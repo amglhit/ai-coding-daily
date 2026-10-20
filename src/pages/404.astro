@@ -1,0 +1,16 @@
+---
+import Base from "../layouts/Base.astro";
+import Masthead from "../components/Masthead.astro";
+import Footer from "../components/Footer.astro";
+import { sitePath } from "../lib/paths.mjs";
+---
+
+<Base title="找不到这一页 · AI Coding 日报" description="页面不存在。">
+  <Masthead />
+  <main id="content" class="missing measure">
+    <p class="eyebrow">404</p>
+    <h1>这一页不在刊期里</h1>
+    <p><a href={sitePath()}>回到本期</a>，或去 <a href={sitePath("archive/")}>归档</a> 查找。</p>
+  </main>
+  <Footer />
+</Base>
