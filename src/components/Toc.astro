@@ -1,0 +1,49 @@
+---
+const { sections, hrefBase = "" } = Astro.props;
+
+function target(anchor) {
+  if (!anchor) return hrefBase || "#content";
+  return `${hrefBase}#${anchor}`;
+}
+---
+
+<nav class="toc" aria-label="本期目录">
+  {
+    sections.map((section) => (
+      <section class="toc-col">
+        <h2>
+          <a href={target(section.id)}>{section.label}</a>
+        </h2>
+        {section.deep.length > 0 && (
+          <div>
+            <p class="toc-kicker">深读</p>
+            <ol>
+              {section.deep.map((item) => (
+                <li>
+                  <a href={target(item.anchor)}>{item.title}</a>
+                  {item.mustRead && <span class="badge-must">必读原文</span>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+        {section.scan.length > 0 && (
+          <div>
+            <p class="toc-kicker">
+              <a href={target(section.glanceAnchor)}>可扫一眼</a>
+            </p>
+            <ul>
+              {section.scan.map((item) => (
+                <li>
+                  <a href={item.href} target="_blank" rel="noreferrer noopener">
+                    {item.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+    ))
+  }
+</nav>
