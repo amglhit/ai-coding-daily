@@ -21,6 +21,14 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={sitePath("favicon.svg")} type="image/svg+xml" />
     <title>{title}</title>
+    <script is:inline>
+      try {
+        var fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+        document.documentElement.setAttribute("data-pointer", fine ? "fine" : "coarse");
+      } catch (error) {
+        document.documentElement.setAttribute("data-pointer", "fine");
+      }
+    </script>
   </head>
   <body>
     <a class="skip" href="#content">跳到正文</a>

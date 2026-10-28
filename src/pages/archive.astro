@@ -7,7 +7,7 @@ import { decorateIssues, formatIsoDate, formatLongDate, padIssue } from "../lib/
 import { sitePath } from "../lib/paths.mjs";
 
 const { newestFirst, numberById } = decorateIssues(await getCollection("daily"));
-const filters = ["全部", "行业动向", "工程化实践", "社区热点"];
+const filters = ["全部", "行业动向", "工程化实践", "社区热点", "选读"];
 ---
 
 <Base title="归档 · AI Coding 日报" description="AI Coding 日报全部刊期，按日期排列。">

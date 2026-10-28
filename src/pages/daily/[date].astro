@@ -4,9 +4,11 @@ import Base from "../../layouts/Base.astro";
 import Masthead from "../../components/Masthead.astro";
 import Footer from "../../components/Footer.astro";
 import Toc from "../../components/Toc.astro";
+import DailyReader from "../../components/DailyReader.astro";
 import { decorateIssues, extractDigest, formatIsoDate, formatLongDate, metaDescription, padIssue } from "../../lib/digest.mjs";
 import { readEntryMarkdown } from "../../lib/entry.mjs";
 import { sitePath } from "../../lib/paths.mjs";
+import { formatMasthead, storyDescription } from "../../lib/stories.mjs";
 
 export async function getStaticPaths() {
   const entries = await getCollection("daily");
@@ -25,9 +27,22 @@ if (!issue) throw new Error(`找不到刊期 ${id}`);
 
 const newer = newestFirst[index - 1];
 const older = newestFirst[index + 1];
-const markdown = readEntryMarkdown(issue);
-const digest = extractDigest(markdown);
-const { Content } = await render(issue);
+const stories = issue.data.stories ?? [];
+const reader = stories.length > 0;
+const masthead = issue.data.masthead || formatMasthead(issue.data.date);
+
+let description = "AI Coding 日报，一份关于人工智能编程的每日杂志。";
+let digest = null;
+let Content = null;
+if (reader) {
+  description = storyDescription(stories);
+} else {
+  const markdown = readEntryMarkdown(issue);
+  description = metaDescription(markdown);
+  digest = extractDigest(markdown);
+  ({ Content } = await render(issue));
+}
+
 const sections = [
   ["today", "今天动向"],
   ["industry", "行业动向"],
@@ -36,57 +51,80 @@ const sections = [
 ];
 ---
 
-<Base title={issue.data.title} description={metaDescription(markdown)}>
+<Base title={issue.data.title} description={description}>
   <Masthead />
-  <nav class="section-nav" aria-label="本篇栏目">
-    <a class="section-nav-mark" href={sitePath()}>日报</a>
-    {sections.map(([anchor, label]) => <a href={`#${anchor}`}>{label}</a>)}
-  </nav>
-  <main id="content" class="issue">
-    <header class="issue-head measure">
-      <p class="issue-meta">
-        <span>第 {padIssue(numberById.get(issue.id) || 1)} 期</span>
-        <time datetime={formatIsoDate(issue.data.date)}>{formatLongDate(issue.data.date)}</time>
-      </p>
-      <h1>{issue.data.title}</h1>
-      {
-        issue.data.must_read.length > 0 && (
-          <p class="must-row">
-            <span class="badge-must">必读原文</span>
-            {issue.data.must_read.map((name) => (
-              <span class="must-name">{name}</span>
-            ))}
-          </p>
-        )
-      }
-    </header>
-    <Toc sections={digest.sections} />
-    <article class="prose measure">
-      <Content />
-    </article>
-    <nav class="pager measure" aria-label="相邻刊期">
-      {
-        older ? (
-          <a class="pager-older" href={sitePath(`daily/${older.id}/`)}>
-            <span>上一期</span>
-            {older.data.title}
-          </a>
-        ) : (
-          <span></span>
-        )
-      }
-      <a class="pager-archive" href={sitePath("archive/")}>归档</a>
-      {
-        newer ? (
-          <a class="pager-newer" href={sitePath(`daily/${newer.id}/`)}>
-            <span>下一期</span>
-            {newer.data.title}
-          </a>
-        ) : (
-          <span></span>
-        )
-      }
-    </nav>
-  </main>
+  {
+    reader ? (
+      <main id="content" class="issue issue-reader">
+        <DailyReader masthead={masthead} stories={stories} />
+        <nav class="pager measure" aria-label="相邻刊期">
+          {older ? (
+            <a class="pager-older" href={sitePath(`daily/${older.id}/`)}>
+              <span>上一期</span>
+              {older.data.title}
+            </a>
+          ) : (
+            <span />
+          )}
+          <a class="pager-archive" href={sitePath("archive/")}>归档</a>
+          {newer ? (
+            <a class="pager-newer" href={sitePath(`daily/${newer.id}/`)}>
+              <span>下一期</span>
+              {newer.data.title}
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+      </main>
+    ) : (
+      <>
+        <nav class="section-nav" aria-label="本篇栏目">
+          <a class="section-nav-mark" href={sitePath()}>日报</a>
+          {sections.map(([anchor, label]) => (
+            <a href={`#${anchor}`}>{label}</a>
+          ))}
+        </nav>
+        <main id="content" class="issue">
+          <header class="issue-head measure">
+            <p class="issue-meta">
+              <span>第 {padIssue(numberById.get(issue.id) || 1)} 期</span>
+              <time datetime={formatIsoDate(issue.data.date)}>{formatLongDate(issue.data.date)}</time>
+            </p>
+            <h1>{issue.data.title}</h1>
+            {issue.data.must_read.length > 0 && (
+              <p class="must-row">
+                <span class="badge-must">必读原文</span>
+                {issue.data.must_read.map((name) => (
+                  <span class="must-name">{name}</span>
+                ))}
+              </p>
+            )}
+          </header>
+          {digest && <Toc sections={digest.sections} />}
+          <article class="prose measure">{Content && <Content />}</article>
+          <nav class="pager measure" aria-label="相邻刊期">
+            {older ? (
+              <a class="pager-older" href={sitePath(`daily/${older.id}/`)}>
+                <span>上一期</span>
+                {older.data.title}
+              </a>
+            ) : (
+              <span />
+            )}
+            <a class="pager-archive" href={sitePath("archive/")}>归档</a>
+            {newer ? (
+              <a class="pager-newer" href={sitePath(`daily/${newer.id}/`)}>
+                <span>下一期</span>
+                {newer.data.title}
+              </a>
+            ) : (
+              <span />
+            )}
+          </nav>
+        </main>
+      </>
+    )
+  }
   <Footer />
 </Base>

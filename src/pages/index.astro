@@ -4,23 +4,34 @@ import Base from "../layouts/Base.astro";
 import Masthead from "../components/Masthead.astro";
 import Footer from "../components/Footer.astro";
 import Toc from "../components/Toc.astro";
+import DailyReader from "../components/DailyReader.astro";
 import { decorateIssues, extractDigest, formatIsoDate, formatLongDate, metaDescription, padIssue, renderInline } from "../lib/digest.mjs";
 import { readEntryMarkdown } from "../lib/entry.mjs";
 import { sitePath } from "../lib/paths.mjs";
+import { formatMasthead, storyDescription } from "../lib/stories.mjs";
 
 const { newestFirst, numberById } = decorateIssues(await getCollection("daily"));
 const latest = newestFirst[0];
 const past = newestFirst.slice(1);
-const markdown = latest ? readEntryMarkdown(latest) : "";
-const digest = latest ? extractDigest(markdown) : null;
-const description = latest ? metaDescription(markdown) : "AI Coding 日报，一份关于人工智能编程的每日杂志。";
+const stories = latest?.data.stories ?? [];
+const hasReader = stories.length > 0;
+const markdown = latest && !hasReader ? readEntryMarkdown(latest) : "";
+const digest = latest && !hasReader ? extractDigest(markdown) : null;
+const description = hasReader
+  ? storyDescription(stories)
+  : latest
+    ? metaDescription(markdown)
+    : "AI Coding 日报，一份关于人工智能编程的每日杂志。";
+const masthead = latest ? latest.data.masthead || formatMasthead(latest.data.date) : "";
 ---
 
 <Base title="AI Coding 日报" description={description}>
   <Masthead />
   <main id="content">
     {
-      latest && digest ? (
+      latest && hasReader ? (
+        <DailyReader masthead={masthead} stories={stories} permalink={sitePath(`daily/${latest.id}/`)} />
+      ) : latest && digest ? (
         <article class="hero">
           <div class="measure">
           <p class="issue-meta">

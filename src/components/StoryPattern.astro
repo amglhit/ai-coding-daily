@@ -1,0 +1,145 @@
+---
+interface StoryBody {
+  pattern: "practice" | "benchmark" | "advice" | "framework" | "experiment" | "essay";
+  scene?: string;
+  problems?: string[];
+  approach?: string;
+  outcomes?: string[];
+  judgment?: string;
+  caveat?: string;
+  motive?: string;
+  method?: string;
+  findings?: string[];
+  bound?: string;
+  conclusion?: string;
+  cost?: string;
+  points?: string[];
+  pointStyle?: "number" | "rule";
+  transfer?: string;
+  claim?: string;
+  tracks?: string[];
+  result?: string;
+  setup?: string;
+  close?: string;
+  observe?: string;
+  evidence?: string;
+  reflect?: string;
+}
+
+interface Props {
+  body: StoryBody;
+}
+
+const { body } = Astro.props;
+---
+
+{
+  body.pattern === "practice" && (
+    <>
+      <p class="story-lead">{body.scene}</p>
+      <ol class="story-numbers">
+        {(body.problems ?? []).map((item, index) => (
+          <li>
+            <span class="story-num">{index + 1}</span>
+            <p>{item}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="story-copy">{body.approach}</p>
+      <ul class="story-accents">
+        {(body.outcomes ?? []).map((item) => (
+          <li>
+            <p>{item}</p>
+          </li>
+        ))}
+      </ul>
+      {body.judgment && (
+        <blockquote class="story-pull">
+          <p>{body.judgment}</p>
+        </blockquote>
+      )}
+      {body.caveat && <p class="story-aside">{body.caveat}</p>}
+    </>
+  )
+}
+{
+  body.pattern === "benchmark" && (
+    <>
+      <p class="story-lead">{body.motive}</p>
+      <p class="story-quiet">{body.method}</p>
+      <ul class="story-accents">
+        {(body.findings ?? []).map((item) => (
+          <li>
+            <p>{item}</p>
+          </li>
+        ))}
+      </ul>
+      <p class="story-aside">{body.bound}</p>
+    </>
+  )
+}
+{
+  body.pattern === "advice" && (
+    <>
+      <p class="story-lead">{body.conclusion}</p>
+      <p class="story-copy">{body.cost}</p>
+      {body.pointStyle === "number" ? (
+        <ol class="story-numbers">
+          {(body.points ?? []).map((item, index) => (
+            <li>
+              <span class="story-num">{index + 1}</span>
+              <p>{item}</p>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <ul class="story-accents">
+          {(body.points ?? []).map((item) => (
+            <li>
+              <p>{item}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      <blockquote class="story-pull">
+        <p>{body.transfer}</p>
+      </blockquote>
+    </>
+  )
+}
+{
+  body.pattern === "framework" && (
+    <>
+      <p class="story-lead">{body.claim}</p>
+      <ul class="story-tracks">
+        {(body.tracks ?? []).map((item) => (
+          <li>
+            <p>{item}</p>
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+}
+{
+  body.pattern === "experiment" && (
+    <>
+      <p class="story-hero">{body.result}</p>
+      <p class="story-quiet">{body.setup}</p>
+      <blockquote class="story-pull">
+        <p>{body.close}</p>
+      </blockquote>
+    </>
+  )
+}
+{
+  body.pattern === "essay" && (
+    <>
+      <p class="story-lead">{body.observe}</p>
+      <p class="story-copy">{body.evidence}</p>
+      <blockquote class="story-pull">
+        <p>{body.reflect}</p>
+      </blockquote>
+    </>
+  )
+}
