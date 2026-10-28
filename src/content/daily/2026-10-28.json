@@ -70,30 +70,46 @@
       "companyColor": "#D4A27F",
       "column": "工程化实践",
       "title": "Claude Code 团队怎么做 code review",
-      "originalTitle": "Solving code review at Anthropic",
+      "originalTitle": "How the Claude Code team does code review",
       "byline": "Addy Osmani、Morgan Westlee Lunt、Qing Wang · 10-15",
       "body": {
-        "pattern": "advice",
+        "pattern": "practice",
         "sections": [
           {
             "kind": "p",
-            "text": "目标不是「人还读不读代码」，而是：不抬高 rollback 与事故的前提下，把人工 review 时间压到最低。六月到九月合并 PR 翻倍以上，rollback 占比降四成多。"
+            "text": "Claude 写了 Claude Code 自己大约九成的代码。agent 写代码时，变更量涨得很快——还怎么 review？还有人在读代码吗？出事了谁拦住？"
           },
           {
             "kind": "p",
-            "text": "PR 前就审：可跑验证 + 新鲜 context 的 subagent 看 diff；CLAUDE.md / REVIEW.md 写清失败长什么样。每条 PR 先过 Claude review 与 security review；发现要多数投票才贴出，style cleanup 直接丢掉。"
+            "text": "六月到九月，合并 PR 翻了一倍以上，rollback 占比降了四成多。我们没有取消 review：大部分阅读交给机器，人的注意力留给只有人能判的事，并花大力气让出错能尽快撤回。目标是多数 PR 最多一个 human in the loop（可以是作者），revert 与事故不升高。"
+          },
+          {
+            "kind": "quote",
+            "text": "「有没有人读过这段代码」不能代替真正该问的：这次变更可能出什么问题，该由自动化还是人来拦。"
           },
           {
             "kind": "p",
-            "text": "人按风险分级：低风险自动化可合；中一人；高与敏感路径两人。bot 审批永远不算人。三轮后强制停，再审只看新 diff；事故与 rollback 做成每日 eval，用「人怎么处理评论」量噪声。"
+            "text": "以前 review 是流程末尾的门禁——写完、开 PR、等同事。现在持续跑着，更像拼写检查；多数改动请人看之前，已被 Claude 审过并修过至少一次。"
+          },
+          {
+            "kind": "p",
+            "text": "Layers, not one gate"
+          },
+          {
+            "kind": "p",
+            "text": "不是末尾只过一道门，而是多层检查，各拦一部分。开 PR 前给 Claude 可跑的验证，再用新鲜 context 的 subagent 看 diff。每条 PR 过 Claude review 和可挡合并的 security review（投票够票才贴，纯 style 丢掉）。人按风险进来：低风险自动化可合；普通一人；最高风险和少数路径两人。指挥 agent 的人算必需 reviewer；bot 审批不算人。再往后是 merge queue、旗标、分阶段发布和快速 rollback。"
+          },
+          {
+            "kind": "p",
+            "text": "Agent 作者和 agent reviewer 会空转——有过五十多轮的 PR，反复被标的约 59% 第一轮就在——于是三轮封顶，之后只审新 diff。事故做成每日 eval。"
+          },
+          {
+            "kind": "p",
+            "text": "人还在 in the loop 的是：该不该做；高风险与定型架构；读证据；为结果负责。共享理解靠 Claude 写某一块的 explainer，不靠逐行读琐碎 diff。"
           },
           {
             "kind": "pull",
-            "text": "人留下：该不该做、高风险与定型架构、读证据、为结果负责。共享 context 靠 explainer，不靠读琐碎 diff。"
-          },
-          {
-            "kind": "aside",
-            "text": "monorepo 日合并从约两千五涨到三万多时，逐行人工审扛不住。稀缺的是注意力——review 的时间，和坏代码事后修的时间。"
+            "text": "目标没变：每次变更少花人时，revert 不比以前多。"
           }
         ]
       },
@@ -106,25 +122,26 @@
       "companyColor": "#F59E0B",
       "column": "社区热点",
       "title": "我怎么和 Agents 一起干活",
+      "originalTitle": "How I work with Agents",
       "byline": "Thorsten Ball · 10-25",
       "body": {
         "pattern": "essay",
         "sections": [
           {
             "kind": "p",
-            "text": "用最强的模型。错百分之十时你不知道是哪百分之十——便宜却随机更笨的那档，省下的钱往往花在反复试错上。Prompt 写 What，少写 How。"
+            "text": "我用最新、最强的模型。一个模型如果 10% 的时候是错的，我并不知道是哪 10%，结果就是多试几次。谁真的想雇一个便宜 50%、却会随机笨上 20% 的通才？Prompt 写 What，不写 How。"
           },
           {
             "kind": "p",
-            "text": "Hallucination 是靠 tool call 压下去的：看不见的东西会编。让它跑通端到端、读日志、部署、切 flag、分诊 bug。"
+            "text": "把 hallucination 压下去的是 tool call。它碰得到现实；看不见的东西，它就会编。所以我让它把做出的东西跑通端到端：读生产日志、部署、看 rollout、发版、翻 flag、分诊 bug、给客户发邮件。我能看见的，它也应该能看见。"
           },
           {
             "kind": "p",
-            "text": "别来回拧——一次生成二十个变体和可对比的小页。要 walkthrough、demo、前后数字。异步与定时唤醒是杀手锏；一个线程一件事。"
+            "text": "我不再跟它来回试。不说「先试这个，不对再试那个」。让它生成 20 个变体，再做一页能组合、能试的小页面；要的是端到端 walkthrough、demo 和前后数字。异步和定时唤醒是杀手锏。一个 thread 一件事，有的 46 条消息，有的 3,714 条。我不再手工管 context。"
           },
           {
             "kind": "pull",
-            "text": "我只审高 blast radius 的代码——中心文件不到五个，外加库迁移。能跑通、能画箭头理解、一个月后还能改，就不盯变量名了。"
+            "text": "我只审高 blast radius 的代码。中心文件不到 5 个，那些我审；数据库迁移也审。closure 还是 class、更整齐的类型、变量名，甚至重复，我都不再管。能跑通、箭头图的层面我能懂、agent 做过端到端测试、一个月后我还能改的话，我也许会再看这段代码。"
           }
         ]
       },
@@ -137,22 +154,26 @@
       "companyColor": "#0078D4",
       "column": "行业动向",
       "title": "Code is cheap 之后，稀缺的是信任",
-      "originalTitle": "Agentic software engineering: large-scale code migration, language modernization, and spec-driven development",
+      "originalTitle": "Cheap code, precious trust: Code modernization at scale",
       "byline": "Sriram Rajamani、Tim Bozarth · Microsoft CoreAI · 10-26",
       "body": {
         "pattern": "framework",
         "sections": [
           {
             "kind": "p",
-            "text": "Agent 能比人快几个数量级改几亿行时，瓶颈不再是能不能 generate，而是敢不敢信任。"
+            "text": "Agent 改起代码来，可以比人审这些改动快几个数量级。我们在 Windows 和 Azure 的代码库上做这件事：把一个 4 亿行的代码库迁到新的编译器工具链，把遗留 C/C++ 现代化成 Rust，并越来越多地做 formal verification。"
           },
           {
             "kind": "p",
-            "text": "给 agent 造「这次改对了没有」的工具，别再硬编码 pipeline 去调模型。人批准 knowledge base，不是每个 patch；极小专家团队驱动，agent 学完再规模化。"
+            "text": "控制流反过来了。我们起初把 LLM 硬编码成 pipeline 里的子程序；到 2025 年 5 月，agent 比这些 pipeline 更会规划，我们的工作变成给它造工具。最有用的，是让 agent 和后面的工程师都知道这次改对了没有。人的注意力成了最稀缺的资源，工具要把它花在最要紧的地方。"
           },
           {
             "kind": "p",
-            "text": "C/C++ 迁 Rust 按 feature 走，留 agent 看不到的 holdout 测试。工程师批「必须满足的 properties」，agent 找 inductive invariants。"
+            "text": "大规模迁移由很小的专家团队驱动，不把所有权摊给整个工程组织。Agent 从抽样里学出 knowledge base，专家批准的是这份 knowledge base，不是每一个 patch。人的反馈仍不可少，但放在杠杆最高的地方：批准 knowledge base，以及处理新的或含糊的情况。C/C++ 迁到 Rust，按 feature 走比逐行翻译更稳。每个 feature 用场景测试做端到端验证，differential testing 比较新旧行为，holdout 测试不给 agent 看，免得它过拟合。工程师批准系统必须满足的 properties；agent 去找证明这些 properties 所需的 inductive invariants。"
+          },
+          {
+            "kind": "pull",
+            "text": "生成代码正在变成容易的部分。真正难的是知道该不该信任它。"
           }
         ]
       },
@@ -172,7 +193,11 @@
         "sections": [
           {
             "kind": "p",
-            "text": "默认不要给每个团队/领域各挂一个 subagent。更稳的是单个主 agent：一个模型、一个 context、开放的 tool loop；做事的步骤放进 skills，硬限制放进 tools，需要时再加载。"
+            "text": "我们在几家企业部署里比过：一个带 skills 的主 agent，质量上经常同时胜过「一个 prompt 包打一切」和 subagent 设计，单任务的成本和延迟也往往更低。太常见的做法，是给每个团队或每种问题各挂一个 subagent，最后架构变成组织图的复印件。来回交接时，context 里的细节会丢掉。有一位客户拿 multi-agent harness 和单循环比，单循环大约快一倍。"
+          },
+          {
+            "kind": "p",
+            "text": "Subagent 仍有位置。我们在这三种情况里用它："
           },
           {
             "kind": "steps",
@@ -183,12 +208,12 @@
             ]
           },
           {
-            "kind": "pull",
-            "text": "先写哪怕十条黄金例的端到端 eval，再谈架构。Claude Code 对更强模型把 system prompt 砍了八成以上——复杂度跟能力走，不跟组织图走。"
+            "kind": "p",
+            "text": "其余时候折进主循环：一个模型、一个 context、开放的 tool loop。做事的步骤放进 skills，硬限制放进 tools，需要时再加载。从 Opus 4.5 起，模型在单循环里能管的比多数团队预期的多。我们对更强模型把 Claude Code 的 system prompt 减少了 80% 以上，其中就包括把 skills 和 tools 从 system prompt 里拿出去，用到时再加载。"
           },
           {
-            "kind": "aside",
-            "text": "按组织图复制「每团队一个 subagent」，常见代价是来回交接丢 context、subagent 越堆越多，以及大约两倍延迟。"
+            "kind": "pull",
+            "text": "先做一份端到端 eval，哪怕只有 10 条黄金例。一次只折进一个 subagent；只有折进去之后更差，才把它留成 subagent。"
           }
         ]
       },
@@ -201,30 +226,30 @@
       "companyColor": "#4285F4",
       "column": "工程化实践",
       "title": "能停、能续、不丢 context 的长跑 agent",
-      "originalTitle": "Build long-running AI agents that pause, resume, and never lose context with ADK",
+      "originalTitle": "Build Long-running AI agents that pause, resume, and never lose context with ADK",
       "byline": "Shubham Saboo、Eric Dong · Google",
       "body": {
         "pattern": "practice",
         "sections": [
           {
             "kind": "p",
-            "text": "多数教程停在无状态聊天：容器一重启就失忆。入职跨两周、发票等回复、销售跨一个月——真实流程被空闲时间主导。"
+            "text": "多数教程停在无状态聊天：容器一重启，什么都不记得。真实流程不是一次 API 调用能收尾的。入职要跨两周，发票纠纷会停好几天等供应商回信，销售要跨一个月里的多次触达。这些过程被 idle time 主导——agent 长时间睡着，等人签字、等发货确认、等一道批准。无状态聊天活不过这种暂停。"
           },
           {
             "kind": "p",
-            "text": "两周对话史污染 prompt，模型搞不清自己在哪一步。每次推理重放整段历史，token 爆炸。空闲三天再醒来，会「想起」从未发生的批准。"
+            "text": "常见做法是把每一轮用户消息和模型回复都追加进历史，下次调用整段塞回去。五分钟的问答没问题。拉到几天、几周，会在三处坏掉。两周的入职对话里堆满闲聊、旧的 tool 输出和重复指令，模型开始搞不清自己在哪一步。每次推理都重放整段历史，token 很快烧完。空闲三天再带着一大段 context 醒来，模型会「想起」从未给出的批准，或跳过它以为已经做完的步骤。"
           },
           {
             "kind": "p",
-            "text": "显式 state machine 写在 session state；tool call 原子推进 checkpoint；持久 session 扛重启；webhook 唤醒而非 polling；窄任务交给专责 subagent。"
+            "text": "进度不靠聊天记录，而靠写在 session state 里的 state machine。入职是一条不能跳的序列：START、WELCOME_SENT、DOCUMENTS_SIGNED、IT_PROVISIONED、HARDWARE_DELIVERED、COMPLETED。system prompt 直接填进 current_step，不靠重放旧消息。每个 tool 通过 ToolContext.state 原子推进 checkpoint。send_welcome_packet 一返回，状态已经是 WELCOME_SENT；容器随即崩溃，重启后也从这里继续。Session 落到持久存储，本地用 SQLite，生产换 Cloud SQL，API 相同。空闲时容器可以缩到零，不轮询，也不占着线程。"
           },
           {
             "kind": "p",
-            "text": "空闲期可缩到零，webhook 到来从同一节点继续。golden eval 用预置状态在秒级模拟「等四十八小时」。"
+            "text": "文档签完，或硬件送到，外部系统打 webhook。唤醒时用 state_delta 先改 current_step，再让模型推理，所以不用重放旧对话，也不会编出中间步骤。IT 开通不塞进主 agent 的 prompt，交给工具更窄的 subagent；它做完把共享 state 写成 IT_PROVISIONED，再把控制交回。不能真等两周才知道它会不会跳步。golden eval 用预置的 session state，在秒级里模拟等 48 小时：停在 WELCOME_SENT 时，它会拒绝跳过签字；预置到 IT_PROVISIONED 之后，它仍记得新人的信息，并按顺序调用后面的工具。"
           },
           {
             "kind": "pull",
-            "text": "修的不是更大的 context window，而是把 state 从对话里拆出来。"
+            "text": "修的不是更大的 context window，而是另一套架构：state 要显式、要持久，并且从原始聊天记录里拆出来。"
           }
         ]
       },
@@ -237,22 +262,26 @@
       "companyColor": "#9CA3AF",
       "column": "社区热点",
       "title": "AI 许诺少干活，我却从未干得这么多",
-      "originalTitle": "AI promised less work",
+      "originalTitle": "AI Promised Less Work. I Have Never Worked More.",
       "byline": "Orestis Ioannou · 10-27",
       "body": {
         "pattern": "essay",
         "sections": [
           {
             "kind": "p",
-            "text": "不是单任务更难，而是以前不值得做的事突然值得做。多个 agent 并行、每个偶尔要我拍板——累的是 context switch。"
+            "text": "承诺是 AI 会把时间还回来：少写样板，把无聊的部分交出去，早点下班。我没有在抱怨工具。我现在所有工程工作都用 agent，也能调查和交付两年前不值得开工的事。可今年我干得比以往都多，而且更沉。不是任何一件单任务更难，而是同时有太多件。"
           },
           {
             "kind": "p",
-            "text": "我已经是 VP，到 10 月 27 日今年仍有两千一百多次 GitHub 贡献，超过近五年任一年全年；八月单月四百二十七是近年最高。角色在管人，图谱却回到全栈高峰。"
+            "text": "做全栈时，正常的一周是两三件正经事，一件放在脑子里做完，再下一件。现在好几个 agent 并行：一个在实现改动，一个在查生产问题，一个在过 review，一个在做我以后才需要的研究。没有一个需要我全程在，每一个都会在某个时候回来，要我批计划、读 diff、看懂结果。累的是 context switch。"
+          },
+          {
+            "kind": "p",
+            "text": "下面是 GitHub 的贡献计数，含私有仓库，混着 commit、PR、review 和 issue，是活动的粗信号，不是价值。到 10 月 27 日，我今年有 2,102 次，已经超过 2021 到 2025 任何一年的全年。同一时段的 2020 年是 2,371，所以还没超过我最忙的那年。八月是 427，整条时间线里最高的一个月；之前的高点是 2020 年 4 月的 319。我现在是 VP of Technology。纸面上，图谱该像 Principal 那些年一样低，甚至更低。它却回到了全职写功能时的形状。"
           },
           {
             "kind": "pull",
-            "text": "Implementation 变 cheap 之后，人会自我加单。给并行 agent 数和待决策队列设硬上限。"
+            "text": "Implementation 变 cheap 之后，agent 不只是让原有的活更快做完，而是让我很容易给自己加一笔大得多的单。"
           }
         ]
       },
@@ -272,27 +301,27 @@
         "sections": [
           {
             "kind": "p",
-            "text": "Core Experimentation 团队用 GPT-6 Astra / 6.1 Sol 做死代码清理与陈旧实验下线：短 prompt，但要求从 Slack、Statsig、画像表里自己找证据。"
+            "text": "我在 Core Experimentation。编码 agent 让构建变快，维护也跟着变多。死代码以前靠静态分析加运行时日志来删，失误还是有：反射会骗过静态分析；一条看起来没用的路径，可能是留着缓解以后的事故的。"
           },
           {
             "kind": "p",
-            "text": "静态分析 + 日志仍会误删；反射、应急路径、永久开关都会漏。陈旧实验仍可能在跑，eligibility 随时变，比「删未引用符号」难。"
+            "text": "GPT-6 Astra 能从一句很短、但含糊的 prompt 开工，自己去 Slack、Statsig 和画像表里找证据，再说明为什么删。五名工程师把这个 prompt 的变体铺开，主要是兼职，做了两周，合入超过 1,400 个 PR，删掉超过 80 万行。其中一个服务的镜像从 3.31GB 降到 1.72GB。"
           },
           {
             "kind": "p",
-            "text": "先小范围 draft PR → 人把 review 写回下一轮 prompt；再扩到子目录与全仓。六人级协作兼职约两周，合入 1400+ PR、删逾 80 万行。"
+            "text": "陈旧实验更难：代码可能仍在跑，eligibility 随时会变，killswitch 必须留下。我在它的 draft PR 上写 review，再让它把意见写进下一轮 prompt，从子目录扩到全仓。同一段 prompt 审一批子目录（超过 6,000 个文件、100 万行）时，GPT-6.1 Sol Ultra 的 findings 是 Astra Ultra 的 92%（131 对 142），API 成本是 14%（$15.12 对 $109.06）。"
           },
           {
             "kind": "p",
-            "text": "例如某服务镜像 3.31GB → 1.72GB；CI 中位约 10 分钟 → 4.5 分钟（另文所述优化一并落地）。GPT-6.1 Sol Ultra 在陈旧实验审计上约拿到 Astra Ultra 九成 findings，API 成本约一成四。"
+            "text": "另一句短 prompt 用来给 CI 减负。跟着做完，大约 30 个 PR 合入之后，CI 完成时间的中位数从大约 10 分钟降到 4.5 分钟，第 90 百分位从 12.5 分钟降到 6 分钟。"
           },
           {
             "kind": "pull",
-            "text": "Agent 负责探索与举证，人负责优先级与做减法。"
+            "text": "有的提案增加的复杂度，超过了它该带来的收益。优先级和测量，仍然是流程的一部分。"
           },
           {
             "kind": "aside",
-            "text": "提案会过载；没有 instrumentation 与审阅，规模化会淹死人。"
+            "text": "模型找得到的优化很容易多到接不住。有 instrumentation，才能把优先级排出来。"
           }
         ]
       },
@@ -312,23 +341,19 @@
         "sections": [
           {
             "kind": "p",
-            "text": "Gemini 4 Argon 在 google/adk-python（约 20.5 万行、近 1.7 万单测）上跑十一小时 /goal：压启动与长 session 开销，API 与模型可见内容不变，改动要有回归测，开 PR 不合并。"
+            "text": "我们让 Gemini 4 Argon 在 google/adk-python 上无人值守地过夜，看它能不能找到跨文件的性能瓶颈。这个仓大约 20.5 万行、近 800 个源文件、近 1.7 万个单测。Profiler 知道 session 拷贝和 import 慢；要加快又不拆现有应用，得把调用方、mock 和共享引用追过几十个文件。"
           },
           {
             "kind": "p",
-            "text": "无性能热点是跨文件的：profiler 能报慢，但追调用链、mock、共享引用要横扫几十个文件。零仓库规范时，模型会碰 public schema、漏测边缘、PR 缺前后数字。"
+            "text": "第一轮不给仓库规范，跑了大约两小时。它找到了真瓶颈，第一轮的部分代码也进了最终提交；同时它改动了 public JSON schema，自定义 copier 漏了 mock 的边缘，只跑了附近 216 个单测，PR 里没有前后数字。第二轮把维护约定写进 .agents/skills，每个 skill 用短索引指向按需才读的 references，免得每轮灌满 context。再打开 /goal，让目标穿过 context 压缩，并要求开一个不合并的 PR，描述里写上前后数字。它跑了 11 小时：先读规范、跑 baseline，结束前自审 diff，并跑完全部 16,892 个单测。"
           },
           {
             "kind": "p",
-            "text": "第二轮把维护约定写进 .agents/skills，打开 /goal 跨 context 压缩保目标；先读规范与 baseline，再改代码；结束前自审 diff 并跑全量单测。"
-          },
-          {
-            "kind": "p",
-            "text": "PR 提六项，人只合两项：session 先过滤再拷、重模块懒加载。长 session 内存准备约降 40%，冷 import 约快 21%。"
+            "text": "PR 里六项优化，我们合入两项。内存里的 session 改为先过滤再拷贝；重模块懒加载，测试要 patch 的公开属性还留在原处。另外四项靠脆弱状态、私有库内部，或只在合成测试里变快，review 时拿掉了。独立 holdout（bench_turn.py，Argon 没见过）上，长 session 的内存准备大约降 40%，冷 import 快 21%。新进程到第一次模型请求几乎不变，3.07 秒到 3.09 秒，因为推迟的模块会在第一轮加载。158 个内部 turn 从 65.6 秒降到 56.1 秒。"
           },
           {
             "kind": "pull",
-            "text": "Agent 探索，维护者做减法——创意方案里一半会撞框架不兼容。"
+            "text": "Agent 探索，维护者做减法。"
           }
         ]
       },
@@ -348,23 +373,23 @@
         "sections": [
           {
             "kind": "p",
-            "text": "公开榜多来自小 Python 仓，模型越来越会刷分；对 4300 万行、以 Java/C++ 为主的 Bazel monorepo，分数几乎说不清谁好用。"
+            "text": "公开基准的任务，多半来自大约 3,000 个源文件的 Python 项目，模型也越来越对着这些集合调。我们的 monorepo 有 4,300 万行；按非测试代码算，大约 1,700 万行、63,000 个非测试源文件，以 Java 和 C++ 为主，用 Bazel 建成一张图。公开榜上的高分，几乎说不清哪个 agent 在我们每天改的代码上好用。"
           },
           {
             "kind": "p",
-            "text": "SnowPR：65 个已合 PR（11 个产品面），用 PR 自带的隐藏测试 + 自家 Bazel 打分；LLM 初筛、人审定题；agent 看不到测试与 diff。"
+            "text": "所以我们做了 SnowPR：65 个已合 PR，11 个产品面。Agent 拿到改动前的代码和一份任务描述，看不到测试，也看不到 diff。打分用 PR 自带的隐藏测试，跑在我们自己的 Bazel 上。LLM 先把候选缩小，每一题由人审定。分数不是 LLM 打的。"
           },
           {
             "kind": "p",
-            "text": "同模型下 harness/成本差更大：REM mode 与 Claude Code / Cursor 通关率接近，但单次更便宜。任务描述质量本身是测量的一部分：同一隐藏测试，两种写法可差到约 83% vs 57% 通关。跨 Java+C++ 边界的任务明显更难；单语言差距没那么大。"
+            "text": "同一模型下，试验通过率拉不开，成本拉得开。opus-5 配四种 harness，通过率在 84.1% 到 85.1% 之间。单次成本 REM mode 是 $6.34，Claude Code 是 $6.51，Cursor 是 $6.93，code mode 是 $8.19。REM mode 至少做对一次的任务也最多，65 题里 62 题。任务描述本身就是测量：同一组隐藏测试、同一个修复，10 个 agent 在一种写法上通过 83% 的试验，在另一种写法上是 57%。跨 Java 和 C++ 的两道题，试验通过率 55%，只改 Java 是 80%；只改 C++ 是 76%，和 Java 差得不大。"
           },
           {
             "kind": "pull",
-            "text": "可学的是：用真实已合 PR + 隐藏测试，并单独压测「描述质量」。"
+            "text": "基准本身，需要和它要测的 agent 一样多的测试。"
           },
           {
             "kind": "aside",
-            "text": "这是私有 eval 方法论文，不是可搬运的公开榜。"
+            "text": "这些任务来自我们自己的历史，不在公开训练数据里。SnowPR 是私有 eval，不是可以拿来直接对照的公开榜。"
           }
         ]
       },
@@ -377,21 +402,26 @@
       "companyColor": "#D4A27F",
       "column": "选读",
       "title": "工程师要解的新题集",
+      "originalTitle": "The new set of problems for engineers to solve",
       "byline": "Katelyn Lesse · Anthropic 平台工程 · 10-26",
       "body": {
         "pattern": "framework",
         "sections": [
           {
             "kind": "p",
-            "text": "解锁数千持久 agent 去攻硬问题的，不是模型再强一点，而是工程把 infrastructure、identity、isolation 和 kill switch 做对——模型越概率，底层越要确定。"
+            "text": "有人已经在搭真正的 multiagent：成千上万个 agent 持久地做研究、发现和硬件设计。模型还会变好。这些系统要做出值得信任的结果，得先由工程师解掉一套新问题。"
           },
           {
             "kind": "p",
-            "text": "Infrastructure：孤立、有状态、单实例，会长时间空闲；K8s 那套假设要重写。Identity 与 authorization：分清代人行事与自有身份；周级任务里人如何有意义地同意，仍宽开。"
+            "text": "Infrastructure 对不上现有假设。Agent 是孤立的、有状态的、单实例负载，会空闲任意久，大量时间花在等 tool、等模型推理、等别的 agent 或人。K8s 是为无状态的多副本，或编号稳定的有状态 Pod 设计的。Identity 和 authorization 仍有大块空白。很多 agent 用人的身份代为行事。任务要跑好几周时，人怎样有意义地同意，还没解。Agent 用自己的身份，以及一个 agent 怎样信任另一个向它要东西的 agent，解得更少。"
           },
           {
             "kind": "p",
-            "text": "Security 与 isolation：数千写不可信代码的 agent 上，未打补丁的 runtime 爆炸半径更大。Observability 与 kill switch：不可篡改的跨 agent tracing，和真正切断 credentials 的总开关。"
+            "text": "Security 也变了。未打补丁的内核、浏览器、runtime 和常用库上面，如果跑着成千上万个持续写不可信代码、读不可信内容的 agent，漏洞的 blast radius 会大得多。被攻破的 agent 还能把注入的指令传给一起干活的其他 agent，留在记忆里，让以后的 agent 不小心信任。Monitoring 要有 agent 自己改不了的跨 agent OTel tracing，以及能一次停掉整个系统、并切断 credentials 的 kill switch。难的是知道方向错了没有：认真地反复访问 allowlist 之外的域名，看起来很像恶意。"
+          },
+          {
+            "kind": "pull",
+            "text": "模型会继续变好。可要真正解锁这套 multiagent，并让世界敢信任它去做出治好疾病这样的结果，而不是坏结果，这些问题得软件工程师来解。"
           }
         ]
       },
@@ -411,23 +441,19 @@
         "sections": [
           {
             "kind": "p",
-            "text": "阿里把内部跑了两年的 code review 工具开源：Open Code Review，定位是可自托管、能落到行级评论的混合架构。"
+            "text": "我们把内部用了两年的 code review 助手开源成 Open Code Review。这两年它服务了数万名开发者，标出过数百万个代码缺陷。它是一个 CLI：读 Git diff，把改动文件交给可配置的 LLM agent，写出精确到行的评论。配好模型端点就能开始。"
           },
           {
             "kind": "p",
-            "text": "纯 LLM review 噪声大，style 与真问题混在一起。纯规则管得住确定性缺陷，但看不到跨文件意图。"
+            "text": "用通用 agent 做 review，大改动会漏文件，评论位置会漂，质量也跟着 prompt 的小改动晃。根子是纯语言驱动的架构对流程没有硬约束。必须做对的步骤交给确定性工程：定死要审哪些文件，把相关文件打成一捆，每捆一个 context 隔开的 subagent，再按文件匹配规则。评论定位和评论反思是独立模块。Agent 负责动态决定，以及按需把 context 取回来。规则集覆盖多种语言，包括 NPE、thread-safety、XSS 和 SQL injection，兼容 OpenAI 与 Anthropic。"
           },
           {
             "kind": "p",
-            "text": "确定性 pipeline + LLM Agent：内置多语言规则集（NPE、thread-safety、XSS、SQL injection），再交给兼容 OpenAI / Anthropic 的 agent 做更深判断；评论精确到行。"
-          },
-          {
-            "kind": "p",
-            "text": "可在私有环境部署，不把代码送出边界。适合当「团队自建 review bot」的起点，而不是又一个 SaaS demo。"
+            "text": "我们用 50 个流行开源仓、200 个真实 PR、10 种语言做了一份基准，80 多位资深工程师标了 1,505 个 ground-truth 问题。同一底层模型，对照 Claude Code，Precision 和 F1 明显更高，token 大约只要 1/9，review 也更快。"
           },
           {
             "kind": "pull",
-            "text": "价值在工程化交付形态，不在再证明「AI 能写评论」。"
+            "text": "对照通用 agent，Recall 更低是故意的：用精度换噪声。"
           }
         ]
       },
@@ -447,19 +473,19 @@
         "sections": [
           {
             "kind": "p",
-            "text": "在第一次 source-code edit 前插入一次 Planner：SWE-bench Verified 分辨率约 +14.8 点，Multilingual 约 +14.7 点；Planner 成本大约是周期性 oversight（SICA）的一到一成半。"
+            "text": "我们在第一次 source-code edit 之前，插入一次 Planner。500 条 Qwen3-coder 轨迹里，476 条出现过这种请求，中位位置是动作进度的 60.0%，前面多是读仓、复现和测试。触发点就是这次编辑本身，所以是 search-free 的：不用训练一个监控器，也不在候选 checkpoint 上搜索。同一个 Executor 留下 context 和 workspace，接着做。"
           },
           {
             "kind": "p",
-            "text": "观察显示首次改源码中位约在轨迹 60%——前面多是读仓、复现、测。PAUSE 用「即将改源码」作 search-free 触发，不依赖异常监控；同一 Executor 保留 context 与 workspace 继续。"
+            "text": "Executor 用 Qwen3-coder，Planner 用 GPT-5.6 Sol。在 SWE-agent 上，SWE-bench Verified 从 50.2%（251/500）升到 65.0%（325/500），高 14.8 个百分点；Multilingual 从 28.3%（85/300）升到 43.0%（129/300），高 14.7 个百分点。同一对模型，OpenHands 上 Verified 高 16.8 个百分点（311/500，62.2%），Pi 上高 6.0 个百分点。增益随 harness 变。"
           },
           {
             "kind": "p",
-            "text": "对照 LivePlan（规则触发）更有效且 Planner 花费相近；对照 SICA（周期性审查）效果接近、规划开销小一个数量级。"
+            "text": "对照 LivePlan 这种按规则触发的顾问，观察到的分辨率更高：Verified 高 3.2 个百分点，Multilingual 高 3.7 个百分点，差别都不显著。Verified 上 Planner 成本几乎相同，$26.13 对 $26.10；Multilingual 上是 $23.68 对 $16.41。对照 SICA 这种周期性审查，Verified 上 SICA 高 2.6 个百分点，Multilingual 高 1.3 个百分点，也不显著。PAUSE 的 Planner 成本大约是 SICA 的 11% 和 15%。"
           },
           {
             "kind": "pull",
-            "text": "可迁移点：干预时机比「多挂几个顾问」更值钱。"
+            "text": "第一次 source-code edit，是把已经攒下的证据变成另一次修复决定的实际时机。"
           }
         ]
       },
