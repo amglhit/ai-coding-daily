@@ -33,7 +33,7 @@
           "市场侧出现会主动催进度的「数字同事」。"
         ],
         "judgment": "中间的传话可以省掉，但判断是省不掉的。",
-        "caveat": "周末自动循环留下二百多个待决策——「我根本定不了。」曾有一个月人均 AI 开销过万美元。"
+        "caveat": "曾有一个月人均 AI 开销过万美元。"
       },
       "sourceUrl": "https://www.53ai.com/news/shuziyuangong/2026102760938.html",
       "sourceLabel": "读原文"
@@ -180,7 +180,7 @@
         "pattern": "essay",
         "observe": "不是单任务更难，而是以前不值得做的事突然值得做。多个 agent 并行、每个偶尔要我拍板——累的是 context switch。",
         "evidence": "我已经是 VP，到 10 月 27 日今年仍有两千一百多次 GitHub 贡献，超过近五年任一年全年；八月单月四百二十七是近年最高。角色在管人，图谱却回到全栈高峰。",
-        "reflect": "Implementation 变 cheap 之后，人会自我加单。给并行 agent 数和待决策队列设硬上限——对照 Manus 周末两百多个待决策那一刀。"
+        "reflect": "Implementation 变 cheap 之后，人会自我加单。给并行 agent 数和待决策队列设硬上限。"
       },
       "sourceUrl": "https://oioannou.com/blog/ai-promised-less-work/",
       "sourceLabel": "读原文"

@@ -59,8 +59,11 @@ test("each story is a full page with one primary source link", () => {
   assert.equal(issue.stories.filter((story) => story.column === "选读").length, 5);
   assert.equal(issue.stories.find((story) => story.id === "claude-review").body.pointStyle, "rule");
   assert.equal(issue.stories.find((story) => story.id === "anth-fold").body.pointStyle, "number");
-  assert.equal(JSON.stringify(issue).includes("小虎"), false);
-  assert.equal(JSON.stringify(issue).includes("xiaohu"), false);
+  const issueText = JSON.stringify(issue);
+  assert.equal(issueText.includes("小虎"), false);
+  assert.equal(issueText.includes("xiaohu"), false);
+  assert.equal(issueText.includes("二百"), false);
+  assert.equal(issueText.includes("两百多个待决策"), false);
   const description = storyDescription(issue.stories);
   assert.match(description, /^用 Manus 改造 Manus。/);
   assert.ok(description.length <= 110);
