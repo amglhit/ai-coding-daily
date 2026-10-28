@@ -35,7 +35,7 @@
         "judgment": "中间的传话可以省掉，但判断是省不掉的。",
         "caveat": "周末自动循环留下二百多个待决策——「我根本定不了。」曾有一个月人均 AI 开销过万美元。"
       },
-      "sourceUrl": "https://www.53ai.com/news/shuziyuangong/2026102760938.html",
+      "sourceUrl": "https://mp.weixin.qq.com/s/I_hNNAf7LFBf5nJ0rEJHig",
       "sourceLabel": "读原文"
     },
     {
@@ -123,26 +123,6 @@
       "sourceLabel": "读原文"
     },
     {
-      "id": "katelyn",
-      "company": "Anthropic",
-      "companyColor": "#D4A27F",
-      "column": "行业动向",
-      "title": "工程师要解的新题集",
-      "byline": "Katelyn Lesse · Anthropic 平台工程 · 10-26",
-      "body": {
-        "pattern": "framework",
-        "claim": "解锁数千持久 agent 去攻硬问题的，不是模型再强一点，而是工程把 infrastructure、identity、isolation 和 kill switch 做对——模型越概率，底层越要确定。",
-        "tracks": [
-          "Infrastructure：孤立、有状态、单实例，会长时间空闲；K8s 那套假设要重写。",
-          "Identity 与 authorization：分清代人行事与自有身份；周级任务里人如何有意义地同意，仍宽开。",
-          "Security 与 isolation：数千写不可信代码的 agent 上，未打补丁的 runtime 爆炸半径更大。",
-          "Observability 与 kill switch：不可篡改的跨 agent tracing，和真正切断 credentials 的总开关。"
-        ]
-      },
-      "sourceUrl": "https://x.com/katelyn_lesse/status/2114542280535318557",
-      "sourceLabel": "读原文"
-    },
-    {
       "id": "google-adk",
       "company": "Google",
       "companyColor": "#4285F4",
@@ -183,70 +163,6 @@
         "reflect": "Implementation 变 cheap 之后，人会自我加单。给并行 agent 数和待决策队列设硬上限——对照 Manus 周末两百多个待决策那一刀。"
       },
       "sourceUrl": "https://oioannou.com/blog/ai-promised-less-work/",
-      "sourceLabel": "读原文"
-    },
-    {
-      "id": "ocr",
-      "company": "Alibaba",
-      "companyColor": "#FF6A00",
-      "column": "选读",
-      "title": "内部用了两年的 AI review 开源",
-      "originalTitle": "Open Code Review",
-      "byline": "Alibaba · GitHub",
-      "body": {
-        "pattern": "practice",
-        "scene": "阿里把内部跑了两年的 code review 工具开源：Open Code Review，定位是可自托管、能落到行级评论的混合架构。",
-        "problems": [
-          "纯 LLM review 噪声大，style 与真问题混在一起。",
-          "纯规则管得住确定性缺陷，但看不到跨文件意图。"
-        ],
-        "approach": "确定性 pipeline + LLM Agent：内置多语言规则集（NPE、thread-safety、XSS、SQL injection），再交给兼容 OpenAI / Anthropic 的 agent 做更深判断；评论精确到行。",
-        "outcomes": [
-          "可在私有环境部署，不把代码送出边界。",
-          "适合当「团队自建 review bot」的起点，而不是又一个 SaaS demo。"
-        ],
-        "judgment": "价值在工程化交付形态，不在再证明「AI 能写评论」。"
-      },
-      "sourceUrl": "https://github.com/alibaba/open-code-review",
-      "sourceLabel": "读原文"
-    },
-    {
-      "id": "snowpr",
-      "company": "Snowflake",
-      "companyColor": "#29B5E8",
-      "column": "选读",
-      "title": "用自家 monorepo 的已合 PR 测 coding agent",
-      "originalTitle": "SnowPR: Benchmarking Coding Agents on Snowflake's 43-Million-Line Monorepo",
-      "byline": "Soyoung Yoon 等 · Snowflake Engineering · 10-27",
-      "body": {
-        "pattern": "benchmark",
-        "motive": "公开榜多来自小 Python 仓，模型越来越会刷分；对 4300 万行、以 Java/C++ 为主的 Bazel monorepo，分数几乎说不清谁好用。",
-        "method": "SnowPR：65 个已合 PR（11 个产品面），用 PR 自带的隐藏测试 + 自家 Bazel 打分；LLM 初筛、人审定题；agent 看不到测试与 diff。",
-        "findings": [
-          "同模型下 harness/成本差更大：REM mode 与 Claude Code / Cursor 通关率接近，但单次更便宜。",
-          "任务描述质量本身是测量的一部分：同一隐藏测试，两种写法可差到约 83% vs 57% 通关。",
-          "跨 Java+C++ 边界的任务明显更难；单语言差距没那么大。"
-        ],
-        "bound": "这是私有 eval 方法论文，不是可搬运的公开榜。可学的是：用真实已合 PR + 隐藏测试，并单独压测「描述质量」。"
-      },
-      "sourceUrl": "https://www.snowflake.com/en/blog/engineering/Benchmarking-coding-agents/",
-      "sourceLabel": "读原文"
-    },
-    {
-      "id": "pause",
-      "company": "MBZUAI",
-      "companyColor": "#7C5CFC",
-      "column": "选读",
-      "title": "第一次改源码前，拦一次就够",
-      "originalTitle": "PAUSE: Search-Free Steering of Coding Agents Before Their First Source-Code Edit",
-      "byline": "Viral Patel 等 · MBZUAI",
-      "body": {
-        "pattern": "experiment",
-        "result": "在第一次 source-code edit 前插入一次 Planner：SWE-bench Verified 分辨率约 +14.8 点，Multilingual 约 +14.7 点；Planner 成本大约是周期性 oversight（SICA）的一到一成半。",
-        "setup": "观察显示首次改源码中位约在轨迹 60%——前面多是读仓、复现、测。PAUSE 用「即将改源码」作 search-free 触发，不依赖异常监控；同一 Executor 保留 context 与 workspace 继续。",
-        "close": "对照 LivePlan（规则触发）更有效且 Planner 花费相近；对照 SICA（周期性审查）效果接近、规划开销小一个数量级。可迁移点：干预时机比「多挂几个顾问」更值钱。"
-      },
-      "sourceUrl": "https://arxiv.org/html/2610.29870",
       "sourceLabel": "读原文"
     },
     {
@@ -298,6 +214,90 @@
         "judgment": "Agent 探索，维护者做减法——创意方案里一半会撞框架不兼容。"
       },
       "sourceUrl": "https://developers.googleblog.com/en/optimizing-a-200000-line-python-codebase-overnight-with-gemini-4-argon/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "snowpr",
+      "company": "Snowflake",
+      "companyColor": "#29B5E8",
+      "column": "选读",
+      "title": "用自家 monorepo 的已合 PR 测 coding agent",
+      "originalTitle": "SnowPR: Benchmarking Coding Agents on Snowflake's 43-Million-Line Monorepo",
+      "byline": "Soyoung Yoon 等 · Snowflake Engineering · 10-27",
+      "body": {
+        "pattern": "benchmark",
+        "motive": "公开榜多来自小 Python 仓，模型越来越会刷分；对 4300 万行、以 Java/C++ 为主的 Bazel monorepo，分数几乎说不清谁好用。",
+        "method": "SnowPR：65 个已合 PR（11 个产品面），用 PR 自带的隐藏测试 + 自家 Bazel 打分；LLM 初筛、人审定题；agent 看不到测试与 diff。",
+        "findings": [
+          "同模型下 harness/成本差更大：REM mode 与 Claude Code / Cursor 通关率接近，但单次更便宜。",
+          "任务描述质量本身是测量的一部分：同一隐藏测试，两种写法可差到约 83% vs 57% 通关。",
+          "跨 Java+C++ 边界的任务明显更难；单语言差距没那么大。"
+        ],
+        "bound": "这是私有 eval 方法论文，不是可搬运的公开榜。可学的是：用真实已合 PR + 隐藏测试，并单独压测「描述质量」。"
+      },
+      "sourceUrl": "https://www.snowflake.com/en/blog/engineering/Benchmarking-coding-agents/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "katelyn",
+      "company": "Anthropic",
+      "companyColor": "#D4A27F",
+      "column": "选读",
+      "title": "工程师要解的新题集",
+      "byline": "Katelyn Lesse · Anthropic 平台工程 · 10-26",
+      "body": {
+        "pattern": "framework",
+        "claim": "解锁数千持久 agent 去攻硬问题的，不是模型再强一点，而是工程把 infrastructure、identity、isolation 和 kill switch 做对——模型越概率，底层越要确定。",
+        "tracks": [
+          "Infrastructure：孤立、有状态、单实例，会长时间空闲；K8s 那套假设要重写。",
+          "Identity 与 authorization：分清代人行事与自有身份；周级任务里人如何有意义地同意，仍宽开。",
+          "Security 与 isolation：数千写不可信代码的 agent 上，未打补丁的 runtime 爆炸半径更大。",
+          "Observability 与 kill switch：不可篡改的跨 agent tracing，和真正切断 credentials 的总开关。"
+        ]
+      },
+      "sourceUrl": "https://x.com/katelyn_lesse/status/2114542280535318557",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ocr",
+      "company": "Alibaba",
+      "companyColor": "#FF6A00",
+      "column": "选读",
+      "title": "内部用了两年的 AI review 开源",
+      "originalTitle": "Open Code Review",
+      "byline": "Alibaba · GitHub",
+      "body": {
+        "pattern": "practice",
+        "scene": "阿里把内部跑了两年的 code review 工具开源：Open Code Review，定位是可自托管、能落到行级评论的混合架构。",
+        "problems": [
+          "纯 LLM review 噪声大，style 与真问题混在一起。",
+          "纯规则管得住确定性缺陷，但看不到跨文件意图。"
+        ],
+        "approach": "确定性 pipeline + LLM Agent：内置多语言规则集（NPE、thread-safety、XSS、SQL injection），再交给兼容 OpenAI / Anthropic 的 agent 做更深判断；评论精确到行。",
+        "outcomes": [
+          "可在私有环境部署，不把代码送出边界。",
+          "适合当「团队自建 review bot」的起点，而不是又一个 SaaS demo。"
+        ],
+        "judgment": "价值在工程化交付形态，不在再证明「AI 能写评论」。"
+      },
+      "sourceUrl": "https://github.com/alibaba/open-code-review",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "pause",
+      "company": "MBZUAI",
+      "companyColor": "#7C5CFC",
+      "column": "选读",
+      "title": "第一次改源码前，拦一次就够",
+      "originalTitle": "PAUSE: Search-Free Steering of Coding Agents Before Their First Source-Code Edit",
+      "byline": "Viral Patel 等 · MBZUAI",
+      "body": {
+        "pattern": "experiment",
+        "result": "在第一次 source-code edit 前插入一次 Planner：SWE-bench Verified 分辨率约 +14.8 点，Multilingual 约 +14.7 点；Planner 成本大约是周期性 oversight（SICA）的一到一成半。",
+        "setup": "观察显示首次改源码中位约在轨迹 60%——前面多是读仓、复现、测。PAUSE 用「即将改源码」作 search-free 触发，不依赖异常监控；同一 Executor 保留 context 与 workspace 继续。",
+        "close": "对照 LivePlan（规则触发）更有效且 Planner 花费相近；对照 SICA（周期性审查）效果接近、规划开销小一个数量级。可迁移点：干预时机比「多挂几个顾问」更值钱。"
+      },
+      "sourceUrl": "https://arxiv.org/html/2610.29870",
       "sourceLabel": "读原文"
     }
   ]

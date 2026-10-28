@@ -29,15 +29,20 @@ test("2026-10-28 is the locked 13-story issue", () => {
       ["thorsten", "社区热点", "我怎么和 Agents 一起干活"],
       ["ms", "行业动向", "Code is cheap 之后，稀缺的是信任"],
       ["anth-fold", "工程化实践", "多数时候，少用 subagent，并进主循环"],
-      ["katelyn", "行业动向", "工程师要解的新题集"],
       ["google-adk", "工程化实践", "能停、能续、不丢 context 的长跑 agent"],
       ["orestis", "社区热点", "AI 许诺少干活，我却从未干得这么多"],
-      ["ocr", "选读", "内部用了两年的 AI review 开源"],
-      ["snowpr", "选读", "用自家 monorepo 的已合 PR 测 coding agent"],
-      ["pause", "选读", "第一次改源码前，拦一次就够"],
       ["openai-maint", "选读", "用 GPT-6 家族做大规模维护，而不是绿场 demo"],
       ["argon-adk", "选读", "隔夜无人值守优化 20 万行 ADK"],
+      ["snowpr", "选读", "用自家 monorepo 的已合 PR 测 coding agent"],
+      ["katelyn", "选读", "工程师要解的新题集"],
+      ["ocr", "选读", "内部用了两年的 AI review 开源"],
+      ["pause", "选读", "第一次改源码前，拦一次就够"],
     ],
+  );
+  assert.equal(issue.stories.filter((story) => story.column !== "选读").length, 7);
+  assert.equal(
+    issue.stories.find((story) => story.id === "manus").sourceUrl,
+    "https://mp.weixin.qq.com/s/I_hNNAf7LFBf5nJ0rEJHig",
   );
 });
 
@@ -56,7 +61,7 @@ test("each story is a full page with one primary source link", () => {
     assert.ok(storyLead(story.body).length > 40, story.id);
     assert.equal(accentColor(story.companyColor), story.companyColor);
   }
-  assert.equal(issue.stories.filter((story) => story.column === "选读").length, 5);
+  assert.equal(issue.stories.filter((story) => story.column === "选读").length, 6);
   assert.equal(issue.stories.find((story) => story.id === "claude-review").body.pointStyle, "rule");
   assert.equal(issue.stories.find((story) => story.id === "anth-fold").body.pointStyle, "number");
   assert.equal(JSON.stringify(issue).includes("小虎"), false);
