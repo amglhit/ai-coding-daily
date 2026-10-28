@@ -183,10 +183,6 @@ html[data-comfort="loose"] .reader {
   width: 100%;
 }
 
-.reader-track.is-paging {
-  cursor: none;
-}
-
 .reader-live,
 .visually-hidden {
   position: absolute;
@@ -534,6 +530,7 @@ html[data-pointer="fine"] .reader-stage {
   overflow-y: auto;
   cursor: text;
   scroll-behavior: auto;
+  scroll-snap-type: none;
   -webkit-overflow-scrolling: touch;
   scrollbar-color: var(--hairline) transparent;
 }
@@ -549,33 +546,55 @@ html[data-pointer="fine"] .reader-track {
 
 html[data-pointer="coarse"] .reader .reader-stage,
 .reader[data-mode="magazine"] .reader-stage {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   cursor: text;
-  overscroll-behavior: none;
+  scroll-behavior: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior-y: contain;
   touch-action: pan-y;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+html[data-pointer="coarse"] .reader .reader-stage::-webkit-scrollbar,
+.reader[data-mode="magazine"] .reader-stage::-webkit-scrollbar {
+  display: none;
 }
 
 html[data-pointer="coarse"] .reader .reader-track,
 .reader[data-mode="magazine"] .reader-track {
-  height: 100%;
+  height: auto;
   cursor: text;
+  transform: none !important;
+}
+
+html[data-pointer="coarse"] .reader .reader-unit,
+.reader[data-mode="magazine"] .reader-unit {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  scroll-margin: 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline) transparent;
+}
+
+html[data-pointer="coarse"] .reader .reader-unit.is-fit,
+.reader[data-mode="magazine"] .reader-unit.is-fit {
+  overflow-y: hidden;
 }
 
 html[data-pointer="coarse"] .reader .story,
 .reader[data-mode="magazine"] .story {
-  display: none;
-  height: 100%;
-  min-height: 100%;
   padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-html[data-pointer="coarse"] .reader .story.is-active,
-.reader[data-mode="magazine"] .story.is-active {
-  display: flex;
-  flex-direction: column;
 }
 
 html[data-pointer="coarse"] .reader .story-main,
@@ -618,20 +637,8 @@ html[data-pointer="coarse"] .reader .reader-end,
 
 html[data-pointer="coarse"] .reader .section-break,
 .reader[data-mode="magazine"] .section-break {
-  display: none;
-  height: 100%;
-  min-height: 100%;
   padding-block: 0;
   padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-html[data-pointer="coarse"] .reader .section-break.is-active,
-.reader[data-mode="magazine"] .section-break.is-active {
-  display: flex;
-  flex-direction: column;
 }
 
 html[data-pointer="coarse"] .reader .section-break-main,
@@ -821,6 +828,10 @@ html[data-scope="morning"] [data-group="picks"],
     transition: none;
   }
 
+  .reader-stage {
+    scroll-behavior: auto;
+  }
+
   .toc-scrim,
   .toc-panel {
     transform: none !important;
@@ -846,6 +857,8 @@ html[data-scope="morning"] [data-group="picks"],
     overflow: visible !important;
     display: block !important;
     transform: none !important;
+    scroll-snap-type: none !important;
+    scroll-snap-align: none !important;
   }
 
   .reader-chip,
