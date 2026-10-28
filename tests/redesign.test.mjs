@@ -12,8 +12,8 @@ function read(file) {
 
 test("tokens drop the newspaper palette and use the locked accent", () => {
   const css = read("src/styles/global.css");
-  assert.match(css, /--bg:\s*#FAFAFA/);
-  assert.match(css, /--surface:\s*#FFFFFF/);
+  assert.match(css, /--bg:\s*#FFFFFF/);
+  assert.match(css, /--surface:\s*#F5F5F5/);
   assert.match(css, /--ink:\s*#171717/);
   assert.match(css, /--muted:\s*#737373/);
   assert.match(css, /--hairline:\s*#E5E5E5/);
@@ -38,7 +38,7 @@ test("story routes are a full-viewport reader without the paper shell", () => {
   const reader = read("src/components/DailyReader.astro");
   const css = read("src/styles/reader.css");
   const home = read("src/pages/index.astro");
-  assert.match(base, /theme-color" content="#FAFAFA"/);
+  assert.match(base, /theme-color" content="#FFFFFF"/);
   assert.match(base, /data-surface=\{surface\}/);
   assert.doesNotMatch(base, /class="sheet"/);
   assert.match(daily, /surface=\{reader \? "reader" : "browse"\}/);
@@ -54,6 +54,13 @@ test("story routes are a full-viewport reader without the paper shell", () => {
   assert.match(css, /height:\s*100dvh/);
   assert.match(css, /var\(--company\)/);
   assert.match(css, /var\(--link\)/);
+  assert.match(css, /\.story-company\s*\{[^}]*color:\s*var\(--company\)/);
+  assert.match(css, /\.story-num\s*\{[^}]*color:\s*var\(--company\)/);
+  assert.match(css, /\.story h2::before\s*\{[^}]*width:\s*3px;\s*height:\s*10px;\s*background:\s*var\(--company\)/);
+  assert.match(css, /\.story-pull\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--ink\) 4%, transparent\)/);
+  assert.match(css, /\.story-pull p\s*\{[^}]*font-weight:\s*500/);
+  assert.doesNotMatch(reader, /reader-rail|story-rail/);
+  assert.doesNotMatch(css, /reader-rail|story-rail|border-left:[^;\n]*var\(--company\)/);
   assert.doesNotMatch(css, /82dvh|min-height:\s*560|var\(--paper\)|var\(--cinnabar\)/);
   assert.match(home, /开始阅读/);
   assert.doesNotMatch(home, /DailyReader|class="seal"|Toc /);
