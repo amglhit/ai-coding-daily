@@ -44,6 +44,7 @@ test("desktop and coarse modes share the locked pointer query", () => {
   assert.doesNotMatch(pattern, /story-lead|story-numbers|story-accents|story-tracks/);
   assert.doesNotMatch(read("src/components/StoryPattern.astro"), />\s*(practice|benchmark|advice|framework|experiment|essay)\s*</);
   assert.match(reader, /IntersectionObserver/);
+  assert.match(reader, /scrollend/);
   assert.doesNotMatch(reader, /settleImmediately|displayY|pointerDown|pointerMove|pointerUp|rubberband|translateY\(/);
   assert.match(css, /margin-top:\s*auto/);
   assert.match(css, /min-height:\s*100%/);
