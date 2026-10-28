@@ -50,29 +50,19 @@ test("2026-10-28 is the locked 13-story issue", () => {
 test("Manus practice body stays faithful to the WeChat primary", () => {
   const manus = issue.stories.find((story) => story.id === "manus");
   assert.equal(manus.body.pattern, "practice");
-  const monoSteps = [
-    "补业务知识让 AI 看见全局并用 Git worktree 并行",
-    "完整产品跑在本地，验证从五到十分钟落到几秒",
-    "权限下读线上日志排查",
-    "发版能力交给 AI，审批权仍在人",
-    "再用测试账号走真实流程做端到端验证",
-  ];
-  assert.equal(
-    manus.body.approach,
-    "我们做了 Manus-mono：不是把代码并成 monorepo，而是统一入口 + 一本写给 AI 的说明书（各仓做什么、怎么配合、规范是什么）。它一步步长起来：" +
-      monoSteps.join("；") +
-      "。",
-  );
-  let from = 0;
-  for (const step of monoSteps) {
-    const at = manus.body.approach.indexOf(step, from);
-    assert.ok(at >= from, step);
-    from = at + step.length;
-  }
-  assert.equal(monoSteps.length, 5);
+  assert.deepEqual(manus.body.problems, [
+    "最大损耗在联调：前后端各自理解需求再对接口，对不齐就反复改——不是不努力，是人对齐很难。",
+    "代码散在多仓，即使一个人全包，AI 仍无法在同一上下文里看到全貌。",
+  ]);
+  assert.ok(Array.isArray(manus.body.approach));
+  assert.equal(manus.body.approach.length, 5);
+  const signals = [/worktree/, /本地/, /日志/, /发版|审批/, /端到端|测试账号/];
+  manus.body.approach.forEach((step, index) => {
+    assert.match(step, signals[index], step);
+  });
   assert.deepEqual(manus.body.outcomes, [
     "共识变成：一个需求，一个人可以写完所有端；移动端 7 人同时扛 2 个产品、共 4 个应用，进度和网页版基本同步。一个工程师常态并行十几、二十个需求。",
-    "瓶颈翻到产品：约一半产品经理能独立把需求做到上线；所有产品经理都向 Manus 提交过代码。有人不再交传统 PRD，而是用视频把场景、界面、状态和实现逻辑一次讲清。",
+    "产品侧：约一半产品经理能独立把需求做到上线；所有产品经理都向 Manus 提交过代码。有人不再交传统 PRD，而是用视频把场景、界面、状态和实现逻辑一次讲清。",
     "市场侧接上「数字同事」：在一个工作台 Session 接需求再拆并行；会学策略、主动提醒项目阶段、跨团队问清能力边界——最后拍板仍是人。",
   ]);
   assert.equal(
@@ -83,10 +73,15 @@ test("Manus practice body stays faithful to the WeChat primary", () => {
     manus.body.caveat,
     "9 月公司 AI 开销人均超过 1 万美元，有人觉得过分。这笔钱买的不是人力，而是时间和注意力；贵是因为用最好的模型探边界——代码审核机器人用了当前最强模型后，同事反馈最近半年没听说因合入问题代码造成线上故障；成本还会随自己产品改进下降。积累下来的工作方式，才是更宝贵的资产。",
   );
-  const text = JSON.stringify(manus);
-  for (const banned of ["七步", "五步", "二百", "定不了", "user_id", "催进度", "传话可以省掉"]) {
-    assert.equal(text.includes(banned), false, banned);
-  }
+});
+
+test("Orestis reflect drops the unsourced Manus backlog clause", () => {
+  const orestis = issue.stories.find((story) => story.id === "orestis");
+  assert.equal(
+    orestis.body.reflect,
+    "Implementation 变 cheap 之后，人会自我加单。给并行 agent 数和待决策队列设硬上限。",
+  );
+  assert.equal(orestis.body.reflect.includes("Manus"), false);
 });
 
 test("each story is a full page with one primary source link", () => {
@@ -107,8 +102,12 @@ test("each story is a full page with one primary source link", () => {
   assert.equal(issue.stories.filter((story) => story.column === "选读").length, 6);
   assert.equal(issue.stories.find((story) => story.id === "claude-review").body.pointStyle, "rule");
   assert.equal(issue.stories.find((story) => story.id === "anth-fold").body.pointStyle, "number");
-  assert.equal(JSON.stringify(issue).includes("小虎"), false);
-  assert.equal(JSON.stringify(issue).includes("xiaohu"), false);
+  const issueText = JSON.stringify(issue);
+  assert.equal(issueText.includes("小虎"), false);
+  assert.equal(issueText.includes("xiaohu"), false);
+  for (const banned of ["七步", "五步", "二百", "两百多个待决策", "user_id", "催进度", "传话可以省掉"]) {
+    assert.equal(issueText.includes(banned), false, banned);
+  }
   const description = storyDescription(issue.stories);
   assert.match(description, /^用 Manus 改造 Manus。/);
   assert.ok(description.length <= 110);
