@@ -60,7 +60,6 @@ interface Props {
 
 const { title, chipHref, chipLabel, stories, older = null, newer = null } = Astro.props;
 const first = stories[0];
-const firstAccent = accentColor(first?.companyColor);
 const hasIssues = Boolean(older || newer);
 ---
 
@@ -84,16 +83,43 @@ const hasIssues = Boolean(older || newer);
       root.setAttribute("data-mode", mode);
     })();
   </script>
-  <a class="reader-chip" href={chipHref}>
-    {chipLabel}
-    <span class="visually-hidden">，回到首页</span>
-  </a>
+  <div class="reader-tools">
+    <a class="reader-chip" href={chipHref}>
+      {chipLabel}
+      <span class="visually-hidden">，回到首页</span>
+    </a>
+    <button
+      type="button"
+      class="comfort-entry"
+      aria-label="版式"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      aria-controls="comfort-sheet"
+    >
+      Aa
+    </button>
+    <div class="comfort-sheet" id="comfort-sheet" role="dialog" aria-label="版式" hidden>
+      <div class="comfort-options" role="radiogroup" aria-label="版式">
+        <label class="comfort-option">
+          <input type="radio" name="comfort" value="tight" />
+          紧凑
+        </label>
+        <label class="comfort-option">
+          <input type="radio" name="comfort" value="standard" checked />
+          标准
+        </label>
+        <label class="comfort-option">
+          <input type="radio" name="comfort" value="loose" />
+          宽松
+        </label>
+      </div>
+    </div>
+  </div>
   <h1 class="visually-hidden">{title}</h1>
   <div class="reader-stage" role="feed" aria-label="AI Coding 日报">
     <div class="reader-live" aria-live="polite">
       {first ? `${first.company} · ${first.title}` : title}
     </div>
-    <div class="reader-rail" style={`background:${firstAccent}`} aria-hidden="true"></div>
     <div class="reader-track">
       {
         stories.map((story, index) => {
@@ -107,13 +133,11 @@ const hasIssues = Boolean(older || newer);
               data-id={story.id}
               data-title={story.title}
               data-company={story.company}
-              data-accent={accent}
               aria-labelledby={`title-${story.id}`}
               aria-posinset={index + 1}
               aria-setsize={stories.length}
               style={`--company:${accent}`}
             >
-              <div class="story-rail" aria-hidden="true" />
               <div class="story-main">
                 <header class="story-head">
                   <div class="story-kicker">
@@ -153,6 +177,7 @@ const hasIssues = Boolean(older || newer);
 </section>
 
 <script>
+  import { COMFORT_KEY, normalizeComfort } from "../lib/reader-comfort.mjs";
   import {
     FINE_POINTER_QUERY,
     createSession,
@@ -176,7 +201,6 @@ const hasIssues = Boolean(older || newer);
     const stage = root.querySelector(".reader-stage");
     const track = root.querySelector(".reader-track");
     const live = root.querySelector(".reader-live");
-    const rail = root.querySelector(".reader-rail");
     const stories = [...root.querySelectorAll(".story")];
     if (!stage || !track || stories.length === 0) return;
 
@@ -213,7 +237,6 @@ const hasIssues = Boolean(older || newer);
       if (!current) return;
       const label = `${current.dataset.company} · ${current.dataset.title}`;
       if (live && live.textContent !== label) live.textContent = label;
-      if (rail && current.dataset.accent) rail.style.background = current.dataset.accent;
       const paging = !fine && session.pageMode && session.dragging;
       track.classList.toggle("is-paging", paging);
       if (fine) {
@@ -403,7 +426,109 @@ const hasIssues = Boolean(older || newer);
     });
   }
 
+  function mountComfort(root) {
+    const tools = root.querySelector(".reader-tools");
+    const entry = root.querySelector(".comfort-entry");
+    const sheet = root.querySelector(".comfort-sheet");
+    if (!(tools instanceof HTMLElement) || !(entry instanceof HTMLButtonElement) || !(sheet instanceof HTMLElement)) return;
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const radios = [...sheet.querySelectorAll('input[type="radio"]')];
+    let open = false;
+    let generation = 0;
+
+    function syncRadios(tier) {
+      for (const radio of radios) {
+        if (radio instanceof HTMLInputElement) radio.checked = radio.value === tier;
+      }
+    }
+
+    function applyTier(tier) {
+      const next = normalizeComfort(tier);
+      document.documentElement.setAttribute("data-comfort", next);
+      try {
+        localStorage.setItem(COMFORT_KEY, next);
+      } catch (error) {
+        /* storage can be blocked; the attribute still applies for this page */
+      }
+      syncRadios(next);
+    }
+
+    function openSheet() {
+      if (open) return;
+      open = true;
+      generation += 1;
+      syncRadios(normalizeComfort(document.documentElement.getAttribute("data-comfort")));
+      sheet.hidden = false;
+      entry.setAttribute("aria-expanded", "true");
+      const show = () => sheet.classList.add("is-open");
+      if (reduce.matches) show();
+      else requestAnimationFrame(show);
+      const checked = radios.find((radio) => radio instanceof HTMLInputElement && radio.checked);
+      if (checked instanceof HTMLElement) checked.focus({ preventScroll: true });
+    }
+
+    function closeSheet(restoreFocus) {
+      if (!open) return;
+      open = false;
+      const token = ++generation;
+      entry.setAttribute("aria-expanded", "false");
+      let settled = false;
+      const done = () => {
+        if (settled || token !== generation) return;
+        settled = true;
+        sheet.hidden = true;
+        sheet.classList.remove("is-open");
+        if (restoreFocus) entry.focus({ preventScroll: true });
+      };
+      if (reduce.matches) {
+        done();
+        return;
+      }
+      sheet.classList.remove("is-open");
+      const onEnd = (event) => {
+        if (event.propertyName !== "opacity") return;
+        sheet.removeEventListener("transitionend", onEnd);
+        done();
+      };
+      sheet.addEventListener("transitionend", onEnd);
+      window.setTimeout(() => {
+        sheet.removeEventListener("transitionend", onEnd);
+        done();
+      }, 200);
+    }
+
+    syncRadios(normalizeComfort(document.documentElement.getAttribute("data-comfort")));
+
+    entry.addEventListener("click", () => {
+      if (open) closeSheet(false);
+      else openSheet();
+    });
+
+    sheet.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.type !== "radio") return;
+      applyTier(target.value);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !open) return;
+      event.preventDefault();
+      closeSheet(true);
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (!open) return;
+      const target = event.target;
+      if (target instanceof Node && tools.contains(target)) return;
+      closeSheet(true);
+    });
+  }
+
   document.querySelectorAll("[data-reader]").forEach((node) => {
-    if (node instanceof HTMLElement) mount(node);
+    if (node instanceof HTMLElement) {
+      mount(node);
+      mountComfort(node);
+    }
   });
 </script>
