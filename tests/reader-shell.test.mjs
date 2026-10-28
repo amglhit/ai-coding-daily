@@ -27,7 +27,12 @@ test("desktop and coarse modes share the locked pointer query", () => {
   assert.match(css, /cursor:\s*text/);
   assert.match(css, /-webkit-line-clamp:\s*2/);
   assert.doesNotMatch(css, /scroll-snap-type:\s*y/);
-  assert.match(read("src/components/StoryPattern.astro"), /story-lead/);
+  const pattern = read("src/components/StoryPattern.astro");
+  assert.match(pattern, /story-quote/);
+  assert.match(pattern, /story-steps/);
+  assert.match(pattern, /story-pull/);
+  assert.match(pattern, /story-aside/);
+  assert.doesNotMatch(pattern, /story-lead|story-numbers|story-accents|story-tracks/);
   assert.doesNotMatch(read("src/components/StoryPattern.astro"), />\s*(practice|benchmark|advice|framework|experiment|essay)\s*</);
   assert.match(reader, /if \(mq\.matches \|\| event\.pointerType === "mouse"\) return;/);
   assert.match(reader, /tick\(session, stageHeight\(stage\)\)/);

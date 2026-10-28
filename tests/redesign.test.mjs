@@ -55,10 +55,14 @@ test("story routes are a full-viewport reader without the paper shell", () => {
   assert.match(css, /var\(--company\)/);
   assert.match(css, /var\(--link\)/);
   assert.match(css, /\.story-company\s*\{[^}]*color:\s*var\(--company\)/);
-  assert.match(css, /\.story-num\s*\{[^}]*color:\s*var\(--company\)/);
+  assert.match(css, /\.story-steps \.n\s*\{[^}]*color:\s*var\(--muted\)/);
+  assert.doesNotMatch(css, /\.story-num|story-lead|story-numbers|story-accents|story-tracks/);
   assert.match(css, /\.story h2::before\s*\{[^}]*width:\s*3px;\s*height:\s*10px;\s*background:\s*var\(--company\)/);
   assert.match(css, /\.story-pull\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--ink\) 4%, transparent\)/);
-  assert.match(css, /\.story-pull p\s*\{[^}]*font-weight:\s*500/);
+  assert.match(css, /\.story-pull\s*\{[^}]*font-weight:\s*500/);
+  assert.match(css, /\.story-quote\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--ink\) 4%, transparent\)/);
+  assert.match(css, /\.story-quote\s*\{[^}]*font-weight:\s*500/);
+  assert.match(css, /\.story-pull \+ \.story-aside\s*\{[^}]*border-top:\s*1px solid var\(--hairline\)/);
   assert.doesNotMatch(reader, /reader-rail|story-rail/);
   assert.doesNotMatch(css, /reader-rail|story-rail|border-left:[^;\n]*var\(--company\)/);
   assert.doesNotMatch(css, /border-left:/);

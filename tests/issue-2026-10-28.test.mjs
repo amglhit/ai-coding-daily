@@ -7,14 +7,33 @@ import { accentColor, formatMasthead, storyDescription, storyLead } from "../src
 const root = path.resolve(import.meta.dirname, "..");
 const issue = JSON.parse(fs.readFileSync(path.join(root, "src/content/daily/2026-10-28.json"), "utf8"));
 
-const REQUIRED = {
-  practice: ["scene", "problems", "approach", "outcomes"],
-  benchmark: ["motive", "method", "findings", "bound"],
-  advice: ["conclusion", "cost", "points", "pointStyle", "transfer"],
-  framework: ["claim", "tracks"],
-  experiment: ["result", "setup", "close"],
-  essay: ["observe", "evidence", "reflect"],
-};
+const PATTERNS = new Set(["practice", "benchmark", "advice", "framework", "experiment", "essay"]);
+const KINDS = new Set(["quote", "p", "steps", "pull", "aside"]);
+const RETIRED = [
+  "scene",
+  "problems",
+  "approach",
+  "outcomes",
+  "judgment",
+  "caveat",
+  "motive",
+  "method",
+  "findings",
+  "bound",
+  "conclusion",
+  "cost",
+  "points",
+  "pointStyle",
+  "transfer",
+  "claim",
+  "tracks",
+  "result",
+  "setup",
+  "close",
+  "observe",
+  "evidence",
+  "reflect",
+];
 
 test("2026-10-28 is the locked 13-story issue", () => {
   assert.equal(fs.existsSync(path.join(root, "src/content/daily/2026-10-28.md")), false);
@@ -47,41 +66,44 @@ test("2026-10-28 is the locked 13-story issue", () => {
   );
 });
 
-test("Manus practice body stays faithful to the WeChat primary", () => {
+test("Manus sections match the locked short article", () => {
   const manus = issue.stories.find((story) => story.id === "manus");
   assert.equal(manus.body.pattern, "practice");
-  assert.deepEqual(manus.body.problems, [
-    "最大损耗在联调：前后端各自理解需求再对接口，对不齐就反复改——不是不努力，是人对齐很难。",
-    "代码散在多仓，即使一个人全包，AI 仍无法在同一上下文里看到全貌。",
-  ]);
-  assert.ok(Array.isArray(manus.body.approach));
-  assert.equal(manus.body.approach.length, 5);
+  assert.deepEqual(
+    manus.body.sections.map((section) => section.kind),
+    ["quote", "p", "p", "p", "steps", "p", "pull", "aside"],
+  );
+  assert.equal(
+    manus.body.sections[0].text,
+    "我给工程师提了几条需求和 Bug，过一会儿去问进展。我看到工程师的电脑上开着的一排 Codex 和 Manus 的 Session，随便点开一个，这些 Session 的输入就是我刚刚在 Slack 上发给他的需求原文，一字未改。",
+  );
+  assert.match(manus.body.sections[2].text, /人和人之间很难完全对齐/);
+  assert.match(manus.body.sections[3].text, /不是把代码并成 monorepo/);
+  const steps = manus.body.sections[4].items;
+  assert.equal(steps.length, 5);
   const signals = [/worktree/, /本地/, /日志/, /发版|审批/, /端到端|测试账号/];
-  manus.body.approach.forEach((step, index) => {
+  steps.forEach((step, index) => {
     assert.match(step, signals[index], step);
   });
-  assert.deepEqual(manus.body.outcomes, [
-    "共识变成：一个需求，一个人可以写完所有端；移动端 7 人同时扛 2 个产品、共 4 个应用，进度和网页版基本同步。一个工程师常态并行十几、二十个需求。",
-    "产品侧：约一半产品经理能独立把需求做到上线；所有产品经理都向 Manus 提交过代码。有人不再交传统 PRD，而是用视频把场景、界面、状态和实现逻辑一次讲清。",
-    "市场侧接上「数字同事」：在一个工作台 Session 接需求再拆并行；会学策略、主动提醒项目阶段、跨团队问清能力边界——最后拍板仍是人。",
-  ]);
+  assert.match(manus.body.sections[5].text, /移动端 7 人同时扛 2 个产品/);
   assert.equal(
-    manus.body.judgment,
+    manus.body.sections[6].text,
     "AI 的完成度已经很高，但「做什么」仍由人决定。人的角色没有变小，而是更集中了：定义问题，判断质量，决定什么值得做，并为结果负责。",
   );
   assert.equal(
-    manus.body.caveat,
+    manus.body.sections[7].text,
     "9 月公司 AI 开销人均超过 1 万美元，有人觉得过分。这笔钱买的不是人力，而是时间和注意力；贵是因为用最好的模型探边界——代码审核机器人用了当前最强模型后，同事反馈最近半年没听说因合入问题代码造成线上故障；成本还会随自己产品改进下降。积累下来的工作方式，才是更宝贵的资产。",
   );
 });
 
 test("Orestis reflect drops the unsourced Manus backlog clause", () => {
   const orestis = issue.stories.find((story) => story.id === "orestis");
+  const reflect = orestis.body.sections.find((section) => section.kind === "pull");
   assert.equal(
-    orestis.body.reflect,
+    reflect.text,
     "Implementation 变 cheap 之后，人会自我加单。给并行 agent 数和待决策队列设硬上限。",
   );
-  assert.equal(orestis.body.reflect.includes("Manus"), false);
+  assert.equal(reflect.text.includes("Manus"), false);
 });
 
 test("each story is a full page with one primary source link", () => {
@@ -93,15 +115,27 @@ test("each story is a full page with one primary source link", () => {
     assert.match(story.sourceUrl, /^https:\/\//);
     const urls = JSON.stringify(story).match(/https?:\/\/[^\s"]+/g) || [];
     assert.deepEqual(urls, [story.sourceUrl]);
-    const fields = REQUIRED[story.body.pattern];
-    assert.ok(fields, story.body.pattern);
-    for (const field of fields) assert.ok(story.body[field], `${story.id} ${field}`);
+    assert.ok(PATTERNS.has(story.body.pattern), story.body.pattern);
+    assert.ok(story.body.sections.length > 0, story.id);
+    assert.ok(story.body.sections.filter((section) => section.kind === "pull").length <= 1, story.id);
+    for (const section of story.body.sections) {
+      assert.ok(KINDS.has(section.kind), `${story.id} ${section.kind}`);
+      if (section.kind === "steps") {
+        assert.ok(section.items.length > 0, story.id);
+      } else {
+        assert.ok(section.text.length > 0, story.id);
+      }
+    }
+    for (const field of RETIRED) assert.equal(story.body[field], undefined, `${story.id} ${field}`);
     assert.ok(storyLead(story.body).length > 40, story.id);
     assert.equal(accentColor(story.companyColor), story.companyColor);
   }
   assert.equal(issue.stories.filter((story) => story.column === "选读").length, 6);
-  assert.equal(issue.stories.find((story) => story.id === "claude-review").body.pointStyle, "rule");
-  assert.equal(issue.stories.find((story) => story.id === "anth-fold").body.pointStyle, "number");
+  const claude = issue.stories.find((story) => story.id === "claude-review");
+  assert.equal(claude.body.sections.some((section) => section.kind === "steps"), false);
+  assert.equal(claude.body.sections.filter((section) => section.kind === "p").length >= 2, true);
+  const fold = issue.stories.find((story) => story.id === "anth-fold");
+  assert.equal(fold.body.sections.find((section) => section.kind === "steps").items.length, 3);
   const issueText = JSON.stringify(issue);
   assert.equal(issueText.includes("小虎"), false);
   assert.equal(issueText.includes("xiaohu"), false);
