@@ -3,7 +3,7 @@ interface StoryBody {
   pattern: "practice" | "benchmark" | "advice" | "framework" | "experiment" | "essay";
   scene?: string;
   problems?: string[];
-  approach?: string;
+  approach?: string | string[];
   outcomes?: string[];
   judgment?: string;
   caveat?: string;
@@ -45,7 +45,17 @@ const { body } = Astro.props;
           </li>
         ))}
       </ol>
-      <p class="story-copy">{body.approach}</p>
+      {Array.isArray(body.approach) ? (
+        <ul class="story-accents">
+          {body.approach.map((item) => (
+            <li>
+              <p>{item}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="story-copy">{body.approach}</p>
+      )}
       <ul class="story-accents">
         {(body.outcomes ?? []).map((item) => (
           <li>

@@ -6,7 +6,7 @@ const practice = z
     pattern: z.literal("practice"),
     scene: z.string(),
     problems: z.array(z.string()).min(1),
-    approach: z.string(),
+    approach: z.union([z.string(), z.array(z.string()).min(1)]),
     outcomes: z.array(z.string()).min(1),
     judgment: z.string().optional(),
     caveat: z.string().optional(),
