@@ -1,64 +1,35 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 
-const practice = z
-  .object({
-    pattern: z.literal("practice"),
-    scene: z.string(),
-    problems: z.array(z.string()).min(1),
-    approach: z.union([z.string(), z.array(z.string()).min(1)]),
-    outcomes: z.array(z.string()).min(1),
-    judgment: z.string().optional(),
-    caveat: z.string().optional(),
-  })
-  .strict();
+const section = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("quote"), text: z.string().min(1) }).strict(),
+  z.object({ kind: z.literal("p"), text: z.string().min(1) }).strict(),
+  z
+    .object({
+      kind: z.literal("steps"),
+      items: z.array(z.string().min(1)).min(1),
+    })
+    .strict(),
+  z.object({ kind: z.literal("pull"), text: z.string().min(1) }).strict(),
+  z.object({ kind: z.literal("aside"), text: z.string().min(1) }).strict(),
+]);
 
-const benchmark = z
+const body = z
   .object({
-    pattern: z.literal("benchmark"),
-    motive: z.string(),
-    method: z.string(),
-    findings: z.array(z.string()).min(1),
-    bound: z.string(),
+    pattern: z.enum(["practice", "benchmark", "advice", "framework", "experiment", "essay"]),
+    sections: z.array(section).min(1),
   })
-  .strict();
-
-const advice = z
-  .object({
-    pattern: z.literal("advice"),
-    conclusion: z.string(),
-    cost: z.string(),
-    points: z.array(z.string()).min(1),
-    pointStyle: z.enum(["number", "rule"]),
-    transfer: z.string(),
-  })
-  .strict();
-
-const framework = z
-  .object({
-    pattern: z.literal("framework"),
-    claim: z.string(),
-    tracks: z.array(z.string()).min(1),
-  })
-  .strict();
-
-const experiment = z
-  .object({
-    pattern: z.literal("experiment"),
-    result: z.string(),
-    setup: z.string(),
-    close: z.string(),
-  })
-  .strict();
-
-const essay = z
-  .object({
-    pattern: z.literal("essay"),
-    observe: z.string(),
-    evidence: z.string(),
-    reflect: z.string(),
-  })
-  .strict();
+  .strict()
+  .superRefine((value, ctx) => {
+    const pulls = value.sections.filter((item) => item.kind === "pull").length;
+    if (pulls > 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: "at most one pull",
+        path: ["sections"],
+      });
+    }
+  });
 
 const story = z
   .object({
@@ -69,7 +40,7 @@ const story = z
     title: z.string().min(1),
     originalTitle: z.string().min(1).optional(),
     byline: z.string().min(1),
-    body: z.discriminatedUnion("pattern", [practice, benchmark, advice, framework, experiment, essay]),
+    body,
     sourceUrl: z.string().url(),
     sourceLabel: z.literal("读原文"),
   })

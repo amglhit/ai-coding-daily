@@ -18,7 +18,7 @@ Light-only site. Story issues fill the viewport. Home and archive share the same
 
 Type is the system sans stack. Selection is `#DBEAFE` with `--ink` text. `theme-color` is `#FFFFFF`.
 
-Company color is the company name, a short 3×10px mark on the first line of the title, and number text. It does not paint the page, and it does not draw a full-height rail or a left edge on lists or pull quotes. It does not replace `--accent`.
+Company color is the company name and a short 3×10px mark on the first line of the title. Numbered steps use muted tabular figures. It does not paint the page, and it does not draw a full-height rail or a left edge on lists, quotes, or pull quotes. It does not replace `--accent`.
 
 ## Reader
 

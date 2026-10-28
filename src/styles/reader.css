@@ -293,62 +293,77 @@ html[data-comfort="loose"] .reader {
 }
 
 .story-body p,
-.story li p {
+.story-steps li {
   text-wrap: pretty;
 }
 
-.story-lead,
-.story-copy,
-.story-quiet,
-.story-hero {
-  margin: 0 0 18px;
+.story .story-body > p {
+  margin: 0 0 1.05rem;
   font-size: var(--body-size);
   font-weight: 400;
   line-height: var(--body-leading);
   letter-spacing: 0;
 }
 
-.story-lead {
-  font-size: calc(var(--body-size) + 0.0625rem);
+.story-quote {
+  margin: 0 0 1.35rem;
+  padding: 0.85rem 1rem;
+  border: 0;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  color: var(--ink);
+  font-size: calc(var(--body-size) + 0.05rem);
   font-weight: 500;
+  font-style: normal;
+  line-height: var(--body-leading);
   letter-spacing: -0.01em;
 }
 
-.story-quiet,
-.story-aside,
+.story-quote::before,
+.story-quote::after,
+.story-pull::before,
+.story-pull::after {
+  content: none;
+}
+
+.story-pull {
+  margin: 1.5rem 0 0.85rem;
+  padding: 0.7rem 0.95rem;
+  border: 0;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  color: var(--ink);
+  font-size: calc(var(--body-size) + 0.03rem);
+  font-weight: 500;
+  font-style: normal;
+  line-height: 1.7;
+  letter-spacing: -0.01em;
+}
+
 .story-next,
 .story-hint {
   color: var(--muted);
 }
 
-.story-hero {
-  font-size: calc(var(--body-size) + 0.125rem);
-  font-weight: 600;
-  line-height: 1.45;
-  letter-spacing: -0.02em;
-}
-
-.story-pull {
-  margin: 18px 0;
-  padding: 8px 12px;
-  border: 0;
-  background: color-mix(in srgb, var(--ink) 4%, transparent);
-}
-
-.story-pull p {
-  margin: 0;
-  font-size: calc(var(--body-size) + 0.05rem);
-  font-weight: 500;
-  line-height: var(--body-leading);
-  letter-spacing: -0.01em;
-}
-
 .story-aside {
-  margin: 12px 0 0;
-  font-size: 0.8125rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.9375rem;
   font-weight: 400;
-  line-height: 1.55;
+  line-height: 1.65;
   letter-spacing: 0;
+  color: var(--muted);
+}
+
+.story-pull + .story-aside {
+  margin-top: 0;
+  padding-top: 0.95rem;
+  border-top: 1px solid var(--hairline);
+}
+
+.story-aside + .story-aside {
+  margin-top: 0.75rem;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .story ul,
@@ -358,51 +373,33 @@ html[data-comfort="loose"] .reader {
   list-style: none;
 }
 
-.story li p {
-  margin: 0;
+.story ol.story-steps {
+  margin: 0.85rem 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.story-steps li {
+  position: relative;
+  margin: 0 0 0.7rem;
+  padding-left: 1.5rem;
   font-size: var(--body-size);
   line-height: var(--body-leading);
 }
 
-.story-numbers,
-.story-accents,
-.story-tracks {
-  display: flex;
-  flex-direction: column;
+.story-steps li:last-child {
+  margin-bottom: 0;
 }
 
-.story-numbers {
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.story-numbers li {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-
-.story-num {
-  flex: none;
-  width: 20px;
-  margin-top: 3px;
-  color: var(--company);
-  font-size: 0.75rem;
+.story-steps .n {
+  position: absolute;
+  left: 0;
+  top: 0.05em;
+  width: 1.15rem;
+  color: var(--muted);
+  font-size: 0.875rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-}
-
-.story-accents {
-  gap: 10px;
-}
-
-.story-tracks {
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.story-tracks li {
-  padding: 12px 0;
 }
 
 .story-next {

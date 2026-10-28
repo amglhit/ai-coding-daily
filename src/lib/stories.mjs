@@ -1,12 +1,3 @@
-const LEAD = {
-  practice: "scene",
-  benchmark: "motive",
-  advice: "conclusion",
-  framework: "claim",
-  experiment: "result",
-  essay: "observe",
-};
-
 export function accentColor(color) {
   return /^#[0-9A-Fa-f]{6}$/.test(String(color || "")) ? color : "#2563EB";
 }
@@ -17,9 +8,15 @@ export function formatChipDate(date) {
 }
 
 export function storyLead(body) {
-  if (!body) return "";
-  const key = LEAD[body.pattern];
-  return key ? String(body[key] || "") : "";
+  if (!body || !Array.isArray(body.sections)) return "";
+  for (const section of body.sections) {
+    if (!section) continue;
+    if (section.text) return String(section.text);
+    if (section.kind === "steps" && Array.isArray(section.items) && section.items[0]) {
+      return String(section.items[0]);
+    }
+  }
+  return "";
 }
 
 export function storyDescription(stories) {

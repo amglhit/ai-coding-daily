@@ -4,31 +4,16 @@ import IssueNav from "./IssueNav.astro";
 import { accentColor } from "../lib/stories.mjs";
 import "../styles/reader.css";
 
+type StorySection =
+  | { kind: "quote"; text: string }
+  | { kind: "p"; text: string }
+  | { kind: "steps"; items: string[] }
+  | { kind: "pull"; text: string }
+  | { kind: "aside"; text: string };
+
 interface StoryBody {
   pattern: "practice" | "benchmark" | "advice" | "framework" | "experiment" | "essay";
-  scene?: string;
-  problems?: string[];
-  approach?: string | string[];
-  outcomes?: string[];
-  judgment?: string;
-  caveat?: string;
-  motive?: string;
-  method?: string;
-  findings?: string[];
-  bound?: string;
-  conclusion?: string;
-  cost?: string;
-  points?: string[];
-  pointStyle?: "number" | "rule";
-  transfer?: string;
-  claim?: string;
-  tracks?: string[];
-  result?: string;
-  setup?: string;
-  close?: string;
-  observe?: string;
-  evidence?: string;
-  reflect?: string;
+  sections: StorySection[];
 }
 
 interface Story {
