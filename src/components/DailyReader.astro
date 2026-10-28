@@ -257,50 +257,28 @@ const hasPicks = pickStories.length > 0;
 
 <script>
   import { COMFORT_KEY, normalizeComfort } from "../lib/reader-comfort.mjs";
-  import {
-    FINE_POINTER_QUERY,
-    createSession,
-    displayY,
-    pointerDown,
-    pointerMove,
-    pointerUp,
-    settleImmediately,
-    tick,
-  } from "../lib/reader-gesture.mjs";
+  import { FINE_POINTER_QUERY } from "../lib/reader-gesture.mjs";
   import { SCOPE_KEY, normalizeScope } from "../lib/reader-scope.mjs";
   import { stepSheetSpring } from "../lib/reader-sheet.mjs";
 
-  function stageHeight(stage) {
-    return stage.clientHeight || 760;
-  }
-
-  function isControl(target) {
-    return target instanceof Element && Boolean(target.closest("a, button"));
-  }
-
   function mount(root) {
     const stage = root.querySelector(".reader-stage");
-    const track = root.querySelector(".reader-track");
     const live = root.querySelector(".reader-live");
-    if (!stage || !track || root.querySelectorAll(".reader-unit").length === 0) return;
+    if (!stage || root.querySelectorAll(".reader-unit").length === 0) return;
 
     const mq = window.matchMedia(FINE_POINTER_QUERY);
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let session = createSession(1);
-    let raf = 0;
+    let index = 0;
+    let observer = null;
+    let snapPause = 0;
 
     function visibleUnits() {
       return [...root.querySelectorAll(".reader-unit")].filter((element) => !element.classList.contains("is-filtered"));
     }
 
-    function restSession(index, count) {
-      return { ...createSession(count), index };
-    }
-
     function syncPositions(list) {
       const storyList = list.filter((element) => element.classList.contains("story"));
-      storyList.forEach((element, index) => {
-        element.setAttribute("aria-posinset", String(index + 1));
+      storyList.forEach((element, storyIndex) => {
+        element.setAttribute("aria-posinset", String(storyIndex + 1));
         element.setAttribute("aria-setsize", String(storyList.length));
       });
     }
@@ -312,8 +290,104 @@ const hasPicks = pickStories.length > 0;
       });
     }
 
-    function setScope(scope, persist) {
-      const previous = visibleUnits()[session.index];
+    function announce(element) {
+      if (!live) return;
+      const company = element.dataset.company;
+      const piece = element.dataset.title || "";
+      const label = company ? `${company} · ${piece}` : piece;
+      if (label && live.textContent !== label) live.textContent = label;
+    }
+
+    function markActive(element) {
+      const list = visibleUnits();
+      const next = list.indexOf(element);
+      if (next < 0) return;
+      index = next;
+      root.querySelectorAll(".reader-unit").forEach((node) => {
+        node.classList.toggle("is-active", node === element);
+      });
+      announce(element);
+    }
+
+    function applyMode() {
+      const fine = mq.matches;
+      root.dataset.mode = fine ? "desktop" : "magazine";
+      document.documentElement.setAttribute("data-pointer", fine ? "fine" : "coarse");
+      if (fine) stage.setAttribute("tabindex", "0");
+      else stage.removeAttribute("tabindex");
+    }
+
+    function pauseSnap() {
+      snapPause += 1;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          snapPause = Math.max(0, snapPause - 1);
+        });
+      });
+    }
+
+    function alignUnit(element, resetInner) {
+      if (!(element instanceof HTMLElement)) return;
+      pauseSnap();
+      if (resetInner && !mq.matches) element.scrollTop = 0;
+      const margin = mq.matches ? 56 : 0;
+      const top = element.getBoundingClientRect().top - stage.getBoundingClientRect().top + stage.scrollTop - margin;
+      stage.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    }
+
+    function mostVisible() {
+      const stageRect = stage.getBoundingClientRect();
+      let best = null;
+      let bestRatio = 0;
+      for (const element of visibleUnits()) {
+        if (!(element instanceof HTMLElement)) continue;
+        const rect = element.getBoundingClientRect();
+        const visible = Math.min(rect.bottom, stageRect.bottom) - Math.max(rect.top, stageRect.top);
+        const ratio = visible / Math.max(stageRect.height, 1);
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          best = element;
+        }
+      }
+      return bestRatio > 0.4 ? best : null;
+    }
+
+    function syncFit() {
+      root.querySelectorAll(".reader-unit").forEach((element) => {
+        if (!(element instanceof HTMLElement)) return;
+        if (mq.matches || element.classList.contains("is-filtered")) {
+          element.classList.remove("is-fit");
+          return;
+        }
+        const overflows = element.scrollHeight - element.clientHeight > 4;
+        element.classList.toggle("is-fit", !overflows);
+      });
+    }
+
+    function watchSnap() {
+      if (observer) observer.disconnect();
+      observer = null;
+      if (mq.matches || typeof IntersectionObserver !== "function") return;
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (snapPause) return;
+          let best = null;
+          for (const entry of entries) {
+            if (!entry.isIntersecting || entry.intersectionRatio < 0.72) continue;
+            if (!best || entry.intersectionRatio > best.intersectionRatio) best = entry;
+          }
+          if (!best || !(best.target instanceof HTMLElement)) return;
+          const next = visibleUnits().indexOf(best.target);
+          if (next < 0 || (next === index && best.target.classList.contains("is-active"))) return;
+          markActive(best.target);
+        },
+        { root: stage, threshold: [0.72, 0.9] },
+      );
+      visibleUnits().forEach((element) => observer.observe(element));
+    }
+
+    function setScope(scope, persist, align = true) {
+      const previous = visibleUnits()[index];
       const next = normalizeScope(scope);
       document.documentElement.setAttribute("data-scope", next);
       if (persist) {
@@ -330,180 +404,26 @@ const hasPicks = pickStories.length > 0;
         else element.removeAttribute("hidden");
       });
       const list = visibleUnits();
-      let index = previous ? list.indexOf(previous) : 0;
-      if (index < 0) index = 0;
-      stopLoop();
-      session = restSession(index, list.length);
+      let nextIndex = previous ? list.indexOf(previous) : 0;
+      if (nextIndex < 0) nextIndex = 0;
       syncPositions(list);
       syncScopeButtons(next);
-      apply();
-    }
-
-    function stopLoop() {
-      if (raf) cancelAnimationFrame(raf);
-      raf = 0;
-    }
-
-    function fadeIn() {
-      track.style.transition = "none";
-      track.style.opacity = "0";
-      requestAnimationFrame(() => {
-        track.style.transition = "opacity 180ms linear";
-        track.style.opacity = "1";
-      });
-    }
-
-    function apply() {
-      const fine = mq.matches;
-      root.dataset.mode = fine ? "desktop" : "magazine";
-      document.documentElement.setAttribute("data-pointer", fine ? "fine" : "coarse");
-      if (fine) stage.setAttribute("tabindex", "0");
-      else stage.removeAttribute("tabindex");
-
-      const list = visibleUnits();
-      if (session.index > list.length - 1 || session.count !== list.length) {
-        session = {
-          ...session,
-          count: list.length,
-          index: Math.min(session.index, Math.max(0, list.length - 1)),
-        };
+      const current = list[nextIndex];
+      if (current) {
+        markActive(current);
+        if (align) alignUnit(current, current !== previous);
       }
-      root.querySelectorAll(".reader-unit").forEach((element) => {
-        element.classList.remove("is-active");
-      });
-      const current = list[session.index];
-      if (!current) return;
-      current.classList.add("is-active");
-      const company = current.dataset.company;
-      const piece = current.dataset.title || "";
-      const label = company ? `${company} · ${piece}` : piece;
-      if (live && live.textContent !== label) live.textContent = label;
-      const paging = !fine && session.pageMode && session.dragging;
-      track.classList.toggle("is-paging", paging);
-      if (fine) {
-        track.style.transform = "";
-        track.style.userSelect = "";
-        return;
-      }
-      const y = displayY(session, stageHeight(stage));
-      track.style.transform = `translateY(${y}px)`;
-      track.style.userSelect = session.dragging ? "none" : "text";
-      const hint = current.querySelector(".story-hint");
-      if (hint instanceof HTMLElement) {
-        const opacity = session.dragging ? Math.min(1, 0.45 + Math.abs(session.dragY) / 160) : 0.55;
-        const lift = session.dragging && session.dragY < 0 ? Math.min(12, -session.dragY / 10) : 0;
-        hint.style.opacity = String(opacity);
-        hint.style.transform = lift ? `translateY(${-lift}px)` : "";
-      }
-    }
-
-    function pump() {
-      if (reduce.matches) {
-        const previous = session.index;
-        const paging = session.settling === "page";
-        session = settleImmediately(session);
-        const landed = visibleUnits()[session.index];
-        if (session.index !== previous && landed) landed.scrollTop = 0;
-        apply();
-        if (paging) fadeIn();
-        return;
-      }
-      track.style.transition = "";
-      stopLoop();
-      const step = () => {
-        if (!session.settling) {
-          raf = 0;
-          return;
-        }
-        const previous = session.index;
-        session = tick(session, stageHeight(stage));
-        const landed = visibleUnits()[session.index];
-        if (session.index !== previous && landed) landed.scrollTop = 0;
-        apply();
-        if (session.settling) raf = requestAnimationFrame(step);
-        else raf = 0;
-      };
-      raf = requestAnimationFrame(step);
-    }
-
-    function scrollSnapshot() {
-      const element = visibleUnits()[session.index];
-      if (!element) return null;
-      return {
-        scrollTop: element.scrollTop,
-        scrollHeight: element.scrollHeight,
-        clientHeight: element.clientHeight,
-      };
-    }
-
-    function onDown(event) {
-      if (isControl(event.target)) {
-        event.stopPropagation();
-        return;
-      }
-      if (mq.matches || event.pointerType === "mouse") return;
-      session = pointerDown(session, {
-        pointerType: event.pointerType,
-        clientY: event.clientY,
-        time: performance.now(),
-        onControl: false,
-      });
-    }
-
-    function onMove(event) {
-      if (mq.matches || event.pointerType === "mouse") return;
-      const touchLike = event.pointerType === "touch" || event.pointerType === "pen";
-      const next = pointerMove(session, {
-        pointerType: event.pointerType,
-        clientY: event.clientY,
-        time: performance.now(),
-        buttons: touchLike ? 1 : event.buttons,
-        scroll: scrollSnapshot(),
-        stageH: stageHeight(stage),
-      });
-      const started = !session.settling && next.settling;
-      session = next;
-      if (session.pageMode && session.dragging) {
-        if (event.cancelable) event.preventDefault();
-        if (!track.hasPointerCapture(event.pointerId)) {
-          try {
-            track.setPointerCapture(event.pointerId);
-          } catch {
-            /* capture can fail if the pointer already ended */
-          }
-        }
-      }
-      apply();
-      if (started) pump();
-    }
-
-    function onUp(event) {
-      if (mq.matches) return;
-      if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
-      const next = pointerUp(session, stageHeight(stage));
-      const started = !session.settling && next.settling;
-      session = next;
-      apply();
-      if (started) pump();
-    }
-
-    function scrollDesktop(element) {
-      const margin = 56;
-      const top = element.getBoundingClientRect().top - stage.getBoundingClientRect().top + stage.scrollTop - margin;
-      stage.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+      syncFit();
+      watchSnap();
     }
 
     function goTo(element) {
-      if (element.classList.contains("is-filtered")) setScope("all", true);
+      if (element.classList.contains("is-filtered") || element.hasAttribute("hidden")) setScope("all", true);
       const list = visibleUnits();
-      const index = list.indexOf(element);
-      if (index < 0) return;
-      stopLoop();
+      if (!list.includes(element)) return;
       if (stage instanceof HTMLElement) stage.inert = false;
-      session = restSession(index, list.length);
-      apply();
-      if (mq.matches) scrollDesktop(element);
-      else element.scrollTop = 0;
+      markActive(element);
+      alignUnit(element, true);
     }
 
     function onKey(event) {
@@ -522,20 +442,6 @@ const hasPicks = pickStories.length > 0;
       stage.scrollBy({ top: delta });
     }
 
-    track.addEventListener("pointerdown", onDown);
-    track.addEventListener("pointermove", onMove, { passive: false });
-    track.addEventListener("pointerup", onUp);
-    track.addEventListener("pointercancel", onUp);
-    track.addEventListener(
-      "touchmove",
-      (event) => {
-        if (mq.matches) return;
-        if (session.pageMode && session.dragging && event.cancelable) event.preventDefault();
-      },
-      { passive: false },
-    );
-    window.addEventListener("keydown", onKey);
-
     function applyHash() {
       const hash = window.location.hash;
       if (!hash) return;
@@ -544,27 +450,29 @@ const hasPicks = pickStories.length > 0;
       goTo(element);
     }
 
-    function syncMode() {
-      if (mq.matches) {
-        stopLoop();
-        session = {
-          ...session,
-          dragY: 0,
-          dragging: false,
-          settling: null,
-          pressing: false,
-          pageMode: false,
-          armed: false,
-          velocity: 0,
-          settleVel: 0,
-          pendingDelta: 0,
-        };
+    function syncMode(align) {
+      applyMode();
+      syncFit();
+      if (align) {
+        const current = mostVisible() || visibleUnits()[index];
+        if (current) {
+          markActive(current);
+          alignUnit(current, false);
+        }
       }
-      apply();
+      watchSnap();
     }
 
-    setScope(normalizeScope(document.documentElement.getAttribute("data-scope")), false);
-    syncMode();
+    if (typeof ResizeObserver === "function") {
+      const fitObserver = new ResizeObserver(() => syncFit());
+      root.querySelectorAll(".story-main, .section-break-main").forEach((element) => {
+        fitObserver.observe(element);
+      });
+    }
+
+    applyMode();
+    setScope(normalizeScope(document.documentElement.getAttribute("data-scope")), false, false);
+    syncMode(false);
     applyHash();
     root.addEventListener("reader-scope", (event) => {
       if (!(event instanceof CustomEvent)) return;
@@ -575,11 +483,16 @@ const hasPicks = pickStories.length > 0;
       const element = root.querySelector(`#story-${String(event.detail)}`);
       if (element instanceof HTMLElement) goTo(element);
     });
-    mq.addEventListener("change", syncMode);
+    mq.addEventListener("change", () => syncMode(true));
     window.addEventListener("hashchange", applyHash);
-    window.addEventListener("resize", () => {
-      if (session.settling === "page") apply();
-    });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("resize", () => syncFit());
+    requestAnimationFrame(() => syncFit());
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => syncFit()).catch(() => {
+        /* fonts can fail; the fit check still runs on resize */
+      });
+    }
   }
 
   function mountComfort(root) {

@@ -24,6 +24,6 @@ Company color is the company name and a short 3×10px mark on the first line of 
 
 `body[data-surface=reader]` is `100dvh`. Persistent chrome is the date chip, a light「Aa」control,「读原文」, the desktop「下一篇」seam or the mobile bottom hint, and adjacent issue links after the last story.
 
-`(hover: hover) and (pointer: fine)` scrolls continuously: about 40px, a 1px hairline, and a muted「下一篇 · 标题」between stories. Anything else is one story per viewport. Inner scroll comes first, then a page at the edge. Cancel settles with `y * 0.72`, and a page springs to ±`clientHeight`. `prefers-reduced-motion` fades the page change instead of springing.
+`(hover: hover) and (pointer: fine)` scrolls continuously: about 40px, a 1px hairline, and a muted「下一篇 · 标题」between stories. Anything else is one viewport per story, paged with CSS `scroll-snap` (`y mandatory`, `scroll-snap-stop: always`) on the stage. A long story scrolls inside that panel, and the next story snaps only after the panel reaches its end. A short story is not an inner scroller, so the swipe pages immediately. Company, title, byline, and「读原文」sit in the story and scroll with it. There is no sticky title and no drag spring. `prefers-reduced-motion` keeps directory and hash jumps instant.
 
 `data-comfort` is `tight`, `standard`, or `loose`. The default is `standard`, stored as `ai-coding-reader-comfort`. It sets `--body-size`, `--body-leading`, `--measure`, and the story padding. Titles stay on the existing clamp.
