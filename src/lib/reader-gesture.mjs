@@ -141,7 +141,8 @@ export function tick(session, stageH = 760) {
 }
 
 function tickPage(session, stageH) {
-  const distance = session.pageDistance || stageH || 760;
+  // Live clientHeight wins so a resize during the spring retargets ±stageH.
+  const distance = stageH || session.pageDistance || 760;
   const target = session.pendingDelta > 0 ? -distance : distance;
   const dist = target - session.dragY;
   let settleVel = session.settleVel + dist * 0.18;

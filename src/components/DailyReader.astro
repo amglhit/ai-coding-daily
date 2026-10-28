@@ -1,5 +1,6 @@
 ---
 import StoryPattern from "./StoryPattern.astro";
+import IssueNav from "./IssueNav.astro";
 import { accentColor } from "../lib/stories.mjs";
 import "../styles/reader.css";
 
@@ -43,18 +44,27 @@ interface Story {
   sourceLabel: string;
 }
 
-interface Props {
-  masthead: string;
-  stories: Story[];
-  permalink?: string;
+interface IssueLink {
+  href: string;
+  title: string;
 }
 
-const { masthead, stories, permalink } = Astro.props;
+interface Props {
+  title: string;
+  chipHref: string;
+  chipLabel: string;
+  stories: Story[];
+  older?: IssueLink | null;
+  newer?: IssueLink | null;
+}
+
+const { title, chipHref, chipLabel, stories, older = null, newer = null } = Astro.props;
 const first = stories[0];
 const firstAccent = accentColor(first?.companyColor);
+const hasIssues = Boolean(older || newer);
 ---
 
-<section class="reader" data-reader data-mode="desktop">
+<section class="reader" id="content" data-reader data-mode="desktop">
   <script is:inline>
     (function () {
       var fine = false;
@@ -74,12 +84,14 @@ const firstAccent = accentColor(first?.companyColor);
       root.setAttribute("data-mode", mode);
     })();
   </script>
-  <h1 class="reader-date">
-    {permalink ? <a href={permalink}>{masthead}</a> : masthead}
-  </h1>
+  <a class="reader-chip" href={chipHref}>
+    {chipLabel}
+    <span class="visually-hidden">，回到首页</span>
+  </a>
+  <h1 class="visually-hidden">{title}</h1>
   <div class="reader-stage" role="feed" aria-label="AI Coding 日报">
     <div class="reader-live" aria-live="polite">
-      {first ? `${first.company} · ${first.title}` : masthead}
+      {first ? `${first.company} · ${first.title}` : title}
     </div>
     <div class="reader-rail" style={`background:${firstAccent}`} aria-hidden="true"></div>
     <div class="reader-track">
@@ -87,6 +99,7 @@ const firstAccent = accentColor(first?.companyColor);
         stories.map((story, index) => {
           const next = stories[index + 1];
           const accent = accentColor(story.companyColor);
+          const last = index === stories.length - 1;
           return (
             <article
               class:list={["story", { "is-active": index === 0 }]}
@@ -98,19 +111,21 @@ const firstAccent = accentColor(first?.companyColor);
               aria-labelledby={`title-${story.id}`}
               aria-posinset={index + 1}
               aria-setsize={stories.length}
-              style={`--accent:${accent}`}
+              style={`--company:${accent}`}
             >
               <div class="story-rail" aria-hidden="true" />
               <div class="story-main">
                 <header class="story-head">
                   <div class="story-kicker">
                     <span class="story-company">{story.company}</span>
+                    <span class="story-dot" aria-hidden="true">·</span>
                     <span class="story-column">{story.column}</span>
                   </div>
                   <h2 id={`title-${story.id}`}>{story.title}</h2>
                   {story.originalTitle && <p class="story-original">{story.originalTitle}</p>}
                   <div class="story-byline">
                     <span>{story.byline}</span>
+                    <span class="story-dot" aria-hidden="true">·</span>
                     <a class="story-source" href={story.sourceUrl} target="_blank" rel="noreferrer noopener">
                       {story.sourceLabel}
                     </a>
@@ -121,11 +136,18 @@ const firstAccent = accentColor(first?.companyColor);
                 </div>
                 {next && <p class="story-next">下一篇 · {next.title}</p>}
               </div>
-              {next ? <p class="story-hint">上滑 · {next.title}</p> : <div class="story-tail" aria-hidden="true" />}
+              {next ? (
+                <p class="story-hint">上滑 · {next.title}</p>
+              ) : last && hasIssues ? (
+                <IssueNav class="story-issues" older={older} newer={newer} />
+              ) : (
+                <div class="story-tail" aria-hidden="true" />
+              )}
             </article>
           );
         })
       }
+      {hasIssues && <IssueNav class="reader-end" older={older} newer={newer} />}
     </div>
   </div>
 </section>
@@ -168,6 +190,15 @@ const firstAccent = accentColor(first?.companyColor);
       raf = 0;
     }
 
+    function fadeIn() {
+      track.style.transition = "none";
+      track.style.opacity = "0";
+      requestAnimationFrame(() => {
+        track.style.transition = "opacity 180ms linear";
+        track.style.opacity = "1";
+      });
+    }
+
     function apply() {
       const fine = mq.matches;
       root.dataset.mode = fine ? "desktop" : "magazine";
@@ -183,6 +214,8 @@ const firstAccent = accentColor(first?.companyColor);
       const label = `${current.dataset.company} · ${current.dataset.title}`;
       if (live && live.textContent !== label) live.textContent = label;
       if (rail && current.dataset.accent) rail.style.background = current.dataset.accent;
+      const paging = !fine && session.pageMode && session.dragging;
+      track.classList.toggle("is-paging", paging);
       if (fine) {
         track.style.transform = "";
         track.style.userSelect = "";
@@ -203,11 +236,14 @@ const firstAccent = accentColor(first?.companyColor);
     function pump() {
       if (reduce.matches) {
         const previous = session.index;
+        const paging = session.settling === "page";
         session = settleImmediately(session);
         if (session.index !== previous) stories[session.index].scrollTop = 0;
         apply();
+        if (paging) fadeIn();
         return;
       }
+      track.style.transition = "";
       stopLoop();
       const step = () => {
         if (!session.settling) {
@@ -235,7 +271,11 @@ const firstAccent = accentColor(first?.companyColor);
     }
 
     function onDown(event) {
-      if (mq.matches || event.pointerType === "mouse" || isControl(event.target)) return;
+      if (isControl(event.target)) {
+        event.stopPropagation();
+        return;
+      }
+      if (mq.matches || event.pointerType === "mouse") return;
       session = pointerDown(session, {
         pointerType: event.pointerType,
         clientY: event.clientY,
@@ -281,6 +321,21 @@ const firstAccent = accentColor(first?.companyColor);
       if (started) pump();
     }
 
+    function onKey(event) {
+      if (!mq.matches) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.target instanceof Element && event.target.closest("a, button, input, textarea, select")) return;
+      let delta = 0;
+      if (event.key === "ArrowDown" || event.key === "j") delta = 80;
+      else if (event.key === "ArrowUp" || event.key === "k") delta = -80;
+      else if (event.key === "PageDown") delta = stage.clientHeight * 0.9;
+      else if (event.key === "PageUp") delta = stage.clientHeight * -0.9;
+      else if (event.key === " ") delta = stage.clientHeight * (event.shiftKey ? -0.9 : 0.9);
+      else return;
+      event.preventDefault();
+      stage.scrollBy({ top: delta });
+    }
+
     track.addEventListener("pointerdown", onDown);
     track.addEventListener("pointermove", onMove, { passive: false });
     track.addEventListener("pointerup", onUp);
@@ -293,6 +348,7 @@ const firstAccent = accentColor(first?.companyColor);
       },
       { passive: false },
     );
+    window.addEventListener("keydown", onKey);
 
     function applyHash() {
       const hash = window.location.hash;
@@ -342,6 +398,9 @@ const firstAccent = accentColor(first?.companyColor);
     applyHash();
     mq.addEventListener("change", syncMode);
     window.addEventListener("hashchange", applyHash);
+    window.addEventListener("resize", () => {
+      if (session.settling === "page") apply();
+    });
   }
 
   document.querySelectorAll("[data-reader]").forEach((node) => {

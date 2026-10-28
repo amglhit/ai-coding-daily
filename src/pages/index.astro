@@ -3,68 +3,44 @@ import { getCollection } from "astro:content";
 import Base from "../layouts/Base.astro";
 import Masthead from "../components/Masthead.astro";
 import Footer from "../components/Footer.astro";
-import Toc from "../components/Toc.astro";
-import DailyReader from "../components/DailyReader.astro";
-import { decorateIssues, extractDigest, formatIsoDate, formatLongDate, metaDescription, padIssue, renderInline } from "../lib/digest.mjs";
+import { decorateIssues, formatIsoDate, formatLongDate, metaDescription } from "../lib/digest.mjs";
 import { readEntryMarkdown } from "../lib/entry.mjs";
 import { sitePath } from "../lib/paths.mjs";
-import { formatMasthead, storyDescription } from "../lib/stories.mjs";
+import { storyDescription } from "../lib/stories.mjs";
 
-const { newestFirst, numberById } = decorateIssues(await getCollection("daily"));
+const { newestFirst } = decorateIssues(await getCollection("daily"));
 const latest = newestFirst[0];
 const past = newestFirst.slice(1);
 const stories = latest?.data.stories ?? [];
 const hasReader = stories.length > 0;
 const markdown = latest && !hasReader ? readEntryMarkdown(latest) : "";
-const digest = latest && !hasReader ? extractDigest(markdown) : null;
 const description = hasReader
   ? storyDescription(stories)
   : latest
     ? metaDescription(markdown)
     : "AI Coding 日报，一份关于人工智能编程的每日杂志。";
-const masthead = latest ? latest.data.masthead || formatMasthead(latest.data.date) : "";
+const hook = description;
 ---
 
 <Base title="AI Coding 日报" description={description}>
   <Masthead />
   <main id="content">
     {
-      latest && hasReader ? (
-        <DailyReader masthead={masthead} stories={stories} permalink={sitePath(`daily/${latest.id}/`)} />
-      ) : latest && digest ? (
+      latest ? (
         <article class="hero">
-          <div class="measure">
           <p class="issue-meta">
-            <span>第 {padIssue(numberById.get(latest.id) || 1)} 期</span>
             <time datetime={formatIsoDate(latest.data.date)}>{formatLongDate(latest.data.date)}</time>
           </p>
-          <h1>{latest.data.title}</h1>
-          <p class="deck">今天动向</p>
-          <ol class="today-list">
-            {digest.today.map((item) => (
-              <li set:html={renderInline(item)} />
-            ))}
-          </ol>
-          {latest.data.must_read.length > 0 && (
-            <p class="must-row">
-              <span class="badge-must">必读原文</span>
-              {latest.data.must_read.map((name) => (
-                <span class="must-name">{name}</span>
-              ))}
-            </p>
-          )}
-          </div>
-          <Toc sections={digest.sections} hrefBase={sitePath(`daily/${latest.id}/`)} />
-          <p class="read-full measure">
-            <a href={sitePath(`daily/${latest.id}/`)}>阅读本期全文</a>
-          </p>
+          <h1><a href={sitePath(`daily/${latest.id}/`)}>{latest.data.title}</a></h1>
+          <p class="hook">{hook}</p>
+          <a class="cta" href={sitePath(`daily/${latest.id}/`)}>开始阅读</a>
         </article>
       ) : (
         <p class="empty">还没有刊期。把 Markdown 放进 <code>src/content/daily/</code> 即可。</p>
       )
     }
 
-    <section class="past measure" aria-labelledby="past-heading">
+    <section class="past" aria-labelledby="past-heading">
       <div class="past-head">
         <h2 id="past-heading">过往刊期</h2>
         <a href={sitePath("archive/")}>全部归档</a>
@@ -76,9 +52,11 @@ const masthead = latest ? latest.data.masthead || formatMasthead(latest.data.dat
           <ol class="archive-list">
             {past.map((issue) => (
               <li>
-                <time datetime={formatIsoDate(issue.data.date)}>{formatIsoDate(issue.data.date)}</time>
-                <a href={sitePath(`daily/${issue.id}/`)}>{issue.data.title}</a>
-                <span class="vol">第 {padIssue(numberById.get(issue.id) || 0)} 期</span>
+                <a class="is-inline" href={sitePath(`daily/${issue.id}/`)}>
+                  <time datetime={formatIsoDate(issue.data.date)}>{formatIsoDate(issue.data.date)}</time>
+                  <span aria-hidden="true">·</span>
+                  <span class="archive-title">{issue.data.title}</span>
+                </a>
               </li>
             ))}
           </ol>

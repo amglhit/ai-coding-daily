@@ -1,6 +1,6 @@
 # AI Coding 日报
 
-面向 AI Coding 的中文杂志式静态站，按日归档每日文摘。
+面向 AI Coding 的中文静态站，按日归档。带故事数据的刊期是全屏阅读；更早的 Markdown 刊期仍按栏目正文排。
 
 线上地址：[https://amglhit.github.io/ai-coding-daily/](https://amglhit.github.io/ai-coding-daily/)
 
@@ -24,6 +24,14 @@ npm test
 npm run build
 npm run preview
 ```
+
+## 阅读
+
+首页和归档是同一套浅色站点壳（文字标 +「本期」「归档」）。点「开始阅读」或某一期进入阅读页。
+
+`stories` 刊期占满视口：桌面连续滚动，触控一屏一篇。左上角只有日期，回到首页。公司色只出现在左轨、公司名和摘录边线。
+
+没有 `stories` 的旧刊仍走 Markdown 正文和轻量页眉页脚。
 
 ## 新增一期
 
