@@ -54,8 +54,13 @@ test("story routes are a full-viewport reader without the paper shell", () => {
   assert.match(css, /height:\s*100dvh/);
   assert.match(css, /var\(--company\)/);
   assert.match(css, /var\(--link\)/);
-  assert.doesNotMatch(css, /story-rail|reader-rail/);
-  assert.doesNotMatch(reader, /story-rail|reader-rail/);
+  assert.match(css, /\.story-company\s*\{[^}]*color:\s*var\(--company\)/);
+  assert.match(css, /\.story-num\s*\{[^}]*color:\s*var\(--company\)/);
+  assert.match(css, /\.story h2::before\s*\{[^}]*width:\s*3px;\s*height:\s*10px;\s*background:\s*var\(--company\)/);
+  assert.match(css, /\.story-pull\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--ink\) 4%, transparent\)/);
+  assert.match(css, /\.story-pull p\s*\{[^}]*font-weight:\s*500/);
+  assert.doesNotMatch(reader, /reader-rail|story-rail/);
+  assert.doesNotMatch(css, /reader-rail|story-rail|border-left:[^;\n]*var\(--company\)/);
   assert.doesNotMatch(css, /border-left:/);
   assert.doesNotMatch(css, /82dvh|min-height:\s*560|var\(--paper\)|var\(--cinnabar\)/);
   assert.match(home, /开始阅读/);

@@ -6,7 +6,7 @@ Light-only site. Story issues fill the viewport. Home and archive share the same
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `--bg` | `#FFFFFF` | Page background |
+| `--bg` | `#FFFFFF` | Page background on reader and browse |
 | `--surface` | `#F5F5F5` | List cards, reader chip, comfort sheet |
 | `--ink` | `#171717` | Titles and body |
 | `--muted` | `#737373` | Column, byline, hints |
@@ -18,7 +18,7 @@ Light-only site. Story issues fill the viewport. Home and archive share the same
 
 Type is the system sans stack. Selection is `#DBEAFE` with `--ink` text. `theme-color` is `#FFFFFF`.
 
-Company color is only the company name and a 3×10px bar beside the story title. It does not paint a full-height rail, a list edge, or a pull quote, and it does not replace `--accent`.
+Company color is the company name, a short 3×10px mark on the first line of the title, and number text. It does not paint the page, and it does not draw a full-height rail or a left edge on lists or pull quotes. It does not replace `--accent`.
 
 ## Reader
 
