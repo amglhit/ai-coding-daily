@@ -7,11 +7,9 @@ const earliest = newestFirst[newestFirst.length - 1];
 const since = earliest ? formatLongDate(earliest.data.date) : "";
 ---
 
-<footer class="colophon measure">
-  <p class="colophon-name">AI Coding 日报</p>
+<footer class="colophon">
   <p>
     {since && <span>创刊 {since}</span>}
     <span>已出 {newestFirst.length} 期</span>
-    <span>Markdown 刊印</span>
   </p>
 </footer>

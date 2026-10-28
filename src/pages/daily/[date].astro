@@ -8,7 +8,7 @@ import DailyReader from "../../components/DailyReader.astro";
 import { decorateIssues, extractDigest, formatIsoDate, formatLongDate, metaDescription, padIssue } from "../../lib/digest.mjs";
 import { readEntryMarkdown } from "../../lib/entry.mjs";
 import { sitePath } from "../../lib/paths.mjs";
-import { formatMasthead, storyDescription } from "../../lib/stories.mjs";
+import { formatChipDate, storyDescription } from "../../lib/stories.mjs";
 
 export async function getStaticPaths() {
   const entries = await getCollection("daily");
@@ -29,7 +29,8 @@ const newer = newestFirst[index - 1];
 const older = newestFirst[index + 1];
 const stories = issue.data.stories ?? [];
 const reader = stories.length > 0;
-const masthead = issue.data.masthead || formatMasthead(issue.data.date);
+const chipLabel = formatChipDate(issue.data.date);
+const linkFor = (entry) => (entry ? { href: sitePath(`daily/${entry.id}/`), title: entry.data.title } : null);
 
 let description = "AI Coding 日报，一份关于人工智能编程的每日杂志。";
 let digest = null;
@@ -51,34 +52,20 @@ const sections = [
 ];
 ---
 
-<Base title={issue.data.title} description={description}>
-  <Masthead />
+<Base surface={reader ? "reader" : "browse"} title={issue.data.title} description={description}>
   {
     reader ? (
-      <main id="content" class="issue issue-reader">
-        <DailyReader masthead={masthead} stories={stories} />
-        <nav class="pager measure" aria-label="相邻刊期">
-          {older ? (
-            <a class="pager-older" href={sitePath(`daily/${older.id}/`)}>
-              <span>上一期</span>
-              {older.data.title}
-            </a>
-          ) : (
-            <span />
-          )}
-          <a class="pager-archive" href={sitePath("archive/")}>归档</a>
-          {newer ? (
-            <a class="pager-newer" href={sitePath(`daily/${newer.id}/`)}>
-              <span>下一期</span>
-              {newer.data.title}
-            </a>
-          ) : (
-            <span />
-          )}
-        </nav>
-      </main>
+      <DailyReader
+        title={issue.data.title}
+        chipHref={sitePath()}
+        chipLabel={chipLabel}
+        stories={stories}
+        older={linkFor(older)}
+        newer={linkFor(newer)}
+      />
     ) : (
       <>
+      <Masthead />
         <nav class="section-nav" aria-label="本篇栏目">
           <a class="section-nav-mark" href={sitePath()}>日报</a>
           {sections.map(([anchor, label]) => (
@@ -123,8 +110,8 @@ const sections = [
             )}
           </nav>
         </main>
+      <Footer />
       </>
     )
   }
-  <Footer />
 </Base>

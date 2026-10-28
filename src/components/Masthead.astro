@@ -5,19 +5,16 @@ const home = sitePath();
 const archive = sitePath("archive/");
 const path = Astro.url.pathname;
 const onArchive = path.includes("/archive");
+const onHome = path === home || path === home.replace(/\/$/, "");
 ---
 
 <header class="masthead">
   <div class="masthead-bar">
     <a class="brand" href={home}>
-      <span class="seal" aria-hidden="true">日</span>
-      <span class="brand-text">
-        <span class="brand-en">AI Coding Daily</span>
-        <span class="brand-zh">人工智能编程日报</span>
-      </span>
+      <span class="brand-zh">AI Coding 日报</span>
     </a>
     <nav class="mast-nav" aria-label="站点">
-      <a href={home} aria-current={!onArchive && !path.includes("/daily/") ? "page" : undefined}>本期</a>
+      <a href={home} aria-current={onHome ? "page" : undefined}>本期</a>
       <a href={archive} aria-current={onArchive ? "page" : undefined}>归档</a>
     </nav>
   </div>

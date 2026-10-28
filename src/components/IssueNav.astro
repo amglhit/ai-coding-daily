@@ -1,0 +1,33 @@
+---
+interface IssueLink {
+  href: string;
+  title: string;
+}
+
+interface Props {
+  older?: IssueLink | null;
+  newer?: IssueLink | null;
+  class?: string;
+}
+
+const { older = null, newer = null, class: className = "" } = Astro.props;
+---
+
+{
+  (older || newer) && (
+    <nav class:list={["issue-nav", className]} aria-label="相邻刊期">
+      {older && (
+        <a href={older.href}>
+          <span>上一期</span>
+          {older.title}
+        </a>
+      )}
+      {newer && (
+        <a class="issue-nav-next" href={newer.href}>
+          <span>下一期</span>
+          {newer.title}
+        </a>
+      )}
+    </nav>
+  )
+}

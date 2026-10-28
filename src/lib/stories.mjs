@@ -8,7 +8,12 @@ const LEAD = {
 };
 
 export function accentColor(color) {
-  return /^#[0-9A-Fa-f]{6}$/.test(String(color || "")) ? color : "#9f2d22";
+  return /^#[0-9A-Fa-f]{6}$/.test(String(color || "")) ? color : "#2563EB";
+}
+
+export function formatChipDate(date) {
+  const value = new Date(date);
+  return `${value.getUTCMonth() + 1}月${value.getUTCDate()}日`;
 }
 
 export function storyLead(body) {
