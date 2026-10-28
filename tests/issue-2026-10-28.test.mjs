@@ -40,10 +40,53 @@ test("2026-10-28 is the locked 13-story issue", () => {
     ],
   );
   assert.equal(issue.stories.filter((story) => story.column !== "选读").length, 7);
+  assert.equal(issue.stories[0].id, "manus");
   assert.equal(
     issue.stories.find((story) => story.id === "manus").sourceUrl,
     "https://mp.weixin.qq.com/s/I_hNNAf7LFBf5nJ0rEJHig",
   );
+});
+
+test("Manus practice body stays faithful to the WeChat primary", () => {
+  const manus = issue.stories.find((story) => story.id === "manus");
+  assert.equal(manus.body.pattern, "practice");
+  const monoSteps = [
+    "补业务知识让 AI 看见全局并用 Git worktree 并行",
+    "完整产品跑在本地，验证从五到十分钟落到几秒",
+    "权限下读线上日志排查",
+    "发版能力交给 AI，审批权仍在人",
+    "再用测试账号走真实流程做端到端验证",
+  ];
+  assert.equal(
+    manus.body.approach,
+    "我们做了 Manus-mono：不是把代码并成 monorepo，而是统一入口 + 一本写给 AI 的说明书（各仓做什么、怎么配合、规范是什么）。它一步步长起来：" +
+      monoSteps.join("；") +
+      "。",
+  );
+  let from = 0;
+  for (const step of monoSteps) {
+    const at = manus.body.approach.indexOf(step, from);
+    assert.ok(at >= from, step);
+    from = at + step.length;
+  }
+  assert.equal(monoSteps.length, 5);
+  assert.deepEqual(manus.body.outcomes, [
+    "共识变成：一个需求，一个人可以写完所有端；移动端 7 人同时扛 2 个产品、共 4 个应用，进度和网页版基本同步。一个工程师常态并行十几、二十个需求。",
+    "瓶颈翻到产品：约一半产品经理能独立把需求做到上线；所有产品经理都向 Manus 提交过代码。有人不再交传统 PRD，而是用视频把场景、界面、状态和实现逻辑一次讲清。",
+    "市场侧接上「数字同事」：在一个工作台 Session 接需求再拆并行；会学策略、主动提醒项目阶段、跨团队问清能力边界——最后拍板仍是人。",
+  ]);
+  assert.equal(
+    manus.body.judgment,
+    "AI 的完成度已经很高，但「做什么」仍由人决定。人的角色没有变小，而是更集中了：定义问题，判断质量，决定什么值得做，并为结果负责。",
+  );
+  assert.equal(
+    manus.body.caveat,
+    "9 月公司 AI 开销人均超过 1 万美元，有人觉得过分。这笔钱买的不是人力，而是时间和注意力；贵是因为用最好的模型探边界——代码审核机器人用了当前最强模型后，同事反馈最近半年没听说因合入问题代码造成线上故障；成本还会随自己产品改进下降。积累下来的工作方式，才是更宝贵的资产。",
+  );
+  const text = JSON.stringify(manus);
+  for (const banned of ["七步", "五步", "二百", "定不了", "user_id", "催进度", "传话可以省掉"]) {
+    assert.equal(text.includes(banned), false, banned);
+  }
 });
 
 test("each story is a full page with one primary source link", () => {
