@@ -332,6 +332,16 @@ html[data-pointer="fine"] .reader .story {
   letter-spacing: 0;
 }
 
+.story .story-body > .story-h {
+  margin: 1.15rem 0 0.35rem;
+  color: var(--ink);
+  font-size: var(--body-size);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+
 .story-quote {
   margin: 0 0 1.35rem;
   padding: 0.85rem 1rem;

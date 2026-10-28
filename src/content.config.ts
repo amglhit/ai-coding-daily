@@ -4,6 +4,7 @@ import { glob } from "astro/loaders";
 const section = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("quote"), text: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("p"), text: z.string().min(1) }).strict(),
+  z.object({ kind: z.literal("h"), text: z.string().min(1) }).strict(),
   z
     .object({
       kind: z.literal("steps"),

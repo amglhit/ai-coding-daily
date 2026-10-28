@@ -2,6 +2,7 @@
 type StorySection =
   | { kind: "quote"; text: string }
   | { kind: "p"; text: string }
+  | { kind: "h"; text: string }
   | { kind: "steps"; items: string[] }
   | { kind: "pull"; text: string }
   | { kind: "aside"; text: string };
@@ -25,6 +26,9 @@ const { body } = Astro.props;
     }
     if (section.kind === "p") {
       return <p>{section.text}</p>;
+    }
+    if (section.kind === "h") {
+      return <h3 class="story-h">{section.text}</h3>;
     }
     if (section.kind === "steps") {
       return (
