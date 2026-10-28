@@ -13,7 +13,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-comfort="standard">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -28,6 +28,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         document.documentElement.setAttribute("data-pointer", fine ? "fine" : "coarse");
       } catch (error) {
         document.documentElement.setAttribute("data-pointer", "fine");
+      }
+      try {
+        var stored = localStorage.getItem("ai-coding-reader-comfort");
+        var comfort = stored === "tight" || stored === "standard" || stored === "loose" ? stored : "standard";
+        document.documentElement.setAttribute("data-comfort", comfort);
+      } catch (error) {
+        document.documentElement.setAttribute("data-comfort", "standard");
       }
     </script>
   </head>

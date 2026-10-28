@@ -61,6 +61,7 @@ test("story routes are a full-viewport reader without the paper shell", () => {
   assert.match(css, /\.story-pull p\s*\{[^}]*font-weight:\s*500/);
   assert.doesNotMatch(reader, /reader-rail|story-rail/);
   assert.doesNotMatch(css, /reader-rail|story-rail|border-left:[^;\n]*var\(--company\)/);
+  assert.doesNotMatch(css, /border-left:/);
   assert.doesNotMatch(css, /82dvh|min-height:\s*560|var\(--paper\)|var\(--cinnabar\)/);
   assert.match(home, /开始阅读/);
   assert.doesNotMatch(home, /DailyReader|class="seal"|Toc /);
