@@ -66,10 +66,6 @@
   border: 0;
 }
 
-.reader-rail {
-  display: none;
-}
-
 .story {
   position: relative;
   display: block;
@@ -80,16 +76,6 @@
   scroll-snap-align: none;
   cursor: text;
   user-select: text;
-}
-
-.story-rail {
-  position: absolute;
-  left: 0;
-  top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
-  bottom: 24px;
-  width: 3px;
-  background: var(--company);
-  opacity: 0.85;
 }
 
 .story-head {
@@ -129,12 +115,24 @@
 }
 
 .story h2 {
+  position: relative;
   margin: 0 0 6px;
   font-size: clamp(1.5rem, 2.4vw, 1.85rem);
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.03em;
   text-wrap: balance;
+}
+
+.story h2::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: calc((1.25em - 10px) / 2);
+  width: 3px;
+  height: 10px;
+  background: var(--company);
+  pointer-events: none;
 }
 
 .story-original {
@@ -213,8 +211,8 @@
 
 .story-pull {
   margin: 18px 0;
-  padding: 0 0 0 16px;
-  border-left: 2px solid var(--company);
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
 }
 
 .story-pull p {
@@ -278,19 +276,13 @@
   gap: 10px;
 }
 
-.story-accents li {
-  padding-left: 16px;
-  border-left: 2px solid var(--company);
-}
-
 .story-tracks {
   gap: 12px;
   margin-bottom: 8px;
 }
 
 .story-tracks li {
-  padding: 12px 0 12px 16px;
-  border-left: 3px solid var(--company);
+  padding: 12px 0;
 }
 
 .story-next {
@@ -422,23 +414,6 @@ html[data-pointer="coarse"] .reader .story-main,
   flex: 1 0 auto;
 }
 
-html[data-pointer="coarse"] .reader .story-rail,
-.reader[data-mode="magazine"] .story-rail {
-  display: none;
-}
-
-html[data-pointer="coarse"] .reader .reader-rail,
-.reader[data-mode="magazine"] .reader-rail {
-  display: block;
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  opacity: 0.85;
-  pointer-events: none;
-}
-
 html[data-pointer="coarse"] .reader .story-next,
 .reader[data-mode="magazine"] .story-next {
   display: none;
@@ -511,7 +486,6 @@ html[data-pointer="coarse"] .reader .reader-end,
 
   .reader-chip,
   .story-hint,
-  .reader-rail,
   .story-issues {
     display: none !important;
   }

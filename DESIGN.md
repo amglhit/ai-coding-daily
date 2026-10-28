@@ -6,8 +6,8 @@ Light-only site. Story issues fill the viewport. Home and archive share the same
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `--bg` | `#FAFAFA` | Page background |
-| `--surface` | `#FFFFFF` | List cards, reader chip |
+| `--bg` | `#FFFFFF` | Page background on reader and browse |
+| `--surface` | `#F5F5F5` | Home and archive list cards, reader chip |
 | `--ink` | `#171717` | Titles and body |
 | `--muted` | `#737373` | Column, byline, hints |
 | `--hairline` | `#E5E5E5` | Dividers, chip edge |
@@ -16,9 +16,9 @@ Light-only site. Story issues fill the viewport. Home and archive share the same
 | `--link` | `var(--accent)` | Text links |
 | `--focus` | `#2563EB` | 2px outline, 3px offset |
 
-Type is the system sans stack. Selection is `#DBEAFE` with `--ink` text. `theme-color` is `#FAFAFA`.
+Type is the system sans stack. Selection is `#DBEAFE` with `--ink` text. `theme-color` is `#FFFFFF`.
 
-Company colors stay on the 3px rail, the company name, and list or pull edges. They do not paint the page and they do not replace `--accent`.
+Company color is the company name and a short 3×10px mark on the first line of the title. Numbers may use it as text. It does not paint the page, and it does not draw a full-height rail or a left edge on lists or pull quotes. It does not replace `--accent`.
 
 ## Reader
 

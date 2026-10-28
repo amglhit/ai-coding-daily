@@ -60,7 +60,6 @@ interface Props {
 
 const { title, chipHref, chipLabel, stories, older = null, newer = null } = Astro.props;
 const first = stories[0];
-const firstAccent = accentColor(first?.companyColor);
 const hasIssues = Boolean(older || newer);
 ---
 
@@ -93,7 +92,6 @@ const hasIssues = Boolean(older || newer);
     <div class="reader-live" aria-live="polite">
       {first ? `${first.company} · ${first.title}` : title}
     </div>
-    <div class="reader-rail" style={`background:${firstAccent}`} aria-hidden="true"></div>
     <div class="reader-track">
       {
         stories.map((story, index) => {
@@ -107,13 +105,11 @@ const hasIssues = Boolean(older || newer);
               data-id={story.id}
               data-title={story.title}
               data-company={story.company}
-              data-accent={accent}
               aria-labelledby={`title-${story.id}`}
               aria-posinset={index + 1}
               aria-setsize={stories.length}
               style={`--company:${accent}`}
             >
-              <div class="story-rail" aria-hidden="true" />
               <div class="story-main">
                 <header class="story-head">
                   <div class="story-kicker">
@@ -176,7 +172,6 @@ const hasIssues = Boolean(older || newer);
     const stage = root.querySelector(".reader-stage");
     const track = root.querySelector(".reader-track");
     const live = root.querySelector(".reader-live");
-    const rail = root.querySelector(".reader-rail");
     const stories = [...root.querySelectorAll(".story")];
     if (!stage || !track || stories.length === 0) return;
 
@@ -213,7 +208,6 @@ const hasIssues = Boolean(older || newer);
       if (!current) return;
       const label = `${current.dataset.company} · ${current.dataset.title}`;
       if (live && live.textContent !== label) live.textContent = label;
-      if (rail && current.dataset.accent) rail.style.background = current.dataset.accent;
       const paging = !fine && session.pageMode && session.dragging;
       track.classList.toggle("is-paging", paging);
       if (fine) {
