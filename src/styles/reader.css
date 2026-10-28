@@ -1,14 +1,32 @@
+.reader {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+  max-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+}
+
+.reader-top {
+  display: grid;
+  grid-template-columns: 1fr min(640px, 100%) 1fr;
+  align-items: baseline;
+  min-width: 0;
+}
+
 .reader-date {
-  width: min(640px, 100%);
-  margin: 0.15rem auto 0.85rem;
-  padding-inline: 56px;
+  grid-column: 2;
+  width: auto;
+  margin: 0;
+  padding: 16px 56px 10px;
   box-sizing: border-box;
   font-family: var(--sans);
-  font-size: 0.98rem;
-  font-weight: 650;
-  letter-spacing: 0.12em;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   line-height: 1.4;
-  color: var(--ink);
+  color: var(--ink-soft);
 }
 
 .reader-date a {
@@ -17,15 +35,35 @@
 }
 
 .reader-date a:hover {
-  color: var(--cinnabar-ink);
+  color: var(--ink);
+}
+
+.reader-exit {
+  grid-column: 3;
+  justify-self: end;
+  margin: 0;
+  padding: 16px 20px 10px 12px;
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.reader-exit:hover {
+  color: var(--ink);
 }
 
 .reader-stage {
   position: relative;
   width: 100%;
-  height: min(82dvh, 820px);
-  min-height: 560px;
-  background: var(--paper);
+  min-height: 0;
+  height: 100%;
+  background: transparent;
+  border-radius: 0;
   scroll-snap-type: none;
 }
 
@@ -98,8 +136,8 @@
 
 .story h2 {
   margin: 0 0 6px;
-  font-size: clamp(1.45rem, 2.4vw, 1.85rem);
-  font-weight: 650;
+  font-size: clamp(1.5rem, 2.4vw, 1.85rem);
+  font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.03em;
   text-wrap: balance;
@@ -129,10 +167,12 @@
 }
 
 .story-source {
-  color: var(--cinnabar-ink);
-  font-weight: 700;
-  text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--cinnabar) 45%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, var(--ink) 35%, transparent);
+  border-bottom: 0;
 }
 
 .story p {
@@ -150,8 +190,8 @@
 
 .story-lead {
   font-size: 1.125rem;
-  line-height: 1.6;
-  font-weight: 650;
+  line-height: 1.65;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -249,7 +289,8 @@
   border-left: 3px solid var(--accent);
 }
 
-.story-next {
+.story-next,
+.story-end {
   margin: 40px 0 8px;
   padding-top: 28px;
   border-top: 1px solid var(--hairline);
@@ -257,6 +298,15 @@
   font-size: 0.78rem;
   line-height: 1.4;
   color: var(--ink-soft);
+}
+
+.story-end a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.story-end a:hover {
+  color: var(--ink);
 }
 
 .story-hint {
@@ -366,50 +416,27 @@ html[data-pointer="coarse"] .reader .story-tail,
   flex-shrink: 0;
 }
 
-.sheet:has(.issue-reader) {
-  height: 100dvh;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding-bottom: 0.75rem;
-}
+@media (max-width: 800px) {
+  .reader-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px 6px 24px;
+  }
 
-.sheet:has(.issue-reader) > .masthead,
-.sheet:has(.issue-reader) > .colophon,
-.sheet:has(.issue-reader) .pager {
-  flex: none;
-}
+  .reader-date,
+  .reader-exit {
+    padding: 0;
+  }
 
-.sheet:has(.issue-reader) .issue-reader,
-.sheet:has(.issue-reader) .reader {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.sheet:has(.issue-reader) .reader-stage {
-  flex: 1 1 auto;
-  height: auto;
-  min-height: 0;
-  max-height: none;
-}
-
-.sheet:has(.issue-reader) .pager {
-  margin-top: 0.75rem;
-}
-
-.sheet:has(.issue-reader) .colophon {
-  margin-top: 0.55rem;
+  .reader-date {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 720px) {
-  .reader-date {
-    padding-inline: 24px;
-    letter-spacing: 0.08em;
-  }
-
   .story {
     padding: 28px 20px 10px 24px;
   }
@@ -419,18 +446,12 @@ html[data-pointer="coarse"] .reader .story-tail,
   }
 }
 
-@media (max-height: 720px) {
-  .reader-stage {
-    min-height: 0;
-    height: min(82dvh, 820px);
-  }
-}
-
 @media print {
-  .sheet:has(.issue-reader) {
-    height: auto;
-    overflow: visible;
+  .reader {
     display: block;
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
 
   .reader-stage,
@@ -444,6 +465,7 @@ html[data-pointer="coarse"] .reader .story-tail,
     transform: none !important;
   }
 
+  .reader-exit,
   .story-hint,
   .reader-rail {
     display: none !important;

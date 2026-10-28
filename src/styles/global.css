@@ -1,16 +1,14 @@
 :root {
-  --paper: #f7f3ea;
-  --ground: #e6dfd2;
-  --ink: #1c1714;
-  --ink-soft: #5e564e;
-  --hairline: #d9d0c3;
-  --rule: #1c1714;
-  --cinnabar: #9f2d22;
-  --cinnabar-ink: #7a241c;
-  --gold: #7d6240;
-  --serif: Palatino, "Palatino Linotype", "Iowan Old Style", "Songti SC", "STSong", "Noto Serif CJK SC", "Noto Serif SC", "Source Han Serif SC", "PMingLiU", "SimSun", "Liberation Serif", "Times New Roman", "WenQuanYi Micro Hei", "Droid Sans Fallback", serif;
-  --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", "Source Han Sans SC", "WenQuanYi Micro Hei", "Droid Sans Fallback", "Segoe UI", sans-serif;
-  --mono: "SFMono-Regular", "Liberation Mono", ui-monospace, Menlo, Consolas, monospace;
+  --paper: #fafafa;
+  --ground: #fafafa;
+  --ink: #111111;
+  --ink-soft: #6b7280;
+  --hairline: #e5e7eb;
+  --rule: #e5e7eb;
+  --link: #111111;
+  --serif: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", "Liberation Mono", Menlo, Consolas, monospace;
   --measure: 40rem;
   --sheet: 68rem;
   color-scheme: light;
@@ -24,23 +22,34 @@
 
 html {
   scroll-behavior: smooth;
+  background: var(--paper);
 }
 
 body {
   margin: 0;
-  background: var(--ground);
+  background: var(--paper);
   color: var(--ink);
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 1.0625rem;
-  line-height: 1.85;
+  line-height: 1.7;
   text-rendering: optimizeLegibility;
+}
+
+body.chrome-immersive {
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+body.chrome-immersive main {
+  height: 100%;
 }
 
 .sheet {
   width: min(var(--sheet), 100%);
   margin: 0 auto;
   min-height: 100vh;
-  background: var(--paper);
+  background: transparent;
   padding: 1.25rem 1.5rem 3rem;
 }
 
@@ -49,16 +58,16 @@ a {
 }
 
 a:hover {
-  color: var(--cinnabar-ink);
+  color: var(--ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--cinnabar);
+  outline: 2px solid var(--ink);
   outline-offset: 3px;
 }
 
 ::selection {
-  background: #ead3c6;
+  background: #e5e7eb;
   color: var(--ink);
 }
 
@@ -77,81 +86,50 @@ a:hover {
 }
 
 .masthead {
-  border-bottom: 3px solid var(--rule);
+  border-bottom: 1px solid var(--hairline);
   margin-bottom: 1.75rem;
 }
 
 .masthead-bar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: 1rem;
-  padding-bottom: 0.7rem;
-  border-bottom: 1px solid var(--rule);
-  margin-bottom: 0.28rem;
+  padding-bottom: 0.85rem;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
   text-decoration: none;
   color: inherit;
 }
 
-.seal {
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 2px solid var(--cinnabar);
-  color: var(--cinnabar);
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 1.25rem;
-  line-height: 1;
-  transform: rotate(-8deg);
-  flex: none;
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.brand-en {
-  font-family: var(--sans);
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-
 .brand-zh {
-  font-size: 1.35rem;
-  letter-spacing: 0.14em;
-  font-weight: 650;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  font-weight: 600;
   line-height: 1.2;
 }
 
 .mast-nav {
   display: flex;
-  gap: 1.1rem;
-  font-family: var(--sans);
-  font-size: 0.92rem;
-  letter-spacing: 0.12em;
+  gap: 1rem;
+  font-size: 0.875rem;
+  letter-spacing: 0;
 }
 
 .mast-nav a {
   text-decoration: none;
+  color: var(--ink-soft);
   border-bottom: 1px solid transparent;
   padding-bottom: 0.1rem;
 }
 
+.mast-nav a:hover,
 .mast-nav a[aria-current="page"] {
-  border-bottom-color: var(--cinnabar);
-  color: var(--cinnabar-ink);
+  color: var(--ink);
+  border-bottom-color: var(--ink);
 }
 
 .section-nav {
@@ -165,9 +143,8 @@ a:hover {
   padding: 0.55rem 1.5rem;
   background: color-mix(in srgb, var(--paper) 92%, white);
   border-bottom: 1px solid var(--hairline);
-  font-family: var(--sans);
   font-size: 0.82rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   overflow-x: auto;
 }
 
@@ -182,9 +159,8 @@ a:hover {
 }
 
 .section-nav-mark {
-  color: var(--cinnabar) !important;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  color: var(--ink) !important;
+  font-weight: 600;
   margin-right: 0.3rem;
 }
 
@@ -203,11 +179,9 @@ main {
   flex-wrap: wrap;
   gap: 0.4rem 0.9rem;
   margin: 0 0 0.6rem;
-  font-family: var(--sans);
   font-size: 0.78rem;
-  letter-spacing: 0.16em;
-  text-transform: none;
-  color: var(--cinnabar-ink);
+  letter-spacing: 0;
+  color: var(--ink-soft);
 }
 
 .hero h1,
@@ -215,29 +189,20 @@ main {
 .missing h1,
 .issue-head h1,
 .prose h1 {
-  font-size: clamp(1.7rem, 4vw, 2.45rem);
-  font-weight: 650;
-  line-height: 1.35;
-  letter-spacing: 0.03em;
+  font-size: clamp(1.7rem, 4vw, 2.15rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
   margin: 0 0 1rem;
   text-wrap: balance;
 }
 
 .deck {
   margin: 1.4rem 0 0.4rem;
-  font-family: var(--sans);
   font-size: 0.78rem;
-  letter-spacing: 0.22em;
-  color: var(--ink);
-}
-
-.deck::after {
-  content: "";
-  display: block;
-  width: 2.5rem;
-  height: 1px;
-  background: var(--cinnabar);
-  margin-top: 0.45rem;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--ink-soft);
 }
 
 .today-list,
@@ -268,18 +233,17 @@ main {
   position: absolute;
   left: 0;
   top: 0.95rem;
-  font-family: var(--sans);
   font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  color: var(--cinnabar);
+  letter-spacing: 0;
+  color: var(--ink-soft);
 }
 
 .today-list a,
 .prose a {
-  color: var(--cinnabar-ink);
+  color: var(--ink);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
-  text-decoration-color: color-mix(in srgb, var(--cinnabar) 45%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--ink) 35%, transparent);
 }
 
 .today-list strong,
@@ -293,7 +257,6 @@ main {
   align-items: center;
   gap: 0.45rem 0.15rem;
   margin: 1rem 0 1.4rem;
-  font-family: var(--sans);
   font-size: 0.92rem;
 }
 
@@ -307,14 +270,13 @@ main {
   display: inline-block;
   margin-right: 0.45rem;
   padding: 0.08rem 0.45rem;
-  border-radius: 2px;
-  background: var(--cinnabar);
-  color: #fffaf6;
-  font-family: var(--sans);
+  border-radius: 4px;
+  background: var(--ink);
+  color: #fafafa;
   font-size: 0.72rem;
-  font-weight: 650;
+  font-weight: 600;
   font-style: normal;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   line-height: 1.5;
   vertical-align: 0.12em;
   text-decoration: none;
@@ -326,17 +288,16 @@ main {
   gap: 1.25rem 1.5rem;
   margin: 1.5rem 0 0.4rem;
   padding: 1rem 0 1.15rem;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
   width: 100%;
 }
 
 .toc-col h2 {
   margin: 0 0 0.7rem;
-  font-family: var(--sans);
   font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .toc-col h2 a {
@@ -345,10 +306,10 @@ main {
 
 .toc-kicker {
   margin: 0.7rem 0 0.25rem;
-  font-family: var(--sans);
   font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  color: var(--gold);
+  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--ink-soft);
 }
 
 .toc-kicker a {
@@ -381,15 +342,14 @@ main {
 
 .read-full {
   margin: 1.4rem 0 0;
-  font-family: var(--sans);
-  letter-spacing: 0.14em;
+  letter-spacing: 0;
   font-size: 0.88rem;
 }
 
 .read-full a {
   color: var(--ink);
   text-decoration: none;
-  border-bottom: 1px solid var(--cinnabar);
+  border-bottom: 1px solid var(--ink);
   padding-bottom: 0.12rem;
 }
 
@@ -403,7 +363,7 @@ main {
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
-  border-top: 3px solid var(--rule);
+  border-top: 1px solid var(--hairline);
   padding-top: 0.7rem;
 }
 
@@ -413,29 +373,30 @@ main {
 }
 
 .past-head h2 {
-  font-size: 1.25rem;
-  letter-spacing: 0.12em;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .past-head a,
 .archive-head p {
-  font-family: var(--sans);
   font-size: 0.88rem;
 }
 
 .archive-head {
   display: block;
   margin-bottom: 1.2rem;
+  border-top: 0;
+  padding-top: 0;
 }
 
 .archive-head p:last-child {
   color: var(--ink-soft);
-  margin: 0.4rem 0 0;
+  margin: 0.45rem 0 0;
 }
 
 .empty {
   color: var(--ink-soft);
-  font-family: var(--sans);
   font-size: 0.95rem;
 }
 
@@ -460,16 +421,15 @@ main {
 
 .archive-list time,
 .vol {
-  font-family: var(--sans);
   font-size: 0.82rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
 }
 
 .archive-list a {
   text-decoration: none;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .archive-title,
@@ -479,10 +439,9 @@ main {
 
 .archive-must {
   margin-top: 0.15rem;
-  font-family: var(--sans);
   font-size: 0.8rem;
   font-weight: 450;
-  color: var(--cinnabar-ink);
+  color: var(--ink-soft);
 }
 
 .filters {
@@ -497,22 +456,23 @@ main {
   border: 1px solid var(--hairline);
   background: transparent;
   color: var(--ink);
-  font-family: var(--sans);
+  font-family: inherit;
   font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  padding: 0.28rem 0.7rem;
+  letter-spacing: 0;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
   cursor: pointer;
 }
 
 .filters button[aria-pressed="true"] {
   background: var(--ink);
   border-color: var(--ink);
-  color: var(--paper);
+  color: #fafafa;
 }
 
 .prose {
   font-size: 1.0625rem;
-  line-height: 1.9;
+  line-height: 1.7;
 }
 
 .prose h1,
@@ -526,15 +486,15 @@ main {
 .prose h2.section-opener {
   margin: 2.4rem 0 0.8rem;
   padding-top: 0.2rem;
-  font-size: clamp(1.45rem, 3vw, 1.9rem);
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  line-height: 1.35;
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
 }
 
 .prose hr {
   border: 0;
-  border-top: 2px solid var(--rule);
+  border-top: 1px solid var(--hairline);
   margin: 2.6rem 0 0;
 }
 
@@ -546,24 +506,24 @@ main {
   margin: 2.4rem 0 0.35rem;
   padding-top: 1rem;
   border-top: 1px solid var(--hairline);
-  font-size: 1.28rem;
-  line-height: 1.45;
-  font-weight: 650;
+  font-size: 1.2rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .prose h3.deep-read.is-must {
-  box-shadow: inset 3px 0 0 var(--cinnabar);
+  box-shadow: inset 2px 0 0 var(--ink);
   padding-left: 0.8rem;
 }
 
 .prose h3 .kicker {
   display: block;
   margin-bottom: 0.28rem;
-  font-family: var(--sans);
   font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.18em;
-  color: var(--cinnabar);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ink-soft);
 }
 
 .prose h3 a {
@@ -573,7 +533,6 @@ main {
 
 .prose h3.deep-read + p {
   margin-top: 0.35rem;
-  font-family: var(--sans);
   font-size: 0.92rem;
   line-height: 1.65;
   color: var(--ink-soft);
@@ -584,10 +543,9 @@ main {
   align-items: center;
   gap: 0.75rem;
   margin: 2.4rem 0 0.3rem;
-  font-family: var(--sans);
   font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .prose h3.scan-head::after {
@@ -620,8 +578,7 @@ main {
 }
 
 .prose li::marker {
-  color: var(--cinnabar);
-  font-family: var(--sans);
+  color: var(--ink-soft);
 }
 
 .prose h2.section-today + ol {
@@ -646,8 +603,7 @@ main {
   align-items: start;
   margin-top: 2.8rem;
   padding-top: 1rem;
-  border-top: 3px solid var(--rule);
-  font-family: var(--sans);
+  border-top: 1px solid var(--hairline);
   font-size: 0.92rem;
 }
 
@@ -663,7 +619,7 @@ main {
 .pager-newer span,
 .pager-archive {
   font-size: 0.75rem;
-  letter-spacing: 0.14em;
+  letter-spacing: 0;
   color: var(--ink-soft);
 }
 
@@ -678,11 +634,10 @@ main {
 .colophon {
   margin-top: 3rem;
   padding-top: 0.8rem;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--hairline);
   color: var(--ink-soft);
-  font-family: var(--sans);
   font-size: 0.82rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
 }
 
 .colophon p {
@@ -691,7 +646,7 @@ main {
 
 .colophon-name {
   color: var(--ink);
-  letter-spacing: 0.16em;
+  letter-spacing: 0;
 }
 
 .colophon span:not(:last-child)::after {
@@ -731,8 +686,7 @@ main {
   }
 
   .brand-zh {
-    letter-spacing: 0.08em;
-    font-size: 1.15rem;
+    font-size: 0.92rem;
   }
 
   .pager {
@@ -744,20 +698,11 @@ main {
   }
 }
 
-@media (max-width: 520px) {
-  .masthead-bar {
-    align-items: flex-start;
-  }
-
-  .mast-nav {
-    flex-direction: column;
-    gap: 0.2rem;
-    align-items: flex-end;
-  }
-}
-
 @media print {
-  body {
+  body,
+  body.chrome-immersive {
+    height: auto;
+    overflow: visible;
     background: white;
   }
 

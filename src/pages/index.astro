@@ -25,66 +25,70 @@ const description = hasReader
 const masthead = latest ? latest.data.masthead || formatMasthead(latest.data.date) : "";
 ---
 
-<Base title="AI Coding 日报" description={description}>
-  <Masthead />
-  <main id="content">
-    {
-      latest && hasReader ? (
+{
+  hasReader ? (
+    <Base title="AI Coding 日报" description={description} chrome="immersive">
+      <main id="content">
         <DailyReader masthead={masthead} stories={stories} permalink={sitePath(`daily/${latest.id}/`)} />
-      ) : latest && digest ? (
-        <article class="hero">
-          <div class="measure">
-          <p class="issue-meta">
-            <span>第 {padIssue(numberById.get(latest.id) || 1)} 期</span>
-            <time datetime={formatIsoDate(latest.data.date)}>{formatLongDate(latest.data.date)}</time>
-          </p>
-          <h1>{latest.data.title}</h1>
-          <p class="deck">今天动向</p>
-          <ol class="today-list">
-            {digest.today.map((item) => (
-              <li set:html={renderInline(item)} />
-            ))}
-          </ol>
-          {latest.data.must_read.length > 0 && (
-            <p class="must-row">
-              <span class="badge-must">必读原文</span>
-              {latest.data.must_read.map((name) => (
-                <span class="must-name">{name}</span>
-              ))}
+      </main>
+    </Base>
+  ) : (
+    <Base title="AI Coding 日报" description={description}>
+      <Masthead />
+      <main id="content">
+        {latest && digest ? (
+          <article class="hero">
+            <div class="measure">
+              <p class="issue-meta">
+                <span>第 {padIssue(numberById.get(latest.id) || 1)} 期</span>
+                <time datetime={formatIsoDate(latest.data.date)}>{formatLongDate(latest.data.date)}</time>
+              </p>
+              <h1>{latest.data.title}</h1>
+              <p class="deck">今天动向</p>
+              <ol class="today-list">
+                {digest.today.map((item) => (
+                  <li set:html={renderInline(item)} />
+                ))}
+              </ol>
+              {latest.data.must_read.length > 0 && (
+                <p class="must-row">
+                  <span class="badge-must">必读原文</span>
+                  {latest.data.must_read.map((name) => (
+                    <span class="must-name">{name}</span>
+                  ))}
+                </p>
+              )}
+            </div>
+            <Toc sections={digest.sections} hrefBase={sitePath(`daily/${latest.id}/`)} />
+            <p class="read-full measure">
+              <a href={sitePath(`daily/${latest.id}/`)}>阅读本期全文</a>
             </p>
-          )}
-          </div>
-          <Toc sections={digest.sections} hrefBase={sitePath(`daily/${latest.id}/`)} />
-          <p class="read-full measure">
-            <a href={sitePath(`daily/${latest.id}/`)}>阅读本期全文</a>
-          </p>
-        </article>
-      ) : (
-        <p class="empty">还没有刊期。把 Markdown 放进 <code>src/content/daily/</code> 即可。</p>
-      )
-    }
-
-    <section class="past measure" aria-labelledby="past-heading">
-      <div class="past-head">
-        <h2 id="past-heading">过往刊期</h2>
-        <a href={sitePath("archive/")}>全部归档</a>
-      </div>
-      {
-        past.length === 0 ? (
-          <p class="empty">创刊号，尚无过往刊期。</p>
+          </article>
         ) : (
-          <ol class="archive-list">
-            {past.map((issue) => (
-              <li>
-                <time datetime={formatIsoDate(issue.data.date)}>{formatIsoDate(issue.data.date)}</time>
-                <a href={sitePath(`daily/${issue.id}/`)}>{issue.data.title}</a>
-                <span class="vol">第 {padIssue(numberById.get(issue.id) || 0)} 期</span>
-              </li>
-            ))}
-          </ol>
-        )
-      }
-    </section>
-  </main>
-  <Footer />
-</Base>
+          <p class="empty">还没有刊期。把 Markdown 放进 <code>src/content/daily/</code> 即可。</p>
+        )}
+
+        <section class="past measure" aria-labelledby="past-heading">
+          <div class="past-head">
+            <h2 id="past-heading">过往刊期</h2>
+            <a href={sitePath("archive/")}>全部归档</a>
+          </div>
+          {past.length === 0 ? (
+            <p class="empty">创刊号，尚无过往刊期。</p>
+          ) : (
+            <ol class="archive-list">
+              {past.map((issue) => (
+                <li>
+                  <time datetime={formatIsoDate(issue.data.date)}>{formatIsoDate(issue.data.date)}</time>
+                  <a href={sitePath(`daily/${issue.id}/`)}>{issue.data.title}</a>
+                  <span class="vol">第 {padIssue(numberById.get(issue.id) || 0)} 期</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      </main>
+      <Footer />
+    </Base>
+  )
+}

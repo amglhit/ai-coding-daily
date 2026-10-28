@@ -8,7 +8,7 @@ const LEAD = {
 };
 
 export function accentColor(color) {
-  return /^#[0-9A-Fa-f]{6}$/.test(String(color || "")) ? color : "#9f2d22";
+  return /^#[0-9A-Fa-f]{6}$/.test(String(color || "")) ? color : "#111111";
 }
 
 export function storyLead(body) {

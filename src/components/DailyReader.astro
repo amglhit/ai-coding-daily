@@ -1,6 +1,7 @@
 ---
 import StoryPattern from "./StoryPattern.astro";
 import { accentColor } from "../lib/stories.mjs";
+import { sitePath } from "../lib/paths.mjs";
 import "../styles/reader.css";
 
 interface StoryBody {
@@ -52,6 +53,7 @@ interface Props {
 const { masthead, stories, permalink } = Astro.props;
 const first = stories[0];
 const firstAccent = accentColor(first?.companyColor);
+const archiveHref = sitePath("archive/");
 ---
 
 <section class="reader" data-reader data-mode="desktop">
@@ -74,9 +76,12 @@ const firstAccent = accentColor(first?.companyColor);
       root.setAttribute("data-mode", mode);
     })();
   </script>
-  <h1 class="reader-date">
-    {permalink ? <a href={permalink}>{masthead}</a> : masthead}
-  </h1>
+  <header class="reader-top">
+    <h1 class="reader-date">
+      {permalink ? <a href={permalink}>{masthead}</a> : masthead}
+    </h1>
+    <a class="reader-exit" href={archiveHref}>归档</a>
+  </header>
   <div class="reader-stage" role="feed" aria-label="AI Coding 日报">
     <div class="reader-live" aria-live="polite">
       {first ? `${first.company} · ${first.title}` : masthead}
@@ -120,6 +125,11 @@ const firstAccent = accentColor(first?.companyColor);
                   <StoryPattern body={story.body} />
                 </div>
                 {next && <p class="story-next">下一篇 · {next.title}</p>}
+                {!next && (
+                  <p class="story-end">
+                    <a href={archiveHref}>过往刊期</a>
+                  </p>
+                )}
               </div>
               {next ? <p class="story-hint">上滑 · {next.title}</p> : <div class="story-tail" aria-hidden="true" />}
             </article>

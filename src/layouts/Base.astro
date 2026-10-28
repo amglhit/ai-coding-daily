@@ -5,9 +5,11 @@ import { sitePath } from "../lib/paths.mjs";
 interface Props {
   title: string;
   description: string;
+  chrome?: "site" | "immersive";
 }
 
-const { title, description } = Astro.props;
+const { title, description, chrome = "site" } = Astro.props;
+const immersive = chrome === "immersive";
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -17,7 +19,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f7f3ea" />
+    <meta name="theme-color" content="#fafafa" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={sitePath("favicon.svg")} type="image/svg+xml" />
     <title>{title}</title>
@@ -30,10 +32,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       }
     </script>
   </head>
-  <body>
+  <body class:list={[{ "chrome-immersive": immersive }]}>
     <a class="skip" href="#content">跳到正文</a>
-    <div class="sheet">
-      <slot />
-    </div>
+    {
+      immersive ? (
+        <slot />
+      ) : (
+        <div class="sheet">
+          <slot />
+        </div>
+      )
+    }
   </body>
 </html>

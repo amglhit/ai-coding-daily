@@ -30,3 +30,46 @@ test("desktop and coarse modes share the locked pointer query", () => {
   assert.match(read("src/components/StoryPattern.astro"), /story-lead/);
   assert.doesNotMatch(read("src/components/StoryPattern.astro"), />\s*(practice|benchmark|advice|framework|experiment|essay)\s*</);
 });
+
+test("story issues are an immersive full-viewport reader", () => {
+  const index = read("src/pages/index.astro");
+  const daily = read("src/pages/daily/[date].astro");
+  const base = read("src/layouts/Base.astro");
+  const css = read("src/styles/reader.css");
+  const global = read("src/styles/global.css");
+  const reader = read("src/components/DailyReader.astro");
+  const mast = read("src/components/Masthead.astro");
+
+  assert.match(base, /chrome\?: "site" \| "immersive"/);
+  assert.match(base, /chrome-immersive/);
+  assert.match(index, /chrome="immersive"/);
+  assert.match(daily, /chrome="immersive"/);
+  assert.match(css, /100dvh/);
+  assert.doesNotMatch(css, /82dvh/);
+  assert.doesNotMatch(css, /issue-reader/);
+  assert.match(reader, /class="reader-exit"/);
+  assert.match(reader, />归档</);
+  assert.match(reader, /过往刊期/);
+  assert.doesNotMatch(reader, /class="pager"/);
+
+  function immersiveBranch(source) {
+    const start = source.indexOf('chrome="immersive"');
+    const end = source.indexOf(") : (", start);
+    assert.ok(start > 0 && end > start);
+    return source.slice(start, end);
+  }
+
+  const homeReader = immersiveBranch(index);
+  assert.match(homeReader, /DailyReader/);
+  assert.doesNotMatch(homeReader, /Masthead|Footer|过往刊期|class="pager"/);
+
+  const issueReader = immersiveBranch(daily);
+  assert.match(issueReader, /DailyReader/);
+  assert.doesNotMatch(issueReader, /Masthead|Footer|section-nav|<Toc|class="pager"/);
+
+  assert.doesNotMatch(mast, /class="seal"/);
+  assert.match(global, /#fafafa/i);
+  assert.match(global, /-apple-system/);
+  assert.doesNotMatch(global, /Palatino|Songti|#f7f3ea|#9f2d22/);
+  assert.match(global, /chrome-immersive/);
+});
