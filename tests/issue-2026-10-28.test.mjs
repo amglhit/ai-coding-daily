@@ -101,9 +101,31 @@ test("Orestis reflect drops the unsourced Manus backlog clause", () => {
   const reflect = orestis.body.sections.find((section) => section.kind === "pull");
   assert.equal(
     reflect.text,
-    "Implementation 变 cheap 之后，人会自我加单。给并行 agent 数和待决策队列设硬上限。",
+    "Implementation 变 cheap 之后，agent 不只是让原有的活更快做完，而是让我很容易给自己加一笔大得多的单。",
   );
   assert.equal(reflect.text.includes("Manus"), false);
+  assert.equal(reflect.text.includes("待决策"), false);
+  assert.equal(orestis.originalTitle, "AI Promised Less Work. I Have Never Worked More.");
+});
+
+test("Claude review matches the approved draft", () => {
+  const claude = issue.stories.find((story) => story.id === "claude-review");
+  assert.equal(claude.originalTitle, "How the Claude Code team does code review");
+  assert.equal(claude.body.pattern, "practice");
+  assert.equal(claude.company, "Anthropic");
+  assert.equal(claude.column, "工程化实践");
+  assert.equal(claude.byline, "Addy Osmani、Morgan Westlee Lunt、Qing Wang · 10-15");
+  assert.equal(claude.sourceUrl, "https://claude.dev/blog/solving-code-review-at-anthropic/");
+  assert.deepEqual(
+    claude.body.sections.map((section) => section.kind),
+    ["p", "p", "quote", "p", "p", "p", "p", "p", "pull"],
+  );
+  assert.equal(claude.body.sections[4].text, "Layers, not one gate");
+  assert.equal(
+    claude.body.sections[2].text,
+    "「有没有人读过这段代码」不能代替真正该问的：这次变更可能出什么问题，该由自动化还是人来拦。",
+  );
+  assert.equal(claude.body.sections.at(-1).text, "目标没变：每次变更少花人时，revert 不比以前多。");
 });
 
 test("each story is a full page with one primary source link", () => {
