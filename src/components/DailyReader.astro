@@ -8,6 +8,7 @@ import "../styles/reader.css";
 type StorySection =
   | { kind: "quote"; text: string }
   | { kind: "p"; text: string }
+  | { kind: "h"; text: string }
   | { kind: "steps"; items: string[] }
   | { kind: "pull"; text: string }
   | { kind: "aside"; text: string };

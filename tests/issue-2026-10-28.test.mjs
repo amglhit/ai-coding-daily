@@ -8,7 +8,7 @@ const root = path.resolve(import.meta.dirname, "..");
 const issue = JSON.parse(fs.readFileSync(path.join(root, "src/content/daily/2026-10-28.json"), "utf8"));
 
 const PATTERNS = new Set(["practice", "benchmark", "advice", "framework", "experiment", "essay"]);
-const KINDS = new Set(["quote", "p", "steps", "pull", "aside"]);
+const KINDS = new Set(["quote", "p", "h", "steps", "pull", "aside"]);
 const RETIRED = [
   "scene",
   "problems",
@@ -149,7 +149,29 @@ test("each story is a full page with one primary source link", () => {
       }
     }
     for (const field of RETIRED) assert.equal(story.body[field], undefined, `${story.id} ${field}`);
-    assert.ok(storyLead(story.body).length > 40, story.id);
+    const lead = storyLead(story.body);
+    if (story.id === "thorsten") {
+      assert.equal(lead, "截至 2026 年 10 月，我是这样和 Agents 一起干活的。");
+      assert.deepEqual(
+        story.body.sections.map((section) => section.kind),
+        ["p", "h", "p", "h", "p", "h", "p", "h", "p", "h", "p", "h", "p", "h", "p", "h", "p"],
+      );
+      assert.deepEqual(
+        story.body.sections.filter((section) => section.kind === "h").map((section) => section.text),
+        [
+          "1. 用最新、最强的模型",
+          "2. Prompt 写 What，不写 How",
+          "3. 让整个 SDLC 对 agent 可见",
+          "4. 别跟它来回试，让它造工具来试",
+          "5. 要不可反驳的证据",
+          "6. 异步：让它们等你",
+          "7. 别再手工管 context",
+          "8. 只审高 blast radius 的代码",
+        ],
+      );
+    } else {
+      assert.ok(lead.length > 40, story.id);
+    }
     assert.equal(accentColor(story.companyColor), story.companyColor);
   }
   assert.equal(issue.stories.filter((story) => story.column === "选读").length, 6);
