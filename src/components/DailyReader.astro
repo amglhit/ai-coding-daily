@@ -73,48 +73,6 @@ const hasPicks = pickStories.length > 0;
       root.setAttribute("data-mode", mode);
     })();
   </script>
-  <div class="reader-tools">
-    <a class="reader-chip" href={chipHref}>
-      {chipLabel}
-      <span class="visually-hidden">，回到首页</span>
-    </a>
-    <button
-      type="button"
-      class="toc-entry"
-      aria-label="目录"
-      aria-haspopup="dialog"
-      aria-expanded="false"
-      aria-controls="toc-panel"
-    >
-      目录
-    </button>
-    <button
-      type="button"
-      class="comfort-entry"
-      aria-label="版式"
-      aria-haspopup="dialog"
-      aria-expanded="false"
-      aria-controls="comfort-sheet"
-    >
-      Aa
-    </button>
-    <div class="comfort-sheet" id="comfort-sheet" role="dialog" aria-label="版式" hidden>
-      <div class="comfort-options" role="radiogroup" aria-label="版式">
-        <label class="comfort-option">
-          <input type="radio" name="comfort" value="tight" />
-          紧凑
-        </label>
-        <label class="comfort-option">
-          <input type="radio" name="comfort" value="standard" checked />
-          标准
-        </label>
-        <label class="comfort-option">
-          <input type="radio" name="comfort" value="loose" />
-          宽松
-        </label>
-      </div>
-    </div>
-  </div>
   <h1 class="visually-hidden">{title}</h1>
   <div class="reader-stage" role="feed" aria-label="AI Coding 日报">
     <div class="reader-live" aria-live="polite">
@@ -164,6 +122,50 @@ const hasPicks = pickStories.length > 0;
               style={`--company:${accent}`}
             >
               <div class="story-main">
+                {unit.index === 0 && (
+                  <div class="reader-tools">
+                    <a class="reader-chip" href={chipHref}>
+                      {chipLabel}
+                      <span class="visually-hidden">，回到首页</span>
+                    </a>
+                    <button
+                      type="button"
+                      class="toc-entry"
+                      aria-label="目录"
+                      aria-haspopup="dialog"
+                      aria-expanded="false"
+                      aria-controls="toc-panel"
+                    >
+                      目录
+                    </button>
+                    <button
+                      type="button"
+                      class="comfort-entry"
+                      aria-label="版式"
+                      aria-haspopup="dialog"
+                      aria-expanded="false"
+                      aria-controls="comfort-sheet"
+                    >
+                      Aa
+                    </button>
+                    <div class="comfort-sheet" id="comfort-sheet" role="dialog" aria-label="版式" hidden>
+                      <div class="comfort-options" role="radiogroup" aria-label="版式">
+                        <label class="comfort-option">
+                          <input type="radio" name="comfort" value="tight" />
+                          紧凑
+                        </label>
+                        <label class="comfort-option">
+                          <input type="radio" name="comfort" value="standard" checked />
+                          标准
+                        </label>
+                        <label class="comfort-option">
+                          <input type="radio" name="comfort" value="loose" />
+                          宽松
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <header class="story-head">
                   <div class="story-kicker">
                     <span class="story-company">{story.company}</span>
@@ -333,7 +335,7 @@ const hasPicks = pickStories.length > 0;
       if (next >= 0) snapOrigin = next;
       pauseSnap();
       if (resetInner && !mq.matches) element.scrollTop = 0;
-      const margin = mq.matches ? 56 : 0;
+      const margin = mq.matches ? 24 : 0;
       const top = element.getBoundingClientRect().top - stage.getBoundingClientRect().top + stage.scrollTop - margin;
       stage.scrollTo({ top: Math.max(0, top), behavior: "auto" });
     }

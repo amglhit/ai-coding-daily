@@ -32,6 +32,9 @@ test("desktop and coarse modes share the locked pointer query", () => {
   assert.match(css, /cursor:\s*text/);
   assert.match(css, /-webkit-line-clamp:\s*2/);
   assert.doesNotMatch(css, /\.story-head\s*\{[^}]*position:\s*(sticky|fixed)/);
+  assert.match(css, /\.reader-tools\s*\{[^}]*position:\s*relative/);
+  assert.doesNotMatch(css, /\.reader-tools\s*\{[^}]*position:\s*(fixed|sticky)/);
+  assert.match(reader, /class="story-main"[\s\S]*class="reader-tools"/);
   const desktopStage = css.match(/\.reader\[data-mode="desktop"\] \.reader-stage,[\s\S]*?\}/);
   assert.ok(desktopStage);
   assert.match(desktopStage[0], /scroll-snap-type:\s*none/);

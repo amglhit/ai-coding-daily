@@ -22,7 +22,7 @@ Company color is the company name and a short 3×10px mark on the first line of 
 
 ## Reader
 
-`body[data-surface=reader]` is `100dvh`. Persistent chrome is the date chip, a light「Aa」control,「读原文」, the desktop「下一篇」seam or the mobile bottom hint, and adjacent issue links after the last story.
+`body[data-surface=reader]` is `100dvh`. The date,「目录」, and「Aa」sit once at the top of the opening story and scroll away with it. They are not fixed or sticky. 「读原文」, the desktop「下一篇」seam or the mobile bottom hint, and adjacent issue links stay in the story. The directory sheet is a transient dialog. Home and archive keep「归档」.
 
 `(hover: hover) and (pointer: fine)` scrolls continuously: about 40px, a 1px hairline, and a muted「下一篇 · 标题」between stories. Anything else is one viewport per story, paged with CSS `scroll-snap` (`y mandatory`, `scroll-snap-stop: always`) on the stage. A long story scrolls inside that panel, and the next story snaps only after the panel reaches its end. A short story is not an inner scroller, so the swipe pages immediately. If a fling lands more than one story away, the reader steps back to the neighboring story after the scroll ends. There is no drag spring. Company, title, byline, and「读原文」sit in the story and scroll with it. There is no sticky title. `prefers-reduced-motion` keeps directory and hash jumps instant.
 

@@ -40,13 +40,13 @@ html[data-comfort="loose"] .reader {
 }
 
 .reader-tools {
-  position: fixed;
-  z-index: 6;
-  top: calc(env(safe-area-inset-top, 0px) + 12px);
-  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  position: relative;
+  z-index: 2;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.15rem;
+  margin: 0 0 1.35rem;
 }
 
 .reader-chip {
@@ -69,7 +69,6 @@ html[data-comfort="loose"] .reader {
 .reader-chip:focus-visible {
   color: var(--ink);
   background: var(--surface);
-  transform: translateY(-1px);
 }
 
 .comfort-entry {
@@ -214,7 +213,7 @@ html[data-comfort="loose"] .reader {
 }
 
 .reader-track > .story:first-child {
-  padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem);
 }
 
 .reader-track > .story + .story {
@@ -223,7 +222,7 @@ html[data-comfort="loose"] .reader {
 
 .reader[data-mode="desktop"] .story,
 html[data-pointer="fine"] .reader .story {
-  scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+  scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 1rem);
 }
 
 .story-head {
@@ -594,7 +593,7 @@ html[data-pointer="coarse"] .reader .reader-unit.is-fit,
 
 html[data-pointer="coarse"] .reader .story,
 .reader[data-mode="magazine"] .story {
-  padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
 }
 
 html[data-pointer="coarse"] .reader .story-main,
@@ -638,7 +637,7 @@ html[data-pointer="coarse"] .reader .reader-end,
 html[data-pointer="coarse"] .reader .section-break,
 .reader[data-mode="magazine"] .section-break {
   padding-block: 0;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
 }
 
 html[data-pointer="coarse"] .reader .section-break-main,
@@ -819,11 +818,6 @@ html[data-scope="morning"] [data-group="picks"],
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reader-chip:hover,
-  .reader-chip:focus-visible {
-    transform: none;
-  }
-
   .comfort-sheet {
     transition: none;
   }
