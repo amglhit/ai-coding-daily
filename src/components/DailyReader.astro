@@ -1,0 +1,350 @@
+---
+import StoryPattern from "./StoryPattern.astro";
+import { accentColor } from "../lib/stories.mjs";
+import "../styles/reader.css";
+
+interface StoryBody {
+  pattern: "practice" | "benchmark" | "advice" | "framework" | "experiment" | "essay";
+  scene?: string;
+  problems?: string[];
+  approach?: string;
+  outcomes?: string[];
+  judgment?: string;
+  caveat?: string;
+  motive?: string;
+  method?: string;
+  findings?: string[];
+  bound?: string;
+  conclusion?: string;
+  cost?: string;
+  points?: string[];
+  pointStyle?: "number" | "rule";
+  transfer?: string;
+  claim?: string;
+  tracks?: string[];
+  result?: string;
+  setup?: string;
+  close?: string;
+  observe?: string;
+  evidence?: string;
+  reflect?: string;
+}
+
+interface Story {
+  id: string;
+  company: string;
+  companyColor: string;
+  column: string;
+  title: string;
+  originalTitle?: string;
+  byline: string;
+  body: StoryBody;
+  sourceUrl: string;
+  sourceLabel: string;
+}
+
+interface Props {
+  masthead: string;
+  stories: Story[];
+  permalink?: string;
+}
+
+const { masthead, stories, permalink } = Astro.props;
+const first = stories[0];
+const firstAccent = accentColor(first?.companyColor);
+---
+
+<section class="reader" data-reader data-mode="desktop">
+  <script is:inline>
+    (function () {
+      var fine = false;
+      try {
+        fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+      } catch (error) {
+        fine = true;
+      }
+      var mode = fine ? "desktop" : "magazine";
+      var root = document.currentScript && document.currentScript.parentElement;
+      if (!root || !root.hasAttribute("data-reader")) {
+        document.querySelectorAll("[data-reader]").forEach(function (node) {
+          node.setAttribute("data-mode", mode);
+        });
+        return;
+      }
+      root.setAttribute("data-mode", mode);
+    })();
+  </script>
+  <h1 class="reader-date">
+    {permalink ? <a href={permalink}>{masthead}</a> : masthead}
+  </h1>
+  <div class="reader-stage" role="feed" aria-label="AI Coding 日报">
+    <div class="reader-live" aria-live="polite">
+      {first ? `${first.company} · ${first.title}` : masthead}
+    </div>
+    <div class="reader-rail" style={`background:${firstAccent}`} aria-hidden="true"></div>
+    <div class="reader-track">
+      {
+        stories.map((story, index) => {
+          const next = stories[index + 1];
+          const accent = accentColor(story.companyColor);
+          return (
+            <article
+              class:list={["story", { "is-active": index === 0 }]}
+              id={`story-${story.id}`}
+              data-id={story.id}
+              data-title={story.title}
+              data-company={story.company}
+              data-accent={accent}
+              aria-labelledby={`title-${story.id}`}
+              aria-posinset={index + 1}
+              aria-setsize={stories.length}
+              style={`--accent:${accent}`}
+            >
+              <div class="story-rail" aria-hidden="true" />
+              <div class="story-main">
+                <header class="story-head">
+                  <div class="story-kicker">
+                    <span class="story-company">{story.company}</span>
+                    <span class="story-column">{story.column}</span>
+                  </div>
+                  <h2 id={`title-${story.id}`}>{story.title}</h2>
+                  {story.originalTitle && <p class="story-original">{story.originalTitle}</p>}
+                  <div class="story-byline">
+                    <span>{story.byline}</span>
+                    <a class="story-source" href={story.sourceUrl} target="_blank" rel="noreferrer noopener">
+                      {story.sourceLabel}
+                    </a>
+                  </div>
+                </header>
+                <div class="story-body">
+                  <StoryPattern body={story.body} />
+                </div>
+                {next && <p class="story-next">下一篇 · {next.title}</p>}
+              </div>
+              {next ? <p class="story-hint">上滑 · {next.title}</p> : <div class="story-tail" aria-hidden="true" />}
+            </article>
+          );
+        })
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  import {
+    FINE_POINTER_QUERY,
+    createSession,
+    displayY,
+    pointerDown,
+    pointerMove,
+    pointerUp,
+    settleImmediately,
+    tick,
+  } from "../lib/reader-gesture.mjs";
+
+  function stageHeight(stage) {
+    return stage.clientHeight || 760;
+  }
+
+  function isControl(target) {
+    return target instanceof Element && Boolean(target.closest("a, button"));
+  }
+
+  function mount(root) {
+    const stage = root.querySelector(".reader-stage");
+    const track = root.querySelector(".reader-track");
+    const live = root.querySelector(".reader-live");
+    const rail = root.querySelector(".reader-rail");
+    const stories = [...root.querySelectorAll(".story")];
+    if (!stage || !track || stories.length === 0) return;
+
+    const mq = window.matchMedia(FINE_POINTER_QUERY);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let session = createSession(stories.length);
+    let raf = 0;
+
+    function stopLoop() {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+    }
+
+    function apply() {
+      const fine = mq.matches;
+      root.dataset.mode = fine ? "desktop" : "magazine";
+      document.documentElement.setAttribute("data-pointer", fine ? "fine" : "coarse");
+      if (fine) stage.setAttribute("tabindex", "0");
+      else stage.removeAttribute("tabindex");
+
+      stories.forEach((element, index) => {
+        element.classList.toggle("is-active", index === session.index);
+      });
+      const current = stories[session.index];
+      if (!current) return;
+      const label = `${current.dataset.company} · ${current.dataset.title}`;
+      if (live && live.textContent !== label) live.textContent = label;
+      if (rail && current.dataset.accent) rail.style.background = current.dataset.accent;
+      if (fine) {
+        track.style.transform = "";
+        track.style.userSelect = "";
+        return;
+      }
+      const y = displayY(session, stageHeight(stage));
+      track.style.transform = `translateY(${y}px)`;
+      track.style.userSelect = session.dragging ? "none" : "text";
+      const hint = current.querySelector(".story-hint");
+      if (hint instanceof HTMLElement) {
+        const opacity = session.dragging ? Math.min(1, 0.45 + Math.abs(session.dragY) / 160) : 0.55;
+        const lift = session.dragging && session.dragY < 0 ? Math.min(12, -session.dragY / 10) : 0;
+        hint.style.opacity = String(opacity);
+        hint.style.transform = lift ? `translateY(${-lift}px)` : "";
+      }
+    }
+
+    function pump() {
+      if (reduce.matches) {
+        const previous = session.index;
+        session = settleImmediately(session);
+        if (session.index !== previous) stories[session.index].scrollTop = 0;
+        apply();
+        return;
+      }
+      stopLoop();
+      const step = () => {
+        if (!session.settling) {
+          raf = 0;
+          return;
+        }
+        const previous = session.index;
+        session = tick(session, stageHeight(stage));
+        if (session.index !== previous) stories[session.index].scrollTop = 0;
+        apply();
+        if (session.settling) raf = requestAnimationFrame(step);
+        else raf = 0;
+      };
+      raf = requestAnimationFrame(step);
+    }
+
+    function scrollSnapshot() {
+      const element = stories[session.index];
+      if (!element) return null;
+      return {
+        scrollTop: element.scrollTop,
+        scrollHeight: element.scrollHeight,
+        clientHeight: element.clientHeight,
+      };
+    }
+
+    function onDown(event) {
+      if (mq.matches || event.pointerType === "mouse" || isControl(event.target)) return;
+      session = pointerDown(session, {
+        pointerType: event.pointerType,
+        clientY: event.clientY,
+        time: performance.now(),
+        onControl: false,
+      });
+    }
+
+    function onMove(event) {
+      if (mq.matches || event.pointerType === "mouse") return;
+      const touchLike = event.pointerType === "touch" || event.pointerType === "pen";
+      const next = pointerMove(session, {
+        pointerType: event.pointerType,
+        clientY: event.clientY,
+        time: performance.now(),
+        buttons: touchLike ? 1 : event.buttons,
+        scroll: scrollSnapshot(),
+        stageH: stageHeight(stage),
+      });
+      const started = !session.settling && next.settling;
+      session = next;
+      if (session.pageMode && session.dragging) {
+        if (event.cancelable) event.preventDefault();
+        if (!track.hasPointerCapture(event.pointerId)) {
+          try {
+            track.setPointerCapture(event.pointerId);
+          } catch {
+            /* capture can fail if the pointer already ended */
+          }
+        }
+      }
+      apply();
+      if (started) pump();
+    }
+
+    function onUp(event) {
+      if (mq.matches) return;
+      if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+      const next = pointerUp(session, stageHeight(stage));
+      const started = !session.settling && next.settling;
+      session = next;
+      apply();
+      if (started) pump();
+    }
+
+    track.addEventListener("pointerdown", onDown);
+    track.addEventListener("pointermove", onMove, { passive: false });
+    track.addEventListener("pointerup", onUp);
+    track.addEventListener("pointercancel", onUp);
+    track.addEventListener(
+      "touchmove",
+      (event) => {
+        if (mq.matches) return;
+        if (session.pageMode && session.dragging && event.cancelable) event.preventDefault();
+      },
+      { passive: false },
+    );
+
+    function applyHash() {
+      const hash = window.location.hash;
+      if (!hash) return;
+      const index = stories.findIndex((element) => `#${element.id}` === hash);
+      if (index < 0) return;
+      stopLoop();
+      session = {
+        ...session,
+        index,
+        dragY: 0,
+        dragging: false,
+        settling: null,
+        pressing: false,
+        pageMode: false,
+        armed: false,
+        velocity: 0,
+        settleVel: 0,
+        pendingDelta: 0,
+      };
+      apply();
+      const element = stories[index];
+      if (mq.matches) stage.scrollTo({ top: element.offsetTop, behavior: "auto" });
+      else element.scrollTop = 0;
+    }
+
+    function syncMode() {
+      if (mq.matches) {
+        stopLoop();
+        session = {
+          ...session,
+          dragY: 0,
+          dragging: false,
+          settling: null,
+          pressing: false,
+          pageMode: false,
+          armed: false,
+          velocity: 0,
+          settleVel: 0,
+          pendingDelta: 0,
+        };
+      }
+      apply();
+    }
+
+    syncMode();
+    applyHash();
+    mq.addEventListener("change", syncMode);
+    window.addEventListener("hashchange", applyHash);
+  }
+
+  document.querySelectorAll("[data-reader]").forEach((node) => {
+    if (node instanceof HTMLElement) mount(node);
+  });
+</script>

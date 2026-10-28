@@ -1,0 +1,304 @@
+{
+  "title": "AI Coding 日报 · 2026-10-28（周三）",
+  "date": "2026-10-28",
+  "type": "daily",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [],
+  "masthead": "10 月 28 日 · AI Coding 日报",
+  "stories": [
+    {
+      "id": "manus",
+      "company": "Manus",
+      "companyColor": "#E07A3D",
+      "column": "工程化实践",
+      "title": "用 Manus 改造 Manus",
+      "byline": "张涛 · 潜云思绪 · 10-26",
+      "body": {
+        "pattern": "practice",
+        "scene": "Manus 2.0 研发期间，我给工程师提了几条需求和 Bug。过了一会儿去问进展，电脑上开着一排 Codex 和 Manus 的 Session。点开其中一个，输入框里直接就是我在 Slack 上发的原始消息——一字未改。",
+        "problems": [
+          "损耗不在写代码，而在人对齐：前端以为 user_id，后端返回 uid。",
+          "代码散在多仓，一个人全包也看不到全局。",
+          "「AI 写得快所以人能多接活」只是表象。"
+        ],
+        "approach": "Manus-mono 不是把代码并成 monorepo，而是统一入口 + 写给 AI 的说明书。本地跑完整产品，验证从五到十分钟落到几秒；测环境 AI 改，线上 AI 申请、人审批；测试账号走真实流程。需求七步，AI 接五步。",
+        "outcomes": [
+          "一个工程师常态并行十几、二十个需求。",
+          "瓶颈翻到产品：约一半 PM 能写到上线；有人用视频演边界，不再交文档。",
+          "市场侧出现会主动催进度的「数字同事」。"
+        ],
+        "judgment": "中间的传话可以省掉，但判断是省不掉的。",
+        "caveat": "周末自动循环留下二百多个待决策——「我根本定不了。」曾有一个月人均 AI 开销过万美元。"
+      },
+      "sourceUrl": "https://www.53ai.com/news/shuziyuangong/2026102760938.html",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "claude-review",
+      "company": "Anthropic",
+      "companyColor": "#D4A27F",
+      "column": "工程化实践",
+      "title": "Claude Code 团队怎么做 code review",
+      "originalTitle": "Solving code review at Anthropic",
+      "byline": "Addy Osmani、Morgan Westlee Lunt、Qing Wang · 10-15",
+      "body": {
+        "pattern": "advice",
+        "conclusion": "目标不是「人还读不读代码」，而是：不抬高 rollback 与事故的前提下，把人工 review 时间压到最低。六月到九月合并 PR 翻倍以上，rollback 占比降四成多。",
+        "cost": "monorepo 日合并从约两千五涨到三万多时，逐行人工审扛不住。稀缺的是注意力——review 的时间，和坏代码事后修的时间。",
+        "pointStyle": "rule",
+        "points": [
+          "PR 前就审：可跑验证 + 新鲜 context 的 subagent 看 diff；CLAUDE.md / REVIEW.md 写清失败长什么样。",
+          "每条 PR 先过 Claude review 与 security review；发现要多数投票才贴出，style cleanup 直接丢掉。",
+          "人按风险分级：低风险自动化可合；中一人；高与敏感路径两人。bot 审批永远不算人。",
+          "三轮后强制停，再审只看新 diff；事故与 rollback 做成每日 eval，用「人怎么处理评论」量噪声。"
+        ],
+        "transfer": "人留下：该不该做、高风险与定型架构、读证据、为结果负责。共享 context 靠 explainer，不靠读琐碎 diff。"
+      },
+      "sourceUrl": "https://claude.dev/blog/solving-code-review-at-anthropic/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "thorsten",
+      "company": "个人",
+      "companyColor": "#F59E0B",
+      "column": "社区热点",
+      "title": "我怎么和 Agents 一起干活",
+      "byline": "Thorsten Ball · 10-25",
+      "body": {
+        "pattern": "essay",
+        "observe": "用最强的模型。错百分之十时你不知道是哪百分之十——便宜却随机更笨的那档，省下的钱往往花在反复试错上。Prompt 写 What，少写 How。",
+        "evidence": "Hallucination 是靠 tool call 压下去的：看不见的东西会编。让它跑通端到端、读日志、部署、切 flag、分诊 bug。别来回拧——一次生成二十个变体和可对比的小页。要 walkthrough、demo、前后数字。异步与定时唤醒是杀手锏；一个线程一件事。",
+        "reflect": "我只审高 blast radius 的代码——中心文件不到五个，外加库迁移。能跑通、能画箭头理解、一个月后还能改，就不盯变量名了。"
+      },
+      "sourceUrl": "https://x.com/thorstenball/status/2114386050638336082",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ms",
+      "company": "Microsoft",
+      "companyColor": "#0078D4",
+      "column": "行业动向",
+      "title": "Code is cheap 之后，稀缺的是信任",
+      "originalTitle": "Agentic software engineering: large-scale code migration, language modernization, and spec-driven development",
+      "byline": "Sriram Rajamani、Tim Bozarth · Microsoft CoreAI · 10-26",
+      "body": {
+        "pattern": "framework",
+        "claim": "Agent 能比人快几个数量级改几亿行时，瓶颈不再是能不能 generate，而是敢不敢信任。",
+        "tracks": [
+          "给 agent 造「这次改对了没有」的工具，别再硬编码 pipeline 去调模型。",
+          "人批准 knowledge base，不是每个 patch；极小专家团队驱动，agent 学完再规模化。",
+          "C/C++ 迁 Rust 按 feature 走，留 agent 看不到的 holdout 测试。",
+          "工程师批「必须满足的 properties」，agent 找 inductive invariants。"
+        ]
+      },
+      "sourceUrl": "https://commandline.microsoft.com/agentic-software-engineering-large-scale-code-migration-language-modernization-spec-driven-development/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "anth-fold",
+      "company": "Anthropic",
+      "companyColor": "#D4A27F",
+      "column": "工程化实践",
+      "title": "多数时候，少用 subagent，并进主循环",
+      "originalTitle": "Building agents: When to fold subagents into your main agent loop",
+      "byline": "Diane Sarkis · Anthropic · 10-22",
+      "body": {
+        "pattern": "advice",
+        "conclusion": "默认不要给每个团队/领域各挂一个 subagent。更稳的是单个主 agent：一个模型、一个 context、开放的 tool loop；做事的步骤放进 skills，硬限制放进 tools，需要时再加载。",
+        "cost": "按组织图复制「每团队一个 subagent」，常见代价是来回交接丢 context、subagent 越堆越多，以及大约两倍延迟。",
+        "pointStyle": "number",
+        "points": [
+          "单循环因 context 膨胀，可测地变差时。",
+          "需要可丢弃的并行新鲜窗口时。",
+          "单 agent 选工具失败，或 system prompt 开始打架时。"
+        ],
+        "transfer": "先写哪怕十条黄金例的端到端 eval，再谈架构。Claude Code 对更强模型把 system prompt 砍了八成以上——复杂度跟能力走，不跟组织图走。"
+      },
+      "sourceUrl": "https://claude.com/resources/articles/building-agents-when-to-fold-subagents-into-your-main-agent-loop",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "katelyn",
+      "company": "Anthropic",
+      "companyColor": "#D4A27F",
+      "column": "行业动向",
+      "title": "工程师要解的新题集",
+      "byline": "Katelyn Lesse · Anthropic 平台工程 · 10-26",
+      "body": {
+        "pattern": "framework",
+        "claim": "解锁数千持久 agent 去攻硬问题的，不是模型再强一点，而是工程把 infrastructure、identity、isolation 和 kill switch 做对——模型越概率，底层越要确定。",
+        "tracks": [
+          "Infrastructure：孤立、有状态、单实例，会长时间空闲；K8s 那套假设要重写。",
+          "Identity 与 authorization：分清代人行事与自有身份；周级任务里人如何有意义地同意，仍宽开。",
+          "Security 与 isolation：数千写不可信代码的 agent 上，未打补丁的 runtime 爆炸半径更大。",
+          "Observability 与 kill switch：不可篡改的跨 agent tracing，和真正切断 credentials 的总开关。"
+        ]
+      },
+      "sourceUrl": "https://x.com/katelyn_lesse/status/2114542280535318557",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "google-adk",
+      "company": "Google",
+      "companyColor": "#4285F4",
+      "column": "工程化实践",
+      "title": "能停、能续、不丢 context 的长跑 agent",
+      "originalTitle": "Build long-running AI agents that pause, resume, and never lose context with ADK",
+      "byline": "Shubham Saboo、Eric Dong · Google",
+      "body": {
+        "pattern": "practice",
+        "scene": "多数教程停在无状态聊天：容器一重启就失忆。入职跨两周、发票等回复、销售跨一个月——真实流程被空闲时间主导。",
+        "problems": [
+          "两周对话史污染 prompt，模型搞不清自己在哪一步。",
+          "每次推理重放整段历史，token 爆炸。",
+          "空闲三天再醒来，会「想起」从未发生的批准。"
+        ],
+        "approach": "显式 state machine 写在 session state；tool call 原子推进 checkpoint；持久 session 扛重启；webhook 唤醒而非 polling；窄任务交给专责 subagent。",
+        "outcomes": [
+          "空闲期可缩到零，webhook 到来从同一节点继续。",
+          "golden eval 用预置状态在秒级模拟「等四十八小时」。"
+        ],
+        "judgment": "修的不是更大的 context window，而是把 state 从对话里拆出来。"
+      },
+      "sourceUrl": "https://developers.googleblog.com/en/build-long-running-ai-agents-that-pause-resume-and-never-lose-context-with-adk/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "orestis",
+      "company": "个人",
+      "companyColor": "#9CA3AF",
+      "column": "社区热点",
+      "title": "AI 许诺少干活，我却从未干得这么多",
+      "originalTitle": "AI promised less work",
+      "byline": "Orestis Ioannou · 10-27",
+      "body": {
+        "pattern": "essay",
+        "observe": "不是单任务更难，而是以前不值得做的事突然值得做。多个 agent 并行、每个偶尔要我拍板——累的是 context switch。",
+        "evidence": "我已经是 VP，到 10 月 27 日今年仍有两千一百多次 GitHub 贡献，超过近五年任一年全年；八月单月四百二十七是近年最高。角色在管人，图谱却回到全栈高峰。",
+        "reflect": "Implementation 变 cheap 之后，人会自我加单。给并行 agent 数和待决策队列设硬上限——对照 Manus 周末两百多个待决策那一刀。"
+      },
+      "sourceUrl": "https://oioannou.com/blog/ai-promised-less-work/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ocr",
+      "company": "Alibaba",
+      "companyColor": "#FF6A00",
+      "column": "选读",
+      "title": "内部用了两年的 AI review 开源",
+      "originalTitle": "Open Code Review",
+      "byline": "Alibaba · GitHub",
+      "body": {
+        "pattern": "practice",
+        "scene": "阿里把内部跑了两年的 code review 工具开源：Open Code Review，定位是可自托管、能落到行级评论的混合架构。",
+        "problems": [
+          "纯 LLM review 噪声大，style 与真问题混在一起。",
+          "纯规则管得住确定性缺陷，但看不到跨文件意图。"
+        ],
+        "approach": "确定性 pipeline + LLM Agent：内置多语言规则集（NPE、thread-safety、XSS、SQL injection），再交给兼容 OpenAI / Anthropic 的 agent 做更深判断；评论精确到行。",
+        "outcomes": [
+          "可在私有环境部署，不把代码送出边界。",
+          "适合当「团队自建 review bot」的起点，而不是又一个 SaaS demo。"
+        ],
+        "judgment": "价值在工程化交付形态，不在再证明「AI 能写评论」。"
+      },
+      "sourceUrl": "https://github.com/alibaba/open-code-review",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "snowpr",
+      "company": "Snowflake",
+      "companyColor": "#29B5E8",
+      "column": "选读",
+      "title": "用自家 monorepo 的已合 PR 测 coding agent",
+      "originalTitle": "SnowPR: Benchmarking Coding Agents on Snowflake's 43-Million-Line Monorepo",
+      "byline": "Soyoung Yoon 等 · Snowflake Engineering · 10-27",
+      "body": {
+        "pattern": "benchmark",
+        "motive": "公开榜多来自小 Python 仓，模型越来越会刷分；对 4300 万行、以 Java/C++ 为主的 Bazel monorepo，分数几乎说不清谁好用。",
+        "method": "SnowPR：65 个已合 PR（11 个产品面），用 PR 自带的隐藏测试 + 自家 Bazel 打分；LLM 初筛、人审定题；agent 看不到测试与 diff。",
+        "findings": [
+          "同模型下 harness/成本差更大：REM mode 与 Claude Code / Cursor 通关率接近，但单次更便宜。",
+          "任务描述质量本身是测量的一部分：同一隐藏测试，两种写法可差到约 83% vs 57% 通关。",
+          "跨 Java+C++ 边界的任务明显更难；单语言差距没那么大。"
+        ],
+        "bound": "这是私有 eval 方法论文，不是可搬运的公开榜。可学的是：用真实已合 PR + 隐藏测试，并单独压测「描述质量」。"
+      },
+      "sourceUrl": "https://www.snowflake.com/en/blog/engineering/Benchmarking-coding-agents/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "pause",
+      "company": "MBZUAI",
+      "companyColor": "#7C5CFC",
+      "column": "选读",
+      "title": "第一次改源码前，拦一次就够",
+      "originalTitle": "PAUSE: Search-Free Steering of Coding Agents Before Their First Source-Code Edit",
+      "byline": "Viral Patel 等 · MBZUAI",
+      "body": {
+        "pattern": "experiment",
+        "result": "在第一次 source-code edit 前插入一次 Planner：SWE-bench Verified 分辨率约 +14.8 点，Multilingual 约 +14.7 点；Planner 成本大约是周期性 oversight（SICA）的一到一成半。",
+        "setup": "观察显示首次改源码中位约在轨迹 60%——前面多是读仓、复现、测。PAUSE 用「即将改源码」作 search-free 触发，不依赖异常监控；同一 Executor 保留 context 与 workspace 继续。",
+        "close": "对照 LivePlan（规则触发）更有效且 Planner 花费相近；对照 SICA（周期性审查）效果接近、规划开销小一个数量级。可迁移点：干预时机比「多挂几个顾问」更值钱。"
+      },
+      "sourceUrl": "https://arxiv.org/html/2610.29870",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "openai-maint",
+      "company": "OpenAI",
+      "companyColor": "#10A37F",
+      "column": "选读",
+      "title": "用 GPT-6 家族做大规模维护，而不是绿场 demo",
+      "originalTitle": "Maintaining software with the GPT-6 family",
+      "byline": "OpenAI Core Experimentation",
+      "body": {
+        "pattern": "practice",
+        "scene": "Core Experimentation 团队用 GPT-6 Astra / 6.1 Sol 做死代码清理与陈旧实验下线：短 prompt，但要求从 Slack、Statsig、画像表里自己找证据。",
+        "problems": [
+          "静态分析 + 日志仍会误删；反射、应急路径、永久开关都会漏。",
+          "陈旧实验仍可能在跑，eligibility 随时变，比「删未引用符号」难。"
+        ],
+        "approach": "先小范围 draft PR → 人把 review 写回下一轮 prompt；再扩到子目录与全仓。六人级协作兼职约两周，合入 1400+ PR、删逾 80 万行。",
+        "outcomes": [
+          "例如某服务镜像 3.31GB → 1.72GB；CI 中位约 10 分钟 → 4.5 分钟（另文所述优化一并落地）。",
+          "GPT-6.1 Sol Ultra 在陈旧实验审计上约拿到 Astra Ultra 九成 findings，API 成本约一成四。"
+        ],
+        "judgment": "Agent 负责探索与举证，人负责优先级与做减法。",
+        "caveat": "提案会过载；没有 instrumentation 与审阅，规模化会淹死人。"
+      },
+      "sourceUrl": "https://developers.openai.com/blog/maintaining-software-with-the-gpt-6-family",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "argon-adk",
+      "company": "Google",
+      "companyColor": "#4285F4",
+      "column": "选读",
+      "title": "隔夜无人值守优化 20 万行 ADK",
+      "originalTitle": "Optimizing a 200,000-line Python codebase overnight with Gemini 4 Argon",
+      "byline": "George Weale、Bo Yang、Andrew Biernat · Google Cloud · 10-13",
+      "body": {
+        "pattern": "practice",
+        "scene": "Gemini 4 Argon 在 google/adk-python（约 20.5 万行、近 1.7 万单测）上跑十一小时 /goal：压启动与长 session 开销，API 与模型可见内容不变，改动要有回归测，开 PR 不合并。",
+        "problems": [
+          "无性能热点是跨文件的：profiler 能报慢，但追调用链、mock、共享引用要横扫几十个文件。",
+          "零仓库规范时，模型会碰 public schema、漏测边缘、PR 缺前后数字。"
+        ],
+        "approach": "第二轮把维护约定写进 .agents/skills，打开 /goal 跨 context 压缩保目标；先读规范与 baseline，再改代码；结束前自审 diff 并跑全量单测。",
+        "outcomes": [
+          "PR 提六项，人只合两项：session 先过滤再拷、重模块懒加载。",
+          "长 session 内存准备约降 40%，冷 import 约快 21%。"
+        ],
+        "judgment": "Agent 探索，维护者做减法——创意方案里一半会撞框架不兼容。"
+      },
+      "sourceUrl": "https://developers.googleblog.com/en/optimizing-a-200000-line-python-codebase-overnight-with-gemini-4-argon/",
+      "sourceLabel": "读原文"
+    }
+  ]
+}
