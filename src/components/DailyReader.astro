@@ -1,6 +1,7 @@
 ---
 import StoryPattern from "./StoryPattern.astro";
 import IssueNav from "./IssueNav.astro";
+import { readerUnits, storyGroup } from "../lib/reader-scope.mjs";
 import { accentColor } from "../lib/stories.mjs";
 import "../styles/reader.css";
 
@@ -46,6 +47,10 @@ interface Props {
 const { title, chipHref, chipLabel, stories, older = null, newer = null } = Astro.props;
 const first = stories[0];
 const hasIssues = Boolean(older || newer);
+const units = readerUnits(stories);
+const morningStories = stories.filter((story) => storyGroup(story.column) === "morning");
+const pickStories = stories.filter((story) => storyGroup(story.column) === "picks");
+const hasPicks = pickStories.length > 0;
 ---
 
 <section class="reader" id="content" data-reader data-mode="desktop">
@@ -73,6 +78,16 @@ const hasIssues = Boolean(older || newer);
       {chipLabel}
       <span class="visually-hidden">，回到首页</span>
     </a>
+    <button
+      type="button"
+      class="toc-entry"
+      aria-label="目录"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+      aria-controls="toc-panel"
+    >
+      目录
+    </button>
     <button
       type="button"
       class="comfort-entry"
@@ -107,19 +122,44 @@ const hasIssues = Boolean(older || newer);
     </div>
     <div class="reader-track">
       {
-        stories.map((story, index) => {
-          const next = stories[index + 1];
+        units.map((unit, unitIndex) => {
+          if (unit.kind === "break") {
+            const following = pickStories[0];
+            return (
+              <section
+                class:list={["section-break", "reader-unit", { "is-active": unitIndex === 0 }]}
+                id="section-picks"
+                data-kind="break"
+                data-group="picks"
+                data-title="选读"
+                aria-label="选读"
+              >
+                <div class="section-break-main">
+                  <p class="section-break-label">选读</p>
+                </div>
+                {following && <p class="story-hint">上滑 · {following.title}</p>}
+              </section>
+            );
+          }
+          const story = stories[unit.index];
+          const next = stories[unit.index + 1];
+          const nextUnit = units[unitIndex + 1];
           const accent = accentColor(story.companyColor);
-          const last = index === stories.length - 1;
+          const last = unit.index === stories.length - 1;
+          const swipeTitle = nextUnit?.kind === "break" ? "选读" : next?.title;
+          const beforePicks = Boolean(next && storyGroup(next.column) === "picks");
           return (
             <article
-              class:list={["story", { "is-active": index === 0 }]}
+              class:list={["story", "reader-unit", { "is-active": unitIndex === 0 }]}
               id={`story-${story.id}`}
               data-id={story.id}
+              data-kind="story"
+              data-group={unit.group}
               data-title={story.title}
               data-company={story.company}
+              data-next-group={next ? storyGroup(next.column) : undefined}
               aria-labelledby={`title-${story.id}`}
-              aria-posinset={index + 1}
+              aria-posinset={unit.index + 1}
               aria-setsize={stories.length}
               style={`--company:${accent}`}
             >
@@ -145,18 +185,72 @@ const hasIssues = Boolean(older || newer);
                 </div>
                 {next && <p class="story-next">下一篇 · {next.title}</p>}
               </div>
-              {next ? (
-                <p class="story-hint">上滑 · {next.title}</p>
+              {swipeTitle ? (
+                <p class="story-hint">上滑 · {swipeTitle}</p>
               ) : last && hasIssues ? (
                 <IssueNav class="story-issues" older={older} newer={newer} />
               ) : (
                 <div class="story-tail" aria-hidden="true" />
+              )}
+              {hasIssues && beforePicks && (
+                <IssueNav class="story-issues story-issues-morning" older={older} newer={newer} />
               )}
             </article>
           );
         })
       }
       {hasIssues && <IssueNav class="reader-end" older={older} newer={newer} />}
+    </div>
+  </div>
+  <div class="toc-sheet" id="toc-sheet" hidden>
+    <div class="toc-scrim" data-toc-scrim aria-hidden="true"></div>
+    <div class="toc-panel" id="toc-panel" role="dialog" aria-modal="true" aria-label="目录" tabindex="-1">
+      {
+        hasPicks && (
+          <div class="toc-scope" role="group" aria-label="阅读范围">
+            <button type="button" data-scope-choice="all" aria-pressed="true">
+              全部
+            </button>
+            <button type="button" data-scope-choice="morning" aria-pressed="false">
+              只看 Morning
+            </button>
+          </div>
+        )
+      }
+      {
+        morningStories.length > 0 && (
+          <div class="toc-group" data-group="morning">
+            <h2>Morning</h2>
+            <ol>
+              {morningStories.map((story) => (
+                <li>
+                  <button type="button" class="toc-row" data-story={story.id}>
+                    <span class="toc-company">{story.company}</span>
+                    <span class="toc-title">{story.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )
+      }
+      {
+        hasPicks && (
+          <div class="toc-group" data-group="picks">
+            <h2>选读</h2>
+            <ol>
+              {pickStories.map((story) => (
+                <li>
+                  <button type="button" class="toc-row" data-story={story.id}>
+                    <span class="toc-company">{story.company}</span>
+                    <span class="toc-title">{story.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )
+      }
     </div>
   </div>
 </section>
@@ -173,6 +267,8 @@ const hasIssues = Boolean(older || newer);
     settleImmediately,
     tick,
   } from "../lib/reader-gesture.mjs";
+  import { SCOPE_KEY, normalizeScope } from "../lib/reader-scope.mjs";
+  import { stepSheetSpring } from "../lib/reader-sheet.mjs";
 
   function stageHeight(stage) {
     return stage.clientHeight || 760;
@@ -186,13 +282,62 @@ const hasIssues = Boolean(older || newer);
     const stage = root.querySelector(".reader-stage");
     const track = root.querySelector(".reader-track");
     const live = root.querySelector(".reader-live");
-    const stories = [...root.querySelectorAll(".story")];
-    if (!stage || !track || stories.length === 0) return;
+    if (!stage || !track || root.querySelectorAll(".reader-unit").length === 0) return;
 
     const mq = window.matchMedia(FINE_POINTER_QUERY);
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let session = createSession(stories.length);
+    let session = createSession(1);
     let raf = 0;
+
+    function visibleUnits() {
+      return [...root.querySelectorAll(".reader-unit")].filter((element) => !element.classList.contains("is-filtered"));
+    }
+
+    function restSession(index, count) {
+      return { ...createSession(count), index };
+    }
+
+    function syncPositions(list) {
+      const storyList = list.filter((element) => element.classList.contains("story"));
+      storyList.forEach((element, index) => {
+        element.setAttribute("aria-posinset", String(index + 1));
+        element.setAttribute("aria-setsize", String(storyList.length));
+      });
+    }
+
+    function syncScopeButtons(scope) {
+      root.querySelectorAll("[data-scope-choice]").forEach((button) => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        button.setAttribute("aria-pressed", button.dataset.scopeChoice === scope ? "true" : "false");
+      });
+    }
+
+    function setScope(scope, persist) {
+      const previous = visibleUnits()[session.index];
+      const next = normalizeScope(scope);
+      document.documentElement.setAttribute("data-scope", next);
+      if (persist) {
+        try {
+          localStorage.setItem(SCOPE_KEY, next);
+        } catch (error) {
+          /* storage can be blocked; the attribute still applies for this page */
+        }
+      }
+      root.querySelectorAll(".reader-unit").forEach((element) => {
+        const hide = next === "morning" && element.dataset.group === "picks";
+        element.classList.toggle("is-filtered", hide);
+        if (hide) element.setAttribute("hidden", "");
+        else element.removeAttribute("hidden");
+      });
+      const list = visibleUnits();
+      let index = previous ? list.indexOf(previous) : 0;
+      if (index < 0) index = 0;
+      stopLoop();
+      session = restSession(index, list.length);
+      syncPositions(list);
+      syncScopeButtons(next);
+      apply();
+    }
 
     function stopLoop() {
       if (raf) cancelAnimationFrame(raf);
@@ -215,12 +360,23 @@ const hasIssues = Boolean(older || newer);
       if (fine) stage.setAttribute("tabindex", "0");
       else stage.removeAttribute("tabindex");
 
-      stories.forEach((element, index) => {
-        element.classList.toggle("is-active", index === session.index);
+      const list = visibleUnits();
+      if (session.index > list.length - 1 || session.count !== list.length) {
+        session = {
+          ...session,
+          count: list.length,
+          index: Math.min(session.index, Math.max(0, list.length - 1)),
+        };
+      }
+      root.querySelectorAll(".reader-unit").forEach((element) => {
+        element.classList.remove("is-active");
       });
-      const current = stories[session.index];
+      const current = list[session.index];
       if (!current) return;
-      const label = `${current.dataset.company} · ${current.dataset.title}`;
+      current.classList.add("is-active");
+      const company = current.dataset.company;
+      const piece = current.dataset.title || "";
+      const label = company ? `${company} · ${piece}` : piece;
       if (live && live.textContent !== label) live.textContent = label;
       const paging = !fine && session.pageMode && session.dragging;
       track.classList.toggle("is-paging", paging);
@@ -246,7 +402,8 @@ const hasIssues = Boolean(older || newer);
         const previous = session.index;
         const paging = session.settling === "page";
         session = settleImmediately(session);
-        if (session.index !== previous) stories[session.index].scrollTop = 0;
+        const landed = visibleUnits()[session.index];
+        if (session.index !== previous && landed) landed.scrollTop = 0;
         apply();
         if (paging) fadeIn();
         return;
@@ -260,7 +417,8 @@ const hasIssues = Boolean(older || newer);
         }
         const previous = session.index;
         session = tick(session, stageHeight(stage));
-        if (session.index !== previous) stories[session.index].scrollTop = 0;
+        const landed = visibleUnits()[session.index];
+        if (session.index !== previous && landed) landed.scrollTop = 0;
         apply();
         if (session.settling) raf = requestAnimationFrame(step);
         else raf = 0;
@@ -269,7 +427,7 @@ const hasIssues = Boolean(older || newer);
     }
 
     function scrollSnapshot() {
-      const element = stories[session.index];
+      const element = visibleUnits()[session.index];
       if (!element) return null;
       return {
         scrollTop: element.scrollTop,
@@ -329,8 +487,28 @@ const hasIssues = Boolean(older || newer);
       if (started) pump();
     }
 
+    function scrollDesktop(element) {
+      const margin = 56;
+      const top = element.getBoundingClientRect().top - stage.getBoundingClientRect().top + stage.scrollTop - margin;
+      stage.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    }
+
+    function goTo(element) {
+      if (element.classList.contains("is-filtered")) setScope("all", true);
+      const list = visibleUnits();
+      const index = list.indexOf(element);
+      if (index < 0) return;
+      stopLoop();
+      if (stage instanceof HTMLElement) stage.inert = false;
+      session = restSession(index, list.length);
+      apply();
+      if (mq.matches) scrollDesktop(element);
+      else element.scrollTop = 0;
+    }
+
     function onKey(event) {
       if (!mq.matches) return;
+      if (root.querySelector(".toc-sheet.is-open")) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.target instanceof Element && event.target.closest("a, button, input, textarea, select")) return;
       let delta = 0;
@@ -361,26 +539,9 @@ const hasIssues = Boolean(older || newer);
     function applyHash() {
       const hash = window.location.hash;
       if (!hash) return;
-      const index = stories.findIndex((element) => `#${element.id}` === hash);
-      if (index < 0) return;
-      stopLoop();
-      session = {
-        ...session,
-        index,
-        dragY: 0,
-        dragging: false,
-        settling: null,
-        pressing: false,
-        pageMode: false,
-        armed: false,
-        velocity: 0,
-        settleVel: 0,
-        pendingDelta: 0,
-      };
-      apply();
-      const element = stories[index];
-      if (mq.matches) stage.scrollTo({ top: element.offsetTop, behavior: "auto" });
-      else element.scrollTop = 0;
+      const element = [...root.querySelectorAll(".reader-unit")].find((node) => `#${node.id}` === hash);
+      if (!(element instanceof HTMLElement)) return;
+      goTo(element);
     }
 
     function syncMode() {
@@ -402,8 +563,18 @@ const hasIssues = Boolean(older || newer);
       apply();
     }
 
+    setScope(normalizeScope(document.documentElement.getAttribute("data-scope")), false);
     syncMode();
     applyHash();
+    root.addEventListener("reader-scope", (event) => {
+      if (!(event instanceof CustomEvent)) return;
+      setScope(String(event.detail), true);
+    });
+    root.addEventListener("reader-go", (event) => {
+      if (!(event instanceof CustomEvent)) return;
+      const element = root.querySelector(`#story-${String(event.detail)}`);
+      if (element instanceof HTMLElement) goTo(element);
+    });
     mq.addEventListener("change", syncMode);
     window.addEventListener("hashchange", applyHash);
     window.addEventListener("resize", () => {
@@ -441,6 +612,10 @@ const hasIssues = Boolean(older || newer);
 
     function openSheet() {
       if (open) return;
+      const tocEntry = root.querySelector(".toc-entry");
+      if (tocEntry instanceof HTMLButtonElement && tocEntry.getAttribute("aria-expanded") === "true") {
+        tocEntry.click();
+      }
       open = true;
       generation += 1;
       syncRadios(normalizeComfort(document.documentElement.getAttribute("data-comfort")));
@@ -510,10 +685,198 @@ const hasIssues = Boolean(older || newer);
     });
   }
 
+  function mountToc(root) {
+    const entry = root.querySelector(".toc-entry");
+    const sheet = root.querySelector(".toc-sheet");
+    const panel = root.querySelector(".toc-panel");
+    const stage = root.querySelector(".reader-stage");
+    if (
+      !(entry instanceof HTMLButtonElement) ||
+      !(sheet instanceof HTMLElement) ||
+      !(panel instanceof HTMLElement)
+    ) {
+      return;
+    }
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let open = false;
+    let restoreFocus = false;
+    let target = 0;
+    let spring = { value: 0, velocity: 0 };
+    let sheetRaf = 0;
+    let last = 0;
+
+    function setInert(on) {
+      if (stage instanceof HTMLElement) stage.inert = on;
+      const tools = root.querySelector(".reader-tools");
+      if (tools instanceof HTMLElement) tools.inert = on;
+    }
+
+    function paint(value) {
+      sheet.style.setProperty("--sheet-p", String(value));
+    }
+
+    function finishClose() {
+      if (open || target !== 0) return;
+      sheet.hidden = true;
+      sheet.classList.remove("is-open");
+      setInert(false);
+      if (restoreFocus) entry.focus({ preventScroll: true });
+    }
+
+    function step(now) {
+      const dt = Math.min(0.032, (now - last) / 1000 || 0.016);
+      last = now;
+      spring = stepSheetSpring(spring, target, dt);
+      paint(spring.value);
+      if (!spring.settled) {
+        sheetRaf = requestAnimationFrame(step);
+        return;
+      }
+      sheetRaf = 0;
+      if (target === 0) finishClose();
+    }
+
+    function startLoop() {
+      if (sheetRaf) return;
+      last = performance.now();
+      sheetRaf = requestAnimationFrame(step);
+    }
+
+    function focusDialog() {
+      const pressed = panel.querySelector('[data-scope-choice][aria-pressed="true"]');
+      const row = panel.querySelector(".toc-row:not([hidden])");
+      const node = pressed || row || panel;
+      if (node instanceof HTMLElement) node.focus({ preventScroll: true });
+    }
+
+    function focusable() {
+      return [...panel.querySelectorAll("button, a[href], input")].filter((node) => {
+        if (!(node instanceof HTMLElement)) return false;
+        if (node.closest("[hidden]")) return false;
+        return node.getClientRects().length > 0;
+      });
+    }
+
+    function openSheet() {
+      if (open) return;
+      const comfortEntry = root.querySelector(".comfort-entry");
+      if (comfortEntry instanceof HTMLButtonElement && comfortEntry.getAttribute("aria-expanded") === "true") {
+        comfortEntry.click();
+      }
+      open = true;
+      restoreFocus = false;
+      target = 1;
+      entry.setAttribute("aria-expanded", "true");
+      sheet.hidden = false;
+      setInert(true);
+      sheet.classList.add("is-open");
+      if (reduce.matches) {
+        if (sheetRaf) cancelAnimationFrame(sheetRaf);
+        sheetRaf = 0;
+        spring = { value: 0, velocity: 0 };
+        paint(0);
+        requestAnimationFrame(() => {
+          spring = { value: 1, velocity: 0 };
+          paint(1);
+        });
+      } else {
+        startLoop();
+      }
+      focusDialog();
+    }
+
+    function closeSheet(restore) {
+      if (!open) return;
+      open = false;
+      restoreFocus = restore;
+      target = 0;
+      entry.setAttribute("aria-expanded", "false");
+      if (reduce.matches) {
+        if (sheetRaf) cancelAnimationFrame(sheetRaf);
+        sheetRaf = 0;
+        spring = { value: 0, velocity: 0 };
+        paint(0);
+        const done = () => finishClose();
+        const onEnd = (event) => {
+          if (event.propertyName !== "opacity") return;
+          sheet.removeEventListener("transitionend", onEnd);
+          done();
+        };
+        sheet.addEventListener("transitionend", onEnd);
+        window.setTimeout(() => {
+          sheet.removeEventListener("transitionend", onEnd);
+          done();
+        }, 180);
+        return;
+      }
+      startLoop();
+    }
+
+    entry.addEventListener("click", () => {
+      if (open) closeSheet(false);
+      else openSheet();
+    });
+
+    const scrim = sheet.querySelector("[data-toc-scrim]");
+    if (scrim) scrim.addEventListener("click", () => closeSheet(true));
+
+    panel.addEventListener("click", (event) => {
+      const targetNode = event.target;
+      if (!(targetNode instanceof Element)) return;
+      const choice = targetNode.closest("[data-scope-choice]");
+      if (choice instanceof HTMLButtonElement) {
+        root.dispatchEvent(new CustomEvent("reader-scope", { detail: choice.dataset.scopeChoice }));
+        return;
+      }
+      const row = targetNode.closest(".toc-row");
+      if (!(row instanceof HTMLButtonElement)) return;
+      root.dispatchEvent(new CustomEvent("reader-go", { detail: row.dataset.story }));
+      closeSheet(true);
+    });
+
+    sheet.addEventListener(
+      "wheel",
+      (event) => {
+        if (!open) return;
+        if (event.target instanceof Node && panel.contains(event.target)) return;
+        event.preventDefault();
+      },
+      { passive: false },
+    );
+
+    document.addEventListener("keydown", (event) => {
+      if (!open) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeSheet(true);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (items.length === 0) {
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !panel.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !panel.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
   document.querySelectorAll("[data-reader]").forEach((node) => {
     if (node instanceof HTMLElement) {
       mount(node);
       mountComfort(node);
+      mountToc(node);
     }
   });
 </script>
