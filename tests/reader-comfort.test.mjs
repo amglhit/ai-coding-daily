@@ -64,6 +64,7 @@ test("comfort tiers set body size, leading, measure, and padding", () => {
   assert.match(css, /font-size:\s*clamp\(1\.5rem, 2\.4vw, 1\.85rem\)/);
   assert.match(css, /\.story-quote\s*\{[^}]*font-size:\s*calc\(var\(--body-size\) \+ 0\.05rem\)/);
   assert.match(css, /\.story-pull\s*\{[^}]*font-size:\s*calc\(var\(--body-size\) \+ 0\.03rem\)/);
+  assert.match(css, /\.story-pull\s*\{[^}]*white-space:\s*pre-line;/);
   assert.match(css, /\.story \.story-body > p\s*\{[^}]*font-size:\s*var\(--body-size\)/);
   assert.match(css, /\.story h2::before \{[^}]*width:\s*3px;/);
   assert.match(css, /\.story h2::before \{[^}]*height:\s*10px;/);

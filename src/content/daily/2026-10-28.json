@@ -76,6 +76,10 @@
         "pattern": "practice",
         "sections": [
           {
+            "kind": "pull",
+            "text": "目标没变：每一笔变更少花人的时间和注意力，同时 revert 和事故也不比以前多。\nThe goal hasn't changed: less human time per change, and no more reverts than before."
+          },
+          {
             "kind": "p",
             "text": "Claude 写了 Claude Code 自己大约九成的代码。agent 写代码时，变更量涨得很快——还怎么 review？还有人在读代码吗？出事了谁拦住？六月到九月，合并到 Claude Code 代码库的 PR 翻了一倍以上，不得不 revert 的占比降了四成多。我们没有取消 review：大部分阅读交给机器，人的注意力留给只有人能判的事，并花大力气让出错能尽快撤回。"
           },
@@ -110,10 +114,6 @@
           {
             "kind": "p",
             "text": "人还在 in the loop 的是：该不该做；高风险路径与会定型的架构；读证据（测试输出、reviewer findings）；为结果负责。共享理解不再靠逐行读琐碎 diff，而是让 Claude 就某一块写 explainer。"
-          },
-          {
-            "kind": "pull",
-            "text": "目标没变：每次变更少花人时，revert 不比以前多。"
           }
         ]
       },
