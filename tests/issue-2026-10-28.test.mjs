@@ -121,8 +121,13 @@ test("Claude review matches the approved draft", () => {
   assert.equal(claude.sourceUrl, "https://claude.dev/blog/solving-code-review-at-anthropic/");
   assert.deepEqual(
     claude.body.sections.map((section) => section.kind),
-    ["p", "quote", "p", "h", "p", "h", "p", "h", "p", "pull"],
+    ["pull", "p", "quote", "p", "h", "p", "h", "p", "h", "p"],
   );
+  assert.equal(claude.body.sections[0].kind, "pull");
+  const firstProse = claude.body.sections.findIndex(
+    (section) => section.kind === "p" || section.kind === "quote",
+  );
+  assert.ok(firstProse > 0);
   assert.deepEqual(
     claude.body.sections.filter((section) => section.kind === "h").map((section) => section.text),
     ["Layer by layer", "How we make the reviewer better", "Where humans stay in the loop"],
@@ -131,7 +136,10 @@ test("Claude review matches the approved draft", () => {
     claude.body.sections.find((section) => section.kind === "quote").text,
     "「有没有人读过这段代码」不能代替真正该问的：这次变更可能出什么问题，该由自动化还是人来拦。",
   );
-  assert.equal(claude.body.sections.at(-1).text, "目标没变：每次变更少花人时，revert 不比以前多。");
+  assert.equal(
+    claude.body.sections[0].text,
+    "目标没变：每一笔变更少花人的时间和注意力，同时 revert 和事故也不比以前多。\nThe goal hasn't changed: less human time per change, and no more reverts than before.",
+  );
 });
 
 test("Microsoft essay keeps the three modernization headings", () => {

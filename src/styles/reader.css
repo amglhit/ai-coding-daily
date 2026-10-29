@@ -373,6 +373,7 @@ html[data-pointer="fine"] .reader .story {
   font-style: normal;
   line-height: 1.7;
   letter-spacing: -0.01em;
+  white-space: pre-line;
 }
 
 .story-next,
