@@ -78,21 +78,24 @@ test("Manus sections match the locked short article", () => {
     "我给工程师提了几条需求和 Bug，过一会儿去问进展。我看到工程师的电脑上开着的一排 Codex 和 Manus 的 Session，随便点开一个，这些 Session 的输入就是我刚刚在 Slack 上发给他的需求原文，一字未改。",
   );
   assert.match(manus.body.sections[2].text, /人和人之间很难完全对齐/);
-  assert.match(manus.body.sections[3].text, /不是把代码并成 monorepo/);
+  assert.match(manus.body.sections[3].text, /没有把代码合并到一起/);
   const steps = manus.body.sections[4].items;
   assert.equal(steps.length, 5);
   const signals = [/worktree/, /本地/, /日志/, /发版|审批/, /端到端|测试账号/];
   steps.forEach((step, index) => {
     assert.match(step, signals[index], step);
   });
-  assert.match(manus.body.sections[5].text, /移动端 7 人同时扛 2 个产品/);
+  assert.ok(manus.body.sections.some((section) => section.kind === "quote"));
+  assert.ok(manus.body.sections.some((section) => section.kind === "pull"));
+  assert.ok(manus.body.sections.some((section) => section.kind === "aside"));
+  assert.match(manus.body.sections[5].text, /移动端一直只有 7 个人，同时负责 2 个产品/);
   assert.equal(
     manus.body.sections[6].text,
     "AI 的完成度已经很高，但「做什么」仍由人决定。人的角色没有变小，而是更集中了：定义问题，判断质量，决定什么值得做，并为结果负责。",
   );
   assert.equal(
     manus.body.sections[7].text,
-    "9 月公司 AI 开销人均超过 1 万美元，有人觉得过分。这笔钱买的不是人力，而是时间和注意力；贵是因为用最好的模型探边界——代码审核机器人用了当前最强模型后，同事反馈最近半年没听说因合入问题代码造成线上故障；成本还会随自己产品改进下降。积累下来的工作方式，才是更宝贵的资产。",
+    "9 月公司 AI 开销人均超过 1 万美元，有人觉得过分。这笔钱买的不是人力，而是时间和注意力；贵是因为用最好的模型探边界——代码审核机器人用了当前最强模型后，同事反馈最近半年没听说因合入有问题的代码造成线上故障；成本还会随自己产品改进下降。积累下来的工作方式，才是更宝贵的资产。",
   );
 });
 
@@ -118,14 +121,34 @@ test("Claude review matches the approved draft", () => {
   assert.equal(claude.sourceUrl, "https://claude.dev/blog/solving-code-review-at-anthropic/");
   assert.deepEqual(
     claude.body.sections.map((section) => section.kind),
-    ["p", "p", "quote", "p", "p", "p", "p", "p", "pull"],
+    ["p", "quote", "p", "h", "p", "h", "p", "h", "p", "pull"],
   );
-  assert.equal(claude.body.sections[4].text, "Layers, not one gate");
+  assert.deepEqual(
+    claude.body.sections.filter((section) => section.kind === "h").map((section) => section.text),
+    ["Layer by layer", "How we make the reviewer better", "Where humans stay in the loop"],
+  );
   assert.equal(
-    claude.body.sections[2].text,
+    claude.body.sections.find((section) => section.kind === "quote").text,
     "「有没有人读过这段代码」不能代替真正该问的：这次变更可能出什么问题，该由自动化还是人来拦。",
   );
   assert.equal(claude.body.sections.at(-1).text, "目标没变：每次变更少花人时，revert 不比以前多。");
+});
+
+test("Microsoft essay keeps the three modernization headings", () => {
+  const ms = issue.stories.find((story) => story.id === "ms");
+  assert.equal(ms.body.pattern, "essay");
+  assert.equal(ms.column, "行业动向");
+  assert.equal(ms.title, "Code is cheap 之后，稀缺的是信任");
+  assert.equal(ms.originalTitle, "Cheap code, precious trust: Code modernization at scale");
+  assert.deepEqual(
+    ms.body.sections.map((section) => section.kind),
+    ["p", "p", "h", "p", "h", "p", "h", "p", "pull"],
+  );
+  assert.deepEqual(
+    ms.body.sections.filter((section) => section.kind === "h").map((section) => section.text),
+    ["Migration", "Language modernization", "Specification-driven development"],
+  );
+  assert.equal(ms.body.sections.at(-1).text, "生成代码正在变成容易的部分。真正难的是知道该不该信任它。");
 });
 
 test("each story is a full page with one primary source link", () => {
