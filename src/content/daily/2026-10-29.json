@@ -1,0 +1,404 @@
+{
+  "title": "AI Coding 日报 · 2026-10-29（周四）",
+  "date": "2026-10-29",
+  "type": "daily",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [
+    "dave-egm",
+    "nikolas-10h"
+  ],
+  "masthead": "10 月 29 日 · AI Coding 日报",
+  "stories": [
+    {
+      "id": "dave-egm",
+      "company": "个人",
+      "companyColor": "#F59E0B",
+      "column": "工程化实践",
+      "title": "大象与金鱼：设计文档才是新的源码",
+      "originalTitle": "Elephants, Goldfish and the New Golden Age of Software Engineering",
+      "byline": "Dave Rensin · 4 月撰；10-21 更新开源",
+      "sourceUrl": "https://drensin.medium.com/elephants-goldfish-and-the-new-golden-age-of-software-engineering-c33641a48874",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "pull",
+            "text": "一不小心，我们就不只是写代码更快，而是在量产错误。\nIf we aren't careful, we aren't just writing code faster. We are mass-producing our mistakes."
+          },
+          {
+            "kind": "p",
+            "text": "用 AI 加速却不维持信噪比，生产力其实在倒退。session 中途崩溃后，模型对前一小时毫无记忆，靠塞几百行代码重引导又慢又贵。后来发现：sizeof(docs) ≪ sizeof(code)——用英文设计文档喂上下文，比逼它读海量源码更便宜、更快、更稳。人不再做那些微决策时，若不把设计判断前移到文档，最终负责的人会看不懂系统。Design is the new code。"
+          },
+          {
+            "kind": "p",
+            "text": "Elephant-Goldfish Model（EGM）：Elephant 是高上下文、帮你写出设计文档的 AI session；Goldfish 是全新零记忆 session，只知道眼前材料。每个新功能：先喂饱 Elephant，再用 Goldfish 验。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "Phase 1 还不写代码：让 AI 读相关设计/代码并复述，误解立刻纠正；强制「不要写代码，只做设计讨论并追问假设」；它变谄媚时说「同意我并没有帮助，挑战我的想法」；再让它用 prose 和框图出第一版技术方案——先看它懂不懂，再辩论到方案站得住。有的 session 会辩上两三天，别急。",
+              "Phase 2 在同一会话里分段写 markdown 真源：Problem（业务问题几句）→ Technical Plan（组件怎么拼）→ Alternatives（否决项写成未来幻觉的护栏）→ Detailed Implementation（逐文件变更与理由）。这文件进仓库，就是功能的新「源码」。",
+              "Phase 3 Goldfish：新 session 只凭文档和它引用的文件复述系统——说不清就补文档；再扮苛刻 reviewer 找缺口与边角（作者体感约三成建议很值）；再问「首遍是否够实现」；通过后才说「严格按文档实现」。实现崩了，新开 session 再投喂文档即可续上。",
+              "代码写完后做「刻薄」review：明确说你觉得代码质量差，请它撕到只剩 nit；并要求几乎每十行要有注释级的可读性。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "存量百万行仓库也可以约一周「喂花生与干草」：叶子目录让 AI 写 README（目的 + 逐文件简述），人花 5–10 分钟修大约一半错，再层层向上汇总。根上只喂 README 树，Elephant 就能较快抓住子系统。等设计文档覆盖到所有文件后，这些 README 可删可留。新同学或想提需求的 PM，可把文档丢进 NotebookLM，作业是写出能过 Goldfish 测试的设计文档。"
+          },
+          {
+            "kind": "p",
+            "text": "为速度而来，为理解留下。设计文档对齐人对系统的理解，也对齐 AI 的速度。"
+          },
+          {
+            "kind": "aside",
+            "text": "2026-10-21 更新：团队内部用的 AI coding assistant plugin 已开源，见 egm.dev。文中是个人路径，请自行验证。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "google-hillclimb",
+      "company": "Google",
+      "companyColor": "#4285F4",
+      "column": "工程化实践",
+      "title": "用 Agents CLI 做 agent 质量的 hill-climbing",
+      "originalTitle": "Hill-Climbing Agent Quality with Agents CLI Evaluation",
+      "byline": "Pier Paolo Ippolito、Elia Secchi · 10-28",
+      "sourceUrl": "https://developers.googleblog.com/en/hill-climbing-agent-quality-with-agents-cli-evaluation/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Demo 能跑，和模型升级、工具变更、新对话形态后仍能跑，是两件事。质量工程把后一件叫做 hill-climbing：写用例 → 跑 → 打分 → 看失败 → 改 agent → 再跑。分升就留，分降就 revert。Agents CLI 的 eval 命名空间围着这个环：eval generate 跑数据集，eval grade 给轨迹打分，eval compare 并排 diff 两次结果，eval analyze 把失败聚成主题，eval optimize 对 prompt 做自动爬山。"
+          },
+          {
+            "kind": "h",
+            "text": "一次回归：错粘的厨师 persona"
+          },
+          {
+            "kind": "p",
+            "text": "脚手架里把数据集扩成 4 例（打招呼、旧金山天气、罗马天气、跑题体育问）。基线 custom_response_quality 均分 4.0/5，标准差 1.41——有起伏比全 5 更健康。有人误把另一项目的厨师 system prompt 贴进天气 agent：能编译，lint/单测/类型检查都过，再跑 eval 均分掉到 2.75。eval compare 看逐案：打招呼被塞食谱；sf_weather 不再调已注册的 get_weather、开始臆造天气；off_topic 答完道奇还附带菜谱。单元测试看不到「工具还在、行为已偏」——只有端到端打分会浮出来。"
+          },
+          {
+            "kind": "h",
+            "text": "均值会骗人"
+          },
+          {
+            "kind": "p",
+            "text": "把 gemini-3.8-flash 换成更便宜的 2.5-flash，均分同样从 4.0 掉到 2.75，但几乎全压在 off_topic（训练截止幻觉）；前三案几乎持平。只看均值会把「可接受的降本」判成和厨师回归一样糟。要看逐案；prompt 也要为弱模型单独调，不能原样搬运。"
+          },
+          {
+            "kind": "h",
+            "text": "调度与告警"
+          },
+          {
+            "kind": "p",
+            "text": "eval 命令可丢进 cron/Cloud Scheduler：夜间对更大的 regression 集 generate+grade，结果落持久目录。再用脚本比均分，掉超阈值就非零退出触发告警——抓住静默模型升级和依赖漂移。ADK 项目可用 eval optimize（GEPA）只动 prompt；人审 candidate，防过拟合指标措辞。"
+          },
+          {
+            "kind": "p",
+            "text": "实践里几条：先做小而有代表性、一分钟内能跑完的数据集，别一上来覆盖所有边角变成没人愿跑的架子；存完整 result 文件而不只存分数，三周后 compare 才找得到是哪一案动了；数据集与期望（eval config）分文件、分节奏演进；警惕汇总指标。另一次对照：接上 agents-cli 的 coding agent 跑 eval 次数约四倍，但 eval 后真改 agent 的频率和基线差不多——质量来自根据结果行动，不来自多跑本身。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anth-automations",
+      "company": "Anthropic",
+      "companyColor": "#D4A27F",
+      "column": "工程化实践",
+      "title": "有效的 agent 自动化：六条规则",
+      "originalTitle": "Building effective agent automations",
+      "byline": "Lance Martin、CJ Avilla · 10-08",
+      "sourceUrl": "https://claude.dev/blog/building-effective-agent-automations/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Anthropic 里常用简单定时自动化：后台攒上下文，主动告诉你该知道什么。但难做：源失联可能无人察觉，偏好也跟不上。我们用 Claude Managed Agents（beta）做了参考实现——按日程读自定义源（如 Slack、GitHub），跟踪距上次跑过的变更，把该知道的发到一个目的地——并总结成可迁移的规则。"
+          },
+          {
+            "kind": "quote",
+            "text": "一条过时的「还在等你」比漏报十条更伤信任。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "每个源用 bookmark，不要固定「过去 24 小时」窗口；晚跑会漏缝，早跑会重复。跑完把各源最新已读时间写入 bookmarks.json。",
+              "源读失败时：保持该源 bookmark 不动，用其他源写 brief，结尾写明读不到什么；绝不把失败当成「今天没事」。",
+              "发帖前复核每条仍要报的项的直播状态；已解决就丢掉，变了就改行，确认不了就丢掉并记入 cuts。",
+              "只有 Slack 返回 ok 且带 message ts 才算发出；之后才更新 ledger 与 bookmarks。结果不清就标 maybe posted，别处不动。",
+              "每跑重读 preferences（只读挂载）；agent 改不了你的规则。state 存 bookmark、ledger、run record。",
+              "只读处给只读凭证与网络 allowlist；每跑设 budget（可先设正常成本的 3–5 倍再收紧）。撞顶会 pause，不像失败那样显眼。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "配置拆成 agent.md、deployment.md、environment、两个 memory store、vault；ant apply 落到 Claude API workspace，机器不必常开。Brief 要短：读者今天会行动或改决策才占一行；不确定就省略。Claude Code 可用 `/claude-api managed-agents-onboard` 按此文搭脚手架。"
+          },
+          {
+            "kind": "pull",
+            "text": "从 bookmark 读每个源，不要固定时间窗。把读失败报成读不到，永远不要报成安静的一天。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nikolas-10h",
+      "company": "个人",
+      "companyColor": "#F59E0B",
+      "column": "社区热点",
+      "title": "怎么让 coding agent 连跑 10 小时",
+      "originalTitle": "How I let coding agents run for 10 hours: the setup",
+      "byline": "Nikolas Barwicki · 10-07",
+      "sourceUrl": "https://nbarwicki.com/blog/29-how-i-let-coding-agents-run-for-10-hours/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "quote",
+            "text": "如果跑到一半还需要你，多半是某个决定被你留到了后来。"
+          },
+          {
+            "kind": "p",
+            "text": "一句 prompt 后我不再碰键盘。票关闭、提交落地、测试变绿。最长一次约 10 小时；第一个项目约 26,000 行，实现循环里它从没问我。同一套流程用在 Swift iOS、Cloudflare Workers 后端、公司内部 CRM（FastAPI + Next.js），合计一百多张票，实现环里没有人。人的活在跑前和跑后；中间只碰事先预留的决定。"
+          },
+          {
+            "kind": "p",
+            "text": "设置很无聊：一个 prompt、几份 markdown、以及 agent 能自己跑的检查。没有大堆自定义 skills。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "单一真相源：移植就让旧代码只读当 spec；重写/绿地就用写死的决策和架构指南。",
+              "开放问题由 agent 读代码列出选项并给推荐，人批量回答；再用另一家模型冷审计划——作者遇过「还不能批准自主实现」，它说得对。",
+              "票图：每票是带 Status / Depends on 的 markdown；agent 取依赖已完成的下一张。",
+              "架构先于功能：新 agent 只拿架构指南在丢弃副本上做小功能，修到它不再困惑——agent 会抄模式，第一个模式必须对。",
+              "列出只有人能做的事（凭证、审批），第一天就让它知道并绕开。",
+              "让它自测：可执行 spec、真库测试（非 mock）、浏览器/模拟器/curl 看活应用、架构检查器、一条「完成」命令（类型/lint/架构/格式/契约/测试）、两个只读 reviewer。拿掉本地审批打断、中途等 merge、可延后的提问；并行则各开端口或 worktree。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "Goal-mode prompt 写清目标与停止条件、重启先读 progress.md、票循环（红测→绿→活应用→审→提交）、哪些仍归人、完成要有证据。progress.md 是重启检查点；TODO.md 只指向人的事。角色按模型分工（integrator / implementer / reviewer），不写「你是资深 reviewer」这种人设。"
+          },
+          {
+            "kind": "pull",
+            "text": "把时间花在跑之前和跑之后。"
+          },
+          {
+            "kind": "aside",
+            "text": "需要事先写清「何为正确」。同目录并行会撞车。UI 缺 foundation 与可靠驱动时，曾出现测试全绿但一屏空白。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hemant-sdd",
+      "company": "个人",
+      "companyColor": "#9CA3AF",
+      "column": "社区热点",
+      "title": "Spec-driven：先测后写，再让 agent 实现",
+      "originalTitle": "Spec-Driven Development: How to Get Better Code from AI Agents",
+      "byline": "Hemant Pandey · 10-28",
+      "sourceUrl": "https://thehustlingengineer.substack.com/p/spec-driven-development-how-to-get",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "AI coding agent 能几分钟做出功能，也常把那几分钟花在做错的事上：漏边角、猜意图、或解法嵌不进现有系统。与其从想法直接跳到代码，不如先定义要什么、为行为写测试，再让 agent 实现。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "先写行为 spec：目标、成功路径、过期/一次性/不暴露账号是否存在等；写清 out of scope。还不选数据库或 API。",
+              "从 spec 生成测试，明确「先不要实现」；人对照 spec 审测试，尤其是边界。",
+              "先跑测试：缺功能导致的失败是预期；环境挂了要先修 setup。",
+              "让 agent 查现有代码提实现计划（复用邮件、限流等），人审安全与取舍，再动手。",
+              "小步实现；跑相关测试。失败就查因，禁止削弱或删除测试来变绿；与 spec 冲突要先说明。",
+              "测试绿后仍不结束：过期 token、二次使用、是否泄露账号存在、限流、无关改动、需求→代码→测试映射——spec 赢。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "串起来就是 Spec → Tests → Plan → Implementation → Verification。错字级小改不必全套；跨服务、安全敏感、规则含糊时，这套结构能少返工。"
+          },
+          {
+            "kind": "pull",
+            "text": "别从「实现这个功能」起手。先定需求，再为它们写测试，然后才实现。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "google-aqua",
+      "company": "Google",
+      "companyColor": "#4285F4",
+      "column": "工程化实践",
+      "title": "Outer loop：生产里诊断 agent 的静默失败",
+      "originalTitle": "The Outer Loop, Insights First: An Ambient Quality Agent That Diagnoses Your Production Agent",
+      "byline": "Dima Melnyk、Elia Secchi · 10-08",
+      "sourceUrl": "https://developers.googleblog.com/en/the-outer-loop-insights-first-an-ambient-quality-agent-that-diagnoses-your-production-agent/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Agent 返回 HTTP 200，延迟在预算内，tool 也没报错——却可能把座位 3A 写成已确认，从未问 seat-selection 子 agent 3A 是否空着；或给档案写着 vegan 的旅客推荐佛罗伦萨牛排馆。上线前用数据集做 inner loop（跑、打分、修、对比）往往能较快到「已知场景」的八成；上线后用量形态与底层（模型、harness、工具）都在变，健康检查仍绿，任务成功率却可能 silently 漂移。"
+          },
+          {
+            "kind": "h",
+            "text": "AQuA 的五段 sweep"
+          },
+          {
+            "kind": "p",
+            "text": "AQuA（Ambient Quality Agent）在请求路径外、在你的 Google Cloud 项目里按日程或部署后扫生产轨迹。一段流水线：Sample（随机最多 1000 session）→ Review（九点清单 + 可选 goal.md，写出 actual/expected）→ Cluster → Verify（另一模型对照最多三份全文，扔掉证据撑不住的簇）→ Track（BigQuery 里 NEW / RECURRING / 14 天未见则 RESOLVED）。根因分析对照部署时不可变源码快照，引用 file:line 并提出锚定修改——但从不开 PR、不自动改代码。"
+          },
+          {
+            "kind": "h",
+            "text": "travel-concierge 上的一趟"
+          },
+          {
+            "kind": "p",
+            "text": "32 个多 agent session：5 个干净通过，27 个产出 42 条 finding，核实后留下 6 个 issue。最重的是：用户主动报座位时 planning_agent 直接写入 session state，不调 flight_seat_selection_agent（15 session）；inspiration → place 交接丢掉 vegan 偏好（7 session）；poi_agent 提示要求地图字段但 tools=[]，于是伪造 example.com 链接（5 session）。两处一行 prompt 修后部署 Revision 2 重放：座位绕过 15→2（约 −87%）；vegan 遗漏 7→0；整 session 通过 5/32→13/32。"
+          },
+          {
+            "kind": "p",
+            "text": "设计上：簇在全文核实前只是声称；insight 靠引用而不是自报 confidence；跳过/失败的工作写在 run record 上。它把生产流量变成可诊断、带代码锚点的洞见和归档失败稿，再喂回你的 inner loop。"
+          },
+          {
+            "kind": "aside",
+            "text": "参考实现绑 ADK 与 GCP 脚手架；采样有上限；模型当法官会错——未核实假设不得装成已核实 finding。本地可用 adk-recipes 里的 make demo 看合成仪表盘。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "flavio-judgment",
+      "company": "个人",
+      "companyColor": "#9CA3AF",
+      "column": "社区热点",
+      "title": "和 AI 一起练工程判断",
+      "originalTitle": "Practicing engineering judgment with AI",
+      "byline": "Flavio · 10-28",
+      "sourceUrl": "https://flaviocopes.com/engineering-judgment-with-ai/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Coding agent 能在你还没决定「该不该改」之前就交出能跑的实现。第一笔 patch 前值得停一下：把问题写成可观察的，并决定什么证据算「有帮助」。下面用假想的大账户 CSV 导出超时当练习场——测量是编的，决定方式可以迁到真项目。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 观察与解释分开"
+          },
+          {
+            "kind": "p",
+            "text": "「导出需要后台队列」已经含解法。「这个账户下载匹配工单时报错」才给调查留空间。先记规模、过滤条件、失败动作；再定义什么叫修成功。别在 prompt 里写死「修好队列问题」——先给症状，让它定位。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 要能改口的证据"
+          },
+          {
+            "kind": "p",
+            "text": "为每种假说列「有用证据」和「什么会削弱它」。给 agent 有界任务：复现、找耗时、记录输入规模与证据；找不到复现，不要当成 bug 已消失。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 按带来的新工作比较方案"
+          },
+          {
+            "kind": "p",
+            "text": "流式、后台任务、缩范围——各自何时对症，又各自引入哪些新问题（部分输出、任务状态、产品行为变更）。把义务写进选择，而不是接了 patch 再发现。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 看 patch 前先写预测"
+          },
+          {
+            "kind": "p",
+            "text": "实现一出现就容易事后合理化。先写下担心：顺序变了、漏行、取消后仍干活、半截文件被当成完整导出、权限过滤被拿掉。用这些担心约束任务说明。"
+          },
+          {
+            "kind": "h",
+            "text": "5. 选能否定实现的测试"
+          },
+          {
+            "kind": "p",
+            "text": "只 mock 掉 helper、喂五行干净数据的测试很弱。用能手算期望的小数据集、夹进其他账户与日期外记录、含逗号/引号/换行的字段，再跑当初失败的大输入。「全过」要说清测了什么。"
+          },
+          {
+            "kind": "h",
+            "text": "6. 用未来维护者眼光读 diff"
+          },
+          {
+            "kind": "p",
+            "text": "跟请求路径、资源关闭、重试副作用、新依赖为何现有平台不够。让 agent 用白话讲一条尴尬失败路径，再自己对代码核对。"
+          },
+          {
+            "kind": "h",
+            "text": "7. 发布、回滚与短日记"
+          },
+          {
+            "kind": "p",
+            "text": "写明停扩条件（丢行或跨账户就停），想清楚有状态变更时回滚怎么做。事后几句记下「什么证据改了你的主意」——比「下次小心点」好用。"
+          },
+          {
+            "kind": "pull",
+            "text": "下次委派修复：先写下什么会让你相信结果可以接受；patch 来了，先看那张纸条，再看 agent 的摘要。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "colgrep",
+      "company": "Hugging Face",
+      "companyColor": "#FF6A00",
+      "column": "选读",
+      "title": "本地 2B 搜仓：frontier agent 少花三分之一 token",
+      "originalTitle": "ColGrep-Agent: Cutting Frontier Coding Agents’ Tokens by a Third",
+      "byline": "Maxence Lasbordes · LightOn · 10-12",
+      "sourceUrl": "https://huggingface.co/blog/lightonai/colgrep-agent",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "benchmark",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Coding agent 修 bug 前常要多轮 grep、开文件、追引用，每步都过 frontier 模型。ColGrep-Agent-2B 在本地做这一段：用 ColGrep 多向量语义检索搜索，读有希望的文件，交回 path:line 与代码。"
+          },
+          {
+            "kind": "p",
+            "text": "评测：Claude Code + Sonnet 5.5，52 道搜码题、13 个训练期未见公开仓、每题每设置 3 次，共 624 session。相对内置 Grep：ColGrep-Agent 少用 34.3% API token（95% CI 28–40%），cache-aware 成本约低 40%；正确率 80.8% vs 83.3%，差异不显著。Claude 平均轮次 5.5→3.9。代价是端到端更慢（约 13.0s→21.6s）。Balanced 设置（可直接 colgrep 或委托 agent）少 21% token，正确率与 Grep 同为 83.3%。"
+          },
+          {
+            "kind": "pull",
+            "text": "不是每一步都要过 frontier 模型；搜对文件可以交给为仓库探索训过的小模型。"
+          },
+          {
+            "kind": "aside",
+            "text": "测的是代码搜索题，不是端到端写码。正确率置信区间较宽，不能排除有意义掉点。"
+          }
+        ]
+      }
+    }
+  ]
+}
