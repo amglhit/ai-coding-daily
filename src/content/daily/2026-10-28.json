@@ -27,29 +27,29 @@
           },
           {
             "kind": "p",
-            "text": "以前工程师拿到需求，先自己分析，再动手写。现在不管是新需求还是新 Bug，大家基本直接交给 AI。人亲手执行的部分越来越少；指挥 AI、为结果承担责任占的比重越来越大。一个工程师同时处理十几、二十个需求，在今天的 Manus 已成为常态。"
+            "text": "以前工程师拿到需求，先自己分析，再动手写。现在不管是新需求还是新 Bug，大家基本直接交给 AI。人亲手执行的部分越来越少；指挥 AI 干活、为 AI 的工作结果承担责任占的比重越来越大。一个工程师同时处理十几、二十个需求，在今天的 Manus 已成为常态。"
           },
           {
             "kind": "p",
-            "text": "过去最大的损耗在联调：前后端各自理解需求再对接口，对不齐就反复改——不是不努力，是人和人之间很难完全对齐。既然 AI 能跨端写代码，一个人理解清楚需求、再推进各端，就能少掉对接损耗。但代码散在多仓，即使一个人全包，AI 仍无法在同一上下文里看到全貌。"
+            "text": "过去最大的损耗在联调。前后端要分别理解需求，再约定接口；理解不一致，就要反复改——不是不努力，是人和人之间很难完全对齐。既然 AI 能跨端写代码，一个人理解清楚需求，再推进前端、后端和移动端，就能减少跨端对接的损耗。但代码分散在不同仓库里。即使由一个人负责，AI 仍然无法在同一个上下文里看到全貌。"
           },
           {
             "kind": "p",
-            "text": "于是做了 Manus-mono：不是把代码并成 monorepo，而是统一入口，配上一本写给 AI 的说明书——每个仓做什么、彼此怎么配合、按什么规范工作。Mono 一步步长起来，每一步都在解决上一步暴露的问题："
+            "text": "于是我们做了 Manus-mono：没有把代码合并到一起，而是提供一个统一入口，配上一本给 AI 看的说明书——每个仓库做什么、彼此怎么配合、研发按什么规范工作。Mono 是一步步长起来的，每一步都在解决上一步暴露的问题："
           },
           {
             "kind": "steps",
             "items": [
-              "让 AI 看见全局：补齐仓外业务知识，用 Git worktree 并行。",
-              "让 AI 在本地验证：完整产品跑在本机，验证从五到十分钟落到几秒。",
-              "权限下读线上日志、配置与异常，让 AI 排查。",
-              "补齐发版操作能力；审批权仍在人。",
-              "用测试账号走真实流程，在浏览器和手机模拟器里做端到端验证。"
+              "让 AI 看见全局。补齐独立仓库之外的业务知识，让跨仓库协作成为可能，再通过 Git worktree 支持并行开发。",
+              "让 AI 在本地验证。过去推到测试环境要等 5 到 10 分钟；现在完整的 Manus 可以跑在本地，验证只需几秒。",
+              "让 AI 排查线上问题。在权限控制下，Mono 可以读取线上日志、配置和异常记录。",
+              "让 AI 走完发布流程。补齐发布中容易卡住的操作能力；审批权仍在人这里。",
+              "让 AI 完成端到端验证。用测试账号走一遍真实流程，在浏览器和手机模拟器里检查结果。"
             ]
           },
           {
             "kind": "p",
-            "text": "共识随之改变：一个需求，一个人可以写完所有端。移动端 7 人同时扛 2 个产品、共 4 个应用，进度和网页版基本同步。产品侧约一半产品经理能独立把需求做到上线，所有产品经理都向 Manus 提交过代码；有人不再交传统 PRD，而是用视频把场景、界面、状态和实现逻辑一次讲清。市场侧接上「数字同事」——在一个工作台 Session 接需求再拆并行，会学策略、主动提醒项目阶段、跨团队问清能力边界，最后拍板仍是人。"
+            "text": "到现在，团队已形成共识：一个需求，一个人可以写完所有端。移动端一直只有 7 个人，同时负责 2 个产品、共 4 个移动应用，进度和网页版基本同步。产品侧约一半产品经理能独立完成需求并上线，所有产品经理都向 Manus 提交过代码；有人交出的不再是传统 PRD，而是一段把场景、界面、状态和实现逻辑讲清的视频。市场侧接上「数字同事」——在一个工作台 Session 里接需求再拆并行；最后拍板的，仍然是人。"
           },
           {
             "kind": "pull",
@@ -57,7 +57,7 @@
           },
           {
             "kind": "aside",
-            "text": "9 月公司 AI 开销人均超过 1 万美元，有人觉得过分。这笔钱买的不是人力，而是时间和注意力；贵是因为用最好的模型探边界——代码审核机器人用了当前最强模型后，同事反馈最近半年没听说因合入问题代码造成线上故障；成本还会随自己产品改进下降。积累下来的工作方式，才是更宝贵的资产。"
+            "text": "9 月公司 AI 开销人均超过 1 万美元，有人觉得过分。这笔钱买的不是人力，而是时间和注意力；贵是因为用最好的模型探边界——代码审核机器人用了当前最强模型后，同事反馈最近半年没听说因合入有问题的代码造成线上故障；成本还会随自己产品改进下降。积累下来的工作方式，才是更宝贵的资产。"
           }
         ]
       },
@@ -77,11 +77,7 @@
         "sections": [
           {
             "kind": "p",
-            "text": "Claude 写了 Claude Code 自己大约九成的代码。agent 写代码时，变更量涨得很快——还怎么 review？还有人在读代码吗？出事了谁拦住？"
-          },
-          {
-            "kind": "p",
-            "text": "六月到九月，合并 PR 翻了一倍以上，rollback 占比降了四成多。我们没有取消 review：大部分阅读交给机器，人的注意力留给只有人能判的事，并花大力气让出错能尽快撤回。目标是多数 PR 最多一个 human in the loop（可以是作者），revert 与事故不升高。"
+            "text": "Claude 写了 Claude Code 自己大约九成的代码。agent 写代码时，变更量涨得很快——还怎么 review？还有人在读代码吗？出事了谁拦住？六月到九月，合并到 Claude Code 代码库的 PR 翻了一倍以上，不得不 revert 的占比降了四成多。我们没有取消 review：大部分阅读交给机器，人的注意力留给只有人能判的事，并花大力气让出错能尽快撤回。"
           },
           {
             "kind": "quote",
@@ -89,23 +85,31 @@
           },
           {
             "kind": "p",
-            "text": "以前 review 是流程末尾的门禁——写完、开 PR、等同事。现在持续跑着，更像拼写检查；多数改动请人看之前，已被 Claude 审过并修过至少一次。"
+            "text": "以前 review 是流程末尾的门禁——写完、开 PR、等同事。现在持续跑着，更像拼写检查；多数改动请人看之前，已被 Claude 审过并修过至少一次。目标是：多数 PR 最多一个 human in the loop（可以是作者），revert 与事故不升高。"
+          },
+          {
+            "kind": "h",
+            "text": "Layer by layer"
           },
           {
             "kind": "p",
-            "text": "Layers, not one gate"
+            "text": "不是末尾只过一道门，而是多层检查，各拦一部分。开 PR 前先给 Claude 可跑的验证，再用新鲜 context 的 subagent 看 diff。每条 PR 过 Claude review，以及可挡合并的 security review——投票够票才贴，纯 style 丢掉。人按风险进来：低风险自动化可合；普通一人；最高风险和少数路径两人。指挥 agent 的人算必需 reviewer；bot 审批不算人。再往后是 merge queue、旗标、分阶段发布和快速 rollback。"
+          },
+          {
+            "kind": "h",
+            "text": "How we make the reviewer better"
           },
           {
             "kind": "p",
-            "text": "不是末尾只过一道门，而是多层检查，各拦一部分。开 PR 前给 Claude 可跑的验证，再用新鲜 context 的 subagent 看 diff。每条 PR 过 Claude review 和可挡合并的 security review（投票够票才贴，纯 style 丢掉）。人按风险进来：低风险自动化可合；普通一人；最高风险和少数路径两人。指挥 agent 的人算必需 reviewer；bot 审批不算人。再往后是 merge queue、旗标、分阶段发布和快速 rollback。"
+            "text": "Agent 作者和 agent reviewer 会空转——有过五十多轮的 PR；反复被标的约 59% 第一轮就在。于是三轮封顶，之后只审新 diff。事故做成每日 eval：过往出事 PR 与 revert 收成集合，每天拿来打分 reviewer。"
+          },
+          {
+            "kind": "h",
+            "text": "Where humans stay in the loop"
           },
           {
             "kind": "p",
-            "text": "Agent 作者和 agent reviewer 会空转——有过五十多轮的 PR，反复被标的约 59% 第一轮就在——于是三轮封顶，之后只审新 diff。事故做成每日 eval。"
-          },
-          {
-            "kind": "p",
-            "text": "人还在 in the loop 的是：该不该做；高风险与定型架构；读证据；为结果负责。共享理解靠 Claude 写某一块的 explainer，不靠逐行读琐碎 diff。"
+            "text": "人还在 in the loop 的是：该不该做；高风险路径与会定型的架构；读证据（测试输出、reviewer findings）；为结果负责。共享理解不再靠逐行读琐碎 diff，而是让 Claude 就某一块写 explainer。"
           },
           {
             "kind": "pull",
@@ -209,19 +213,39 @@
       "originalTitle": "Cheap code, precious trust: Code modernization at scale",
       "byline": "Sriram Rajamani、Tim Bozarth · Microsoft CoreAI · 10-26",
       "body": {
-        "pattern": "framework",
+        "pattern": "essay",
         "sections": [
           {
             "kind": "p",
-            "text": "Agent 改起代码来，可以比人审这些改动快几个数量级。我们在 Windows 和 Azure 的代码库上做这件事：把一个 4 亿行的代码库迁到新的编译器工具链，把遗留 C/C++ 现代化成 Rust，并越来越多地做 formal verification。"
+            "text": "Agent 改起代码来，可以比人审这些改动快几个数量级。我们在 Windows 和 Azure 的代码库上做这件事：把一个 4 亿行的代码库迁到新的编译器工具链，把遗留 C/C++ 现代化成 Rust，并越来越多地做 formal verification。写出代码正在变成容易的部分；真正难的是知道该不该信任它。"
           },
           {
             "kind": "p",
             "text": "控制流反过来了。我们起初把 LLM 硬编码成 pipeline 里的子程序；到 2025 年 5 月，agent 比这些 pipeline 更会规划，我们的工作变成给它造工具。最有用的，是让 agent 和后面的工程师都知道这次改对了没有。人的注意力成了最稀缺的资源，工具要把它花在最要紧的地方。"
           },
           {
+            "kind": "h",
+            "text": "Migration"
+          },
+          {
             "kind": "p",
-            "text": "大规模迁移由很小的专家团队驱动，不把所有权摊给整个工程组织。Agent 从抽样里学出 knowledge base，专家批准的是这份 knowledge base，不是每一个 patch。人的反馈仍不可少，但放在杠杆最高的地方：批准 knowledge base，以及处理新的或含糊的情况。C/C++ 迁到 Rust，按 feature 走比逐行翻译更稳。每个 feature 用场景测试做端到端验证，differential testing 比较新旧行为，holdout 测试不给 agent 看，免得它过拟合。工程师批准系统必须满足的 properties；agent 去找证明这些 properties 所需的 inductive invariants。"
+            "text": "大规模迁移由很小的专家团队驱动，不把所有权摊给整个工程组织。Agent 从抽样里学出 knowledge base；专家批准的是这份 knowledge base，不是每一个 patch。人的反馈仍不可少，但放在杠杆最高的地方：批准知识，以及处理新的或含糊的情况。"
+          },
+          {
+            "kind": "h",
+            "text": "Language modernization"
+          },
+          {
+            "kind": "p",
+            "text": "C/C++ 迁到 Rust，按 feature 走比逐行翻译更稳。每个 feature 用场景测试做端到端验证；differential testing 比较新旧行为；holdout 测试不给 agent 看，免得它过拟合。最近开始从源码抽出 formal specification，带到目标语言，再用 Verus 证明现代化后的代码满足它们。"
+          },
+          {
+            "kind": "h",
+            "text": "Specification-driven development"
+          },
+          {
+            "kind": "p",
+            "text": "Agent 产出变更的速度，已经超过人评估的速度。我们把意图写清楚：工程师批准系统必须满足的 properties；agent 去找证明这些 properties 所需的 inductive invariants。规格越完整，也能锚定现代化——这也是我们把 C/C++ 译成 Verus 验证过的 Rust 的做法。"
           },
           {
             "kind": "pull",
