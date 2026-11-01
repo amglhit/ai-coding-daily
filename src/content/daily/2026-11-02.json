@@ -1,0 +1,448 @@
+{
+  "title": "AI Coding 日报 · 2026-11-02（周一）",
+  "date": "2026-11-02",
+  "type": "daily",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [
+    "cursor-sec",
+    "meta-jit"
+  ],
+  "masthead": "11 月 2 日 · AI Coding 日报",
+  "stories": [
+    {
+      "id": "cursor-sec",
+      "company": "Cursor",
+      "companyColor": "#000000",
+      "column": "行业动向",
+      "title": "Cursor Marketplace 恶意 Claude Code 扩展：先查再清",
+      "originalTitle": "Security notice — malicious version of Anthropic.claude-code (2.1.312 and 2.1.313) identified in the Cursor VS Code Extension Marketplace",
+      "byline": "Cursor · 10-29（10-30 更新 IOC）",
+      "sourceUrl": "https://cursor.com/blog/claude-code-extension-security-notice",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "10 月 29 日约 2:27am–1:35pm PT，Cursor VS Code Extension Marketplace 上出现了非 Anthropic 制作的 Anthropic.claude-code 2.1.312 / 2.1.313（Windows 与 macOS）。恶意代码会收集主机与用户信息，尝试把攻击者 SSH 公钥写入 authorized_keys、打开本地 SSH、建反向隧道，并用 LaunchAgent（macOS）或计划任务 / Startup 脚本（Windows）做持久化；后台约每 60 秒重试隧道。攻击者服务器已由云厂商配合下线；开启本地 SSH 多数机器需要管理员权限，该步常失败——但密钥、持久化与主机详情仍可能已落下。其他 marketplace 扩展与官方发行无证据受影响。10-30 更新了 IOC 并澄清受影响版本。"
+          },
+          {
+            "kind": "p",
+            "text": "若你在上述窗口从 Cursor Marketplace 安装或更新到这两个版本：先用平台脚本 / 查 authorized_keys 里是否有 comment 为 svc-telemetry 的密钥；命中再按下面处置。只卸扩展不够——payload 会落下独立持久化脚本继续跑。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "跑通告附带的校验脚本，确认本机是否受影响。",
+              "在 endpoint、网络与扩展安装遥测里搜通告给出的 IOC。",
+              "对出现 payload 执行或后门安装证据的主机做隔离。",
+              "删除未授权 SSH 密钥、持久化机制与正在跑的隧道进程，并评估是否应整机重建。",
+              "从可信机器轮换受影响主机上可触及的凭证与 session；有限的环境变量名收集，不排除后门后续拿凭据。"
+            ]
+          },
+          {
+            "kind": "aside",
+            "text": "macOS 用 grep 查 ~/.ssh/authorized_keys 是否含 svc-telemetry；Windows 查用户与 ProgramData 下 authorized_keys。清理可跑 remediate-macos.sh（以受影响用户、非 root）或管理员 PowerShell 下的 remediate-windows.ps1。问题可联系 security@cursor.com。"
+          },
+          {
+            "kind": "pull",
+            "text": "卸掉扩展可能不够——payload 会落下继续跑的独立持久化脚本。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "meta-jit",
+      "company": "Meta",
+      "companyColor": "#0668E1",
+      "column": "工程化实践",
+      "title": "落地前抓 bug：JiTTesting 的 human-on-the-loop",
+      "originalTitle": "Catching Bugs Before They Land: JiTTesting’s Human-on-the-Loop Approach at Full Scale",
+      "byline": "Sreeja Thummala、Sophie Zeng、Mark Harman、Weini Liu、Eric Liu · 10-29",
+      "sourceUrl": "https://engineering.fb.com/2026/10/29/security/catching-bugs-before-they-land-jittestings-human-on-the-loop-approach-at-full-scale/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "过去一年我们用 LLM 在变更落地前即时生成测试，称作 Catching Just-in-Time Tests（JiTTests）。多数 AI 防 bug 做法是让模型像人一样更快做 code review；JiTTests 不同：它生成可执行测试，展示变更引入的具体行为差。算力步骤更多，但能抓到 LLM / agent review 容易漏的一类问题。五个月前公开后，我们把 Catching JiTTests 推到生产：它已是 Meta 基础设施的一部分，帮工程师用更少负担、更低假阳性抓到更多 bug。"
+          },
+          {
+            "kind": "h",
+            "text": "两套并排的生成工作流"
+          },
+          {
+            "kind": "p",
+            "text": "难点是在海量代码里分清 strong catch（真阳性、真 bug）与 weak catch（可能假阳性）。我们并行两套：intent-aware——从 diff、标题与摘要推断意图与风险，再针对可能出错点生成测试；dodgy diff——把每次变更都当 mutant/bug，不做意图推理，直接生成能暴露与 parent 行为差的测试，隐式假定「这次 diff 有问题」。假阳性过滤用规则加上 LLM-as-Judge 集成（多家 SOTA 模型给 weak catch 打真/假阳性），再配合规则型 RubFake 做可核验的确定性判断，一起给候选排序。"
+          },
+          {
+            "kind": "h",
+            "text": "五段流水线"
+          },
+          {
+            "kind": "p",
+            "text": "整晚跑在空闲容量上。Stage 1 用类似 Diff Risk Score 的机制圈出前一天偏「risky」的 diff。Stage 2 同时跑 dodgy 与 intent-aware，失败测试收成 weak catch。Stage 3 LLM-as-Judge 看测试代码、失败轨迹、diff 与推断意图。Stage 4 RubFake 补确定性打分。Stage 5 按排名决定是否触达工程师——不是每条输出都要人审的 human-in-the-loop，而是 human-on-the-loop：人设标准、看汇总结果，而不是盯每一条。"
+          },
+          {
+            "kind": "h",
+            "text": "影响"
+          },
+          {
+            "kind": "p",
+            "text": "截至撰稿，589 名工程师（外联的 64%）与 Catching JiTTests 有过互动；他们反馈发现可行动，真阳性约 60%。2026 上半年，它在 diff 阶段参与抓住 74 个严重（SEV）隐私 bug，同期隐私 SEV 总体发生降低约 20%。工程师很少需要读测试代码，只需确认观察到的行为变化是否符合意图。可迁移做法：人尽早定义成功标准，让 AI 执行测试，人在汇总层监控、在策略层介入，而不是逐条督导。"
+          },
+          {
+            "kind": "pull",
+            "text": "工程师很少需要读测试代码，只需确认观察到的行为变化是否本意。"
+          },
+          {
+            "kind": "aside",
+            "text": "论文 Just-in-Time Catching Test Generation at Meta 在 FSE 2026 / Product@Scale 有更细的初期部署。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "outerloop-tdd",
+      "company": "个人",
+      "companyColor": "#F59E0B",
+      "column": "工程化实践",
+      "title": "用测试合同带 AI：红绿重构的 pair",
+      "originalTitle": "Test-Driven Vibe Coding: Letting the Contract Lead the AI",
+      "byline": "Jamie Cook · Outerloop · 10-30",
+      "sourceUrl": "https://www.outerloop.io/blog/20261030_tdd_with_ai/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "和 AI pair 真正强的不是「写得快」，而是缩短「描述想要什么」到「看见它存在」的反馈环。陷阱是 vibe coding：描述含糊，AI 交出看起来像样的一大坨，你变成在审别人的猜测，不再是架构师。用 TDD 驱动 AI，是在它跑偏、过度工程之前，先钉死它必须满足的合同。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 我写红测，AI 负责变绿"
+          },
+          {
+            "kind": "p",
+            "text": "模式就是经典 red/green/refactor。我交出描述下一片行为的失败测试，并说明：我们在做 TDD；你负责把测试变绿；绿了就 commit，控制权还给我。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 测试即规格，下一轮可以说「go again」"
+          },
+          {
+            "kind": "p",
+            "text": "然后继续往测试里加片。很多轮 prompt 短到一句 go again。测试就是规格：AI 读 diff、补缺失行为、跑 suite、lint、类型检查、commit，再交回。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 用断言钉架构语义，而不是用散文讲 API"
+          },
+          {
+            "kind": "p",
+            "text": "在 popdelta（把人口演化当 git 仓的小库）里，我没有用散文描述 API，而是写成断言：create 后要有 current_state/ 与有序 deltas/。编辑工作流里钉死输入不可变、commit 返回新状态。再把「删行与换列的顺序」写成合同——乱序应抛 ValueError，正确顺序才通过。我从不解释「怎么强制」，只断言想要的行为，让 AI 找满足它的实现。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 高价值决策留给人：形状、合法操作、不变量"
+          },
+          {
+            "kind": "p",
+            "text": "几十年经验不会让我更快记住 DataFrame.merge 的某个参数；跟语法搏斗是税。高价值的是决定形状：状态物化还是从 delta 重建、合法操作有哪些、哪些不变量必须成立。先写测试，就是只做这些决定；设计决定变成 agent 必须执行的实现合同。pandas、Parquet、manifest 交给它；ruff 嫌函数太复杂时它也会自己重构。"
+          },
+          {
+            "kind": "h",
+            "text": "5. 整份工作变成：写合同，并判断合同对不对"
+          },
+          {
+            "kind": "p",
+            "text": "节奏：我写或扩展描述下一行为的测试 → go again → AI 实现、跑测试+lint+类型、绿了 commit 并交回 → 重复。像早年迷上的 pair + TDD，只是 pair 不累、不跳过测试跑。我的工作变成写合同、判断它是否正确——这是架构师该花时间的地方。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "allen-agents",
+      "company": "个人",
+      "companyColor": "#9CA3AF",
+      "column": "社区热点",
+      "title": "Guidelines 与 guardrails 该进 Git",
+      "originalTitle": "Guidelines and Guardrails Belong in Git",
+      "byline": "Allen Pike · 10-31",
+      "sourceUrl": "https://allenpike.com/2026/in-repo-agent-instructions/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "essay",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "开箱的模型会过度复杂化、走捷径、把缺陷滚大。要从默认 Claude / ChatGPT 走到对你们产品可靠、便宜、快的软件环，需要真花力气——这越来越就是工作本身。该把这份工作分享给团队了。"
+          },
+          {
+            "kind": "p",
+            "text": "让 coding agent 行为一致，主要靠两条：用 guidelines 去steer，用 guardrails 去redirect——「请做对的事」并上「Error: 你做错了，重来」。Markdown 规则、docs、skills 与 PR 时的 AI reviewer 是用更好的非确定性对抗非确定性；但确定性规则才是金子。与其「PLEASE 别写一万行文件」，不如 lint 在 push 前直接拒掉过长文件。能搬进确定性代码的 Markdown 规则就搬——检查比 prompt 更硬、更快、更强，也便宜得多。再给模型可本地验证的环境，猜测和多余 fallback 会少。"
+          },
+          {
+            "kind": "quote",
+            "text": "个人机器上的一条 prompt 是个人生产力窍门；同一条进团队仓库就是基础设施。"
+          },
+          {
+            "kind": "p",
+            "text": "仓库里的 AGENTS.md 已常见；可复现的开发环境塞进更多 lint、sandbox、MCP；CI 常跑 review agent，最好由仓内说明来 steer。目标有两头：让 agent 说明更确定，并对整个团队更有用。工作越来越不是直接产代码，而是迭代一套 guidelines、guardrails 与 tools，帮全队产出好活。领域专家可以把专长写进文档与护栏，让无论 PM 还是 principal 起的变更都更好——仓内规则把专长变成杠杆。"
+          },
+          {
+            "kind": "h",
+            "text": "共享规则本身得真的好"
+          },
+          {
+            "kind": "p",
+            "text": "2024 年模型最糟是不听话；2026 年也会因为太听话、指令过绝对而出事。AGENTS.md 里若写「每次修复必须先从失败测试开始」，一千个 PR 后可能送来九千九百个单测，很多没用，CI 账单多一位数。说明太长，agent harness 还会截断。不少团队仍要求人读代码变更，却不审每个 agent 都遵守的根规则集。一条文档或工具能影响全队成千上万次非确定性跑数，就值得持续迭代，并有人对其有效性负责。"
+          },
+          {
+            "kind": "h",
+            "text": "把环闭上"
+          },
+          {
+            "kind": "p",
+            "text": "你自己测过 AGENTS.md 改版，别人那边呢？需要能看见 skills 谁在用、是否按预期工作、agent 是否在缺上下文上空转——不只修自己笔记本上的浪费，还要修团队 agent 上的。有的队靠人报；有的用默认共享 session 转录的环境，或 harness 无关的 session 调试工具。共享日志有用也有风险，要配安全、隐私与问责。早期各自实验的乱战在收束：该一起建共享 agent 基础设施、guidelines 与 guardrails，少对 Claude 吼，多做有用软件。"
+          },
+          {
+            "kind": "pull",
+            "text": "各自实验的乱战在收束。该一起建共享 agent 基础设施、guidelines 与 guardrails，少对 Claude 吼，多做有用软件。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "replit-habitat",
+      "company": "Replit",
+      "companyColor": "#F26207",
+      "column": "工程化实践",
+      "title": "Secure Agent Work：Habitat 的四条原则",
+      "originalTitle": "Replit’s Architecture Behind Secure Agent Work",
+      "byline": "Luis Héctor Chávez · 10-28",
+      "sourceUrl": "https://replit.com/blog/architecture-behind-secure-agent-work",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "agent 自主性上去，安全必须跟着扩。Palo Alto 的 Nikesh Arora 问：coding harness 安全吗？建议是给部署设护栏，再用第二双眼睛盯 drift、合规与可验证性。我们把多年长在 agent 工作处的安全基础设施，通过 Agent Habitat 开放给别的公司：在公司可控边界内，让 agent 碰到知识与系统。上周内核披露时，既有隔离挡住了利用；我们还集中打了工具补丁与防火墙，减轻开发者各自补救的活。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 只给 agent 所需的权限"
+          },
+          {
+            "kind": "p",
+            "text": "任务只需读却连上可写，失误或 prompt injection 就会越界。企业 connector 管理可按组控连接、给自定义 OAuth 定 scope；SAML SSO、SCIM、RBAC 与 IdP 同步。凭证另划更严边界：agent 应能发已授权请求，却拿不到可复用的外部凭证。凭证留在 agent 上下文外，由 credential broker 逐请求授权后，才从 vault 取并挂到出站请求上。权限决定能做什么；凭证保护防止密钥经生成代码、日志或对话泄露。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 遏制失败，并在环境里响应漏洞"
+          },
+          {
+            "kind": "p",
+            "text": "agent 试代码，不应自动摸到员工笔记本、生产库或不相关负载。共享责任模型下，我们负责 harness、runtime 与 OS；agent 跑在隔离云环境，MicroVM 给每套执行自有最小内核。托管库上开发与生产库分离。本周 Linux 内核披露里，既有 microVM + 加固内核配置挡住了利用，客户不必为那些洞单独动作。Node/Python/PHP 工具洞则由平台打补丁并推 WAF；Auto-Protect 对照新披露扫依赖并可自动备测补丁。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 扩大参与，生产变更仍要工程问责"
+          },
+          {
+            "kind": "p",
+            "text": "提出变更与批准进生产必须分开。主题专家可用 agent 改代码库并开 PR；agent 在独立分支准备，工程师审代码、在跑着的 sandbox 里检查。Security Agent 把静态分析、依赖扫描与 AI 推理合在一起——我们研究发现功能等价代码仅靠 AI 评估会随语法/prompt 措辞漂移，依赖洞也需要传统扫描。内部 Self-Driving Company 里，同一工程师队列从年初到六月末代码产出约 2.9×，review 延迟、PR 回退率与事故持平（内部经验，非对外承诺）。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 委托工作可追责，数据可治理"
+          },
+          {
+            "kind": "p",
+            "text": "审计日志覆盖 agent 活动、connector、secrets、部署与访问变更，可搜可导出，也可流到 Datadog / Splunk 一类 SIEM。静态数据 AES-256、传输 TLS 1.2+；单租户企业可选 CMEK。要最大控制可用 BYOC，把 agent harness、sandbox 与 credential broker 放进公司自己的云租户。组织、连接与执行环境层的控制还在变细：按任务收窄权限、把 Security Agent 扩到公司代码贡献、以及基于现有 eBPF sandbox 监控做可疑活动检测。"
+          },
+          {
+            "kind": "pull",
+            "text": "提出变更与批准进生产必须分开，才能在扩大参与的同时保住工程审阅。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ms-ext-malware",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "工程化实践",
+      "title": "恶意 Claude Code 扩展：loader 链与持久化取证",
+      "originalTitle": "Inside a malicious Claude Code-branded extension and its persistent SSH backdoor",
+      "byline": "Microsoft Security Research · 10-30",
+      "sourceUrl": "https://www.microsoft.com/en-us/security/blog/2026/10/30/inside-malicious-claude-code-branded-cursor-extension-persistent-ssh-backdoor/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Cursor 报告 Anthropic.claude-code 2.1.312 / 2.1.313 曾在其 Marketplace 短暂上架。我们确认这些恶意包从未出现在 Visual Studio Marketplace，也不在 npm @anthropic-ai/claude-code；Anthropic 向我们确认其系统未被攻破、也未制作该包。目前证据表明事件限于 Cursor marketplace。我们分析了注入的 JavaScript：模块一加载，loader 就跑在扩展正常代码之前，尝试加攻击者 SSH 密钥、启用本地 SSH、建反向转发、写持久化，并延迟回传主机详情。远程能否进来取决于权限与服务端配置；即便隧道失败，密钥与持久化产物仍可能已写入。"
+          },
+          {
+            "kind": "h",
+            "text": "攻击链顺序"
+          },
+          {
+            "kind": "p",
+            "text": "代码执行顺序（不证明每台主机每步都成功）：① 模块加载并收集主机信息；② 追加嵌入的公钥并尝试开本地 SSH；③ 用嵌入的隧道私钥出站，请求把远端端口转到本机 22；④ 按平台写启动持久化；⑤ 延迟 callback 试图上报先前收集的主机详情与部分环境变量名。全程用内嵌组件与系统自带工具，不另下一份可执行文件；吞掉命令输出、静默 catch，扩展表面仍正常以免惊动用户。"
+          },
+          {
+            "kind": "h",
+            "text": "侦察、双身份与反向隧道"
+          },
+          {
+            "kind": "p",
+            "text": "收集 hostname、用户名、OS、架构、家目录、工作目录、全局 Git email；并找环境变量名里含 KEY/TOKEN/SECRET/PASS/AWS/GCP 等的项，最多四十个——回传的是名字不是值。两套 SSH 身份分工：一套公钥进用户 authorized_keys（comment svc-telemetry）；另一套私钥写到隐藏临时文件 .stk_ + 十位十六进制，经 -i 以远端账号 tunnel 出站。隧道参数含 -N -R '*:0:localhost:22'：从工作站主动出站，远端分配监听端口再转到本机 22。关掉常规 host-key 检查；Unix 优先 autossh，否则 ssh；Windows 用隐藏 PowerShell 循环；退出后约等 60 秒再试。"
+          },
+          {
+            "kind": "h",
+            "text": "平台持久化与狩猎要点"
+          },
+          {
+            "kind": "p",
+            "text": "产物写在扩展目录外：macOS 用户 LaunchAgent com.apple.sysmond.plist 配 RunAtLoad/KeepAlive，以及 ~/.config/.smt、.smtk；Linux 用户 crontab @reboot；Windows 尝试名为 SysMon 的计划任务（想以 SYSTEM 跑），失败则落到 Startup 里的 sysmon.cmd。名字像监控组件，动作却是维持反向 SSH。清理前先保全扩展包、改过的授权文件、生成密钥/脚本与启动配置。卸扩展或 Cursor 侧服务器下线，都不会清掉已在设备上的产物。狩猎可围绕 134.209.82.225、payload SHA-256、.smt/.smtk/sysmon.cmd/com.apple.sysmond.plist、.stk_ 前缀，以及同时含 SysMon 与 smt 的计划任务创建事件。"
+          },
+          {
+            "kind": "aside",
+            "text": "缓解步骤与 Cursor 通告脚本互补；用前核对自己环境。组织侧可收紧只允许批准发布者、并对新发布版本设安装冷却。VS Marketplace / 官方 npm 包此事件未受影响。"
+          },
+          {
+            "kind": "pull",
+            "text": "隧道失败不等于干净——密钥与扩展目录外的持久化仍可能已落下。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "meta-thin-orch",
+      "company": "Meta",
+      "companyColor": "#0668E1",
+      "column": "工程化实践",
+      "title": "Thin Orchestrator：路由变薄，专家变深",
+      "originalTitle": "The Thin Orchestrator: How We Made Our AI Agents More Reliable by Giving the Router Less to Do",
+      "byline": "Plawan Rath、Akhil Jindal、Ashwini Verma · 10-19",
+      "sourceUrl": "https://engineering.fb.com/2026/10/19/ml-applications/thin-orchestrator-ai-agent-architecture/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们做了一个约 1,300 行的 orchestrator，把 20+ 工作流路由给 14 个专用 AI agent，自己不做任何领域活——这就是点。给推荐系统做数据列接入时，流程跨三个仓、三种语言、最多六段要同步的 pipeline。第一版是一个「什么都知道」的聪明 agent：demo 能跑，生产开始幻觉。过了某个上下文阈值，再加知识是在变差：命名约定、代码生成模式会串子系统。修法不是更好的 prompt 或更大窗口，而是让中心 agent 少做事：thin orchestrator——路由器只管编排与可靠性检查，领域决策全交给专家。"
+          },
+          {
+            "kind": "h",
+            "text": "薄路由 + 专家 worker"
+          },
+          {
+            "kind": "p",
+            "text": "两层：确定性 orchestrator 分类意图、收齐字段、跑可靠性检查、委派给对的专家——从不推理代码、从不生成配置、从不碰代码库；14 个 specialized subagent 各自带隔离上下文当完整领域专家。没有 agent 看见全貌，这是特性不是 bug。每次请求固定 7 步：读相关 subagent 说明 → 查目标是否已存在 → 向用户收齐必填字段 → 自动发现可推断项 → 可靠性门禁（活跃告警/必要 reviewer）→ 带全上下文委派 → 处理结果并暴露错误。1–5 与 7 确定；只有第 6 步在隔离 subagent 里做 LLM 推理，且只加载其领域知识。"
+          },
+          {
+            "kind": "h",
+            "text": "扩能力靠 workflow 模板，不靠新 agent"
+          },
+          {
+            "kind": "p",
+            "text": "orchestrator 用确定性状态机约束决策空间，例如 Column Onboarding：Schema → Validation → Population → Testing；换 Event Onboarding 或 Pipeline Migration 只是重排同一池 14 个 subagent。支持 pipeline migration 时零新增 agent 代码。每个 subagent 结构统一：知识源、委派前 checklist、领域步骤、发现模式、排错映射——加第 15 个是填模板。25+ 知识文件按工作流域组织，运行时按需加载；更新后下一 session 自动用新版，不必改 orchestrator。"
+          },
+          {
+            "kind": "h",
+            "text": "结果与可迁移做法"
+          },
+          {
+            "kind": "p",
+            "text": "新列配置准备手工要三到四天，早先配置驱动系统大约一天；thin orchestrator 不到一小时。约三分之二的变更无明显人工修改就落地——用深度领域知识换通用性：orchestrator 通用，subagent 专精。对照单 agent：靠人工为每任务定制 system prompt 成功率约 70–80%，没有手扶掉到 10–20%。可迁移：把路由与推理分开；subagent 结构均一；新用例先问能否重排既有 agent；知识运行时加载；显式划定确定性/概率边界——重 orchestrator 一幻觉，错路由、错字段、跳门禁会传遍下游。"
+          },
+          {
+            "kind": "pull",
+            "text": "系统里最重要的组件，往往是干活最少的那个：orchestrator 要薄，专家要深。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anth-asr",
+      "company": "Anthropic",
+      "companyColor": "#D4A27F",
+      "column": "选读",
+      "title": "用 Claude 缩攻击面：25 个项目里的 493 个问题",
+      "originalTitle": "Using Claude to reduce the attack surface of code",
+      "byline": "Chris Rohlf · Frontier Red Team · 10-20",
+      "sourceUrl": "https://www.anthropic.com/research/attack-surface-reduction",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "只靠找洞修洞扩展性差：修掉一个关键洞，说明不了还剩什么。缩攻击面是另一条近路——映射哪些代码可达，再把部署不需要暴露的移到认证后、需点击、显式 opt-in，或协议状态机更深的位置。洞还在代码里，但更难够到，严重度下降。我们让 Claude 在 25 个开源项目（多种语言、合计超五百万行）上做自动化攻击面分析与削减，发现 493 个问题；并清点了逾 17,000 个配置项，其中 3,842 个与安全相关控制/功能有关。"
+          },
+          {
+            "kind": "p",
+            "text": "方法盯三类：默认配置下可达却非任何默认功能所需；单独合理、合在一起却静默关掉安全控制或行为未定义的配置组合；在认证等硬门禁之前、无受害者交互、或协议状态转换之前就跑的敏感/复杂代码。项目分成 Public / Gated / Private。Gated 的 11 个项目里，默认配置下发现 93 处不必要的预认证表面、37 处认证前执行或记状态、61 处静默削弱管理员预认证控制的配置组合。跨类型共 162 组安全敏感组合被无错无警接受且无文档；其中 94 组静默关掉安全控制，68 组是同一机制内的不一致。有一组冲突配置静默丢掉证书校验，已存在 21 年。"
+          },
+          {
+            "kind": "p",
+            "text": "按占预认证代码比例，削减最大的竟是 OpenSSH。在 10.4 里 Claude 追到默认配置下未认证客户端可达的约 4,500 行 ML-DSA-44 实验代码（约 sshd 自有预认证代码的 16%）：先解析再检查是否允许该密钥类型。10.5 把检查前移后仍有两处缺口（广告算法名与 blob 内类型不一致；证书路径在配置检查前就对嵌入 CA 密钥做完整验签）。与维护者多轮后，10.6 把检查放进 parser 本身，去掉未认证客户端原先约五分之一可达代码。我们把方法收成可复用 Claude skill，正接入 OSS-Scanner：三轮空上下文（只带上轮短摘要），每轮用动态 trace 确认，默认配置改动要过项目自测与黑盒回归且默认行为不变。"
+          },
+          {
+            "kind": "pull",
+            "text": "缩不必要攻击面，是一次降低所有未知洞——包括可能已在被利用的那些——的风险。"
+          },
+          {
+            "kind": "aside",
+            "text": "研究预览；个别洞名与 PoC 细节以原文与对维护者披露为准。OpenSSH 仍是高审计质量代码——那里都能活过不必要可达性，别处更可能。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cognition-fc2",
+      "company": "Cognition",
+      "companyColor": "#7C3AED",
+      "column": "选读",
+      "title": "FrontierCode 2.0：用 thoroughness 卡住「看起来做完」",
+      "originalTitle": "FrontierCode 2.0",
+      "byline": "The Cognition Team · 10-27",
+      "sourceUrl": "https://cognition.com/blog/frontier-code-2.0",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "benchmark",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "多数 coding benchmark 很快被刷满，却测不到真实缺口：推断用户意图、尊重未言明约束、预见改动的长期后果。FrontierCode 2.0 仍由 20+ 顶级开源维护者按仓做可合并性评测，并加强三处：任务来自多 55% 的仓库、覆盖含安全补丁与性能优化；评分更强调正确性与设计，thoroughness 权重上升；相对 1.1，参考解平均多改 67% 文件、89% 行，代码库大约大 25%。不过阻塞标准多 43%。80% 任务的参考解与上游 PR 不同（1.0 为 60%）。"
+          },
+          {
+            "kind": "p",
+            "text": "榜首 Claude Opus 5.5 仅 45.5%（1.1 为 54.6%），远未饱和；与 DeepSWE / 1.1 相比分层更开。阻塞项里 thoroughness 从 168 增到 501（约 3×），在各 effort 上失败率都高于 core behavior（池化四模型时约 19.2% vs 14.9%）。它抓的是能从说明与既有代码推断、却未写明的正确性条件——例如只修了提示里的一条路径、漏了兄弟路径；或只支持提示提到的一种输入。相对 1.1，scope 阻塞失败率从 9.0% 降到 3.8%，以容纳「出人意料但可接受」的超出范围改动；effort 升高时仍可能因乱扩 scope、偶发作弊或 overthinking 掉分。"
+          },
+          {
+            "kind": "pull",
+            "text": "模型常在「提示没写明、但可推断」的约束上失手；thoroughness 专门卡住表面做完、功能仍烂的解。"
+          },
+          {
+            "kind": "aside",
+            "text": "私有评测与专有模型名不可直接外推到你们仓库；可迁移的是方法——用可推断约束与合并标准，而不是只测「按长规格实现」。"
+          }
+        ]
+      }
+    }
+  ]
+}
