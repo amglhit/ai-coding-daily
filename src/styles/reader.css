@@ -392,6 +392,18 @@ html[data-pointer="fine"] .reader .story {
   color: var(--muted);
 }
 
+.weekly-brief.story h2::before {
+  content: none;
+}
+
+.weekly-brief .section-break-label {
+  margin: 0.35rem 0 1rem;
+}
+
+.weekly-brief .theme-links {
+  margin: 0 0 1.15rem;
+}
+
 .story-pull + .story-aside {
   margin-top: 0;
   padding-top: 0.95rem;

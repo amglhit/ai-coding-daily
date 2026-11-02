@@ -36,6 +36,17 @@ interface IssueLink {
   title: string;
 }
 
+interface ThemeLink {
+  label: string;
+  href: string;
+}
+
+interface Theme {
+  title: string;
+  summary: string;
+  links?: ThemeLink[];
+}
+
 interface Props {
   title: string;
   chipHref: string;
@@ -43,9 +54,25 @@ interface Props {
   stories: Story[];
   older?: IssueLink | null;
   newer?: IssueLink | null;
+  masthead?: string;
+  themes?: Theme[];
+  practices?: string[];
+  feedLabel?: string;
 }
 
-const { title, chipHref, chipLabel, stories, older = null, newer = null } = Astro.props;
+const {
+  title,
+  chipHref,
+  chipLabel,
+  stories,
+  older = null,
+  newer = null,
+  masthead = "",
+  themes = [],
+  practices = [],
+  feedLabel = "AI Coding 日报",
+} = Astro.props;
+const hasBrief = Boolean(masthead || themes.length || practices.length);
 const first = stories[0];
 const hasIssues = Boolean(older || newer);
 const units = readerUnits(stories);
@@ -75,18 +102,129 @@ const hasPicks = pickStories.length > 0;
     })();
   </script>
   <h1 class="visually-hidden">{title}</h1>
-  <div class="reader-stage" role="feed" aria-label="AI Coding 日报">
+  <div class="reader-stage" role="feed" aria-label={feedLabel}>
     <div class="reader-live" aria-live="polite">
-      {first ? `${first.company} · ${first.title}` : title}
+      {hasBrief ? masthead || title : first ? `${first.company} · ${first.title}` : title}
     </div>
     <div class="reader-track">
+      {
+        hasBrief && (
+          <article
+            class="story reader-unit weekly-brief is-active"
+            id="story-weekly-brief"
+            data-id="weekly-brief"
+            data-kind="brief"
+            data-group="brief"
+            data-title={masthead || title}
+            aria-labelledby="title-weekly-brief"
+          >
+            <div class="story-main">
+              <div class="reader-tools">
+                <a class="reader-chip" href={chipHref}>
+                  {chipLabel}
+                  <span class="visually-hidden">，回到首页</span>
+                </a>
+                <button
+                  type="button"
+                  class="toc-entry"
+                  aria-label="目录"
+                  aria-haspopup="dialog"
+                  aria-expanded="false"
+                  aria-controls="toc-panel"
+                >
+                  目录
+                </button>
+                <button
+                  type="button"
+                  class="comfort-entry"
+                  aria-label="版式"
+                  aria-haspopup="dialog"
+                  aria-expanded="false"
+                  aria-controls="comfort-sheet"
+                >
+                  Aa
+                </button>
+                <div class="comfort-sheet" id="comfort-sheet" role="dialog" aria-label="版式" hidden>
+                  <div class="comfort-options" role="radiogroup" aria-label="版式">
+                    <label class="comfort-option">
+                      <input type="radio" name="comfort" value="tight" />
+                      紧凑
+                    </label>
+                    <label class="comfort-option">
+                      <input type="radio" name="comfort" value="standard" checked />
+                      标准
+                    </label>
+                    <label class="comfort-option">
+                      <input type="radio" name="comfort" value="loose" />
+                      宽松
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <header class="story-head">
+                <h2 id="title-weekly-brief">{masthead || title}</h2>
+              </header>
+              <div class="story-body">
+                {
+                  themes.length > 0 && (
+                    <>
+                      <p class="section-break-label">本周主线</p>
+                      {themes.map((theme) => (
+                        <>
+                          <h3 class="story-h">{theme.title}</h3>
+                          <p>{theme.summary}</p>
+                          {
+                            theme.links && theme.links.length > 0 && (
+                              <div class="story-byline theme-links">
+                                {theme.links.map((link, linkIndex) => (
+                                  <>
+                                    {linkIndex > 0 && (
+                                      <span class="story-dot" aria-hidden="true">
+                                        ·
+                                      </span>
+                                    )}
+                                    <a class="story-source" href={link.href} target="_blank" rel="noreferrer noopener">
+                                      {link.label}
+                                    </a>
+                                  </>
+                                ))}
+                              </div>
+                            )
+                          }
+                        </>
+                      ))}
+                    </>
+                  )
+                }
+                {
+                  practices.length > 0 && (
+                    <>
+                      <p class="section-break-label">落地实践</p>
+                      <ol class="story-steps">
+                        {practices.map((item, index) => (
+                          <li>
+                            <span class="n">{index + 1}</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ol>
+                    </>
+                  )
+                }
+              </div>
+              {first && <p class="story-next">下一篇 · {first.title}</p>}
+            </div>
+            {first && <p class="story-hint">上滑 · {first.title}</p>}
+          </article>
+        )
+      }
       {
         units.map((unit, unitIndex) => {
           if (unit.kind === "break") {
             const following = pickStories[0];
             return (
               <section
-                class:list={["section-break", "reader-unit", { "is-active": unitIndex === 0 }]}
+                class:list={["section-break", "reader-unit", { "is-active": unitIndex === 0 && !hasBrief }]}
                 id="section-picks"
                 data-kind="break"
                 data-group="picks"
@@ -109,7 +247,7 @@ const hasPicks = pickStories.length > 0;
           const beforePicks = Boolean(next && storyGroup(next.column) === "picks");
           return (
             <article
-              class:list={["story", "reader-unit", { "is-active": unitIndex === 0 }]}
+              class:list={["story", "reader-unit", { "is-active": unitIndex === 0 && !hasBrief }]}
               id={`story-${story.id}`}
               data-id={story.id}
               data-kind="story"
@@ -123,7 +261,7 @@ const hasPicks = pickStories.length > 0;
               style={`--company:${accent}`}
             >
               <div class="story-main">
-                {unit.index === 0 && (
+                {unit.index === 0 && !hasBrief && (
                   <div class="reader-tools">
                     <a class="reader-chip" href={chipHref}>
                       {chipLabel}
@@ -221,6 +359,21 @@ const hasPicks = pickStories.length > 0;
         )
       }
       {
+        hasBrief && (
+          <div class="toc-group" data-group="brief">
+            <h2>本周</h2>
+            <ol>
+              <li>
+                <button type="button" class="toc-row" data-story="weekly-brief">
+                  <span class="toc-company">周报</span>
+                  <span class="toc-title">本周主线</span>
+                </button>
+              </li>
+            </ol>
+          </div>
+        )
+      }
+      {
         morningStories.length > 0 && (
           <div class="toc-group" data-group="morning">
             <h2>Morning</h2>
@@ -280,7 +433,9 @@ const hasPicks = pickStories.length > 0;
     }
 
     function syncPositions(list) {
-      const storyList = list.filter((element) => element.classList.contains("story"));
+      const storyList = list.filter(
+        (element) => element.classList.contains("story") && element.dataset.kind !== "brief",
+      );
       storyList.forEach((element, storyIndex) => {
         element.setAttribute("aria-posinset", String(storyIndex + 1));
         element.setAttribute("aria-setsize", String(storyList.length));
