@@ -6,7 +6,17 @@ import Footer from "../components/Footer.astro";
 import { decorateIssues, formatIsoDate, formatLongDate } from "../lib/digest.mjs";
 import { sitePath } from "../lib/paths.mjs";
 
-const { newestFirst } = decorateIssues(await getCollection("daily"));
+const dailyIssues = (await getCollection("daily")).map((entry) => ({
+  id: entry.id,
+  data: entry.data,
+  kind: "daily",
+}));
+const weeklyIssues = (await getCollection("weekly")).map((entry) => ({
+  id: entry.id,
+  data: entry.data,
+  kind: "weekly",
+}));
+const { newestFirst } = decorateIssues([...dailyIssues, ...weeklyIssues]);
 const filters = ["全部", "行业动向", "工程化实践", "社区热点", "选读"];
 ---
 
@@ -35,10 +45,11 @@ const filters = ["全部", "行业动向", "工程化实践", "社区热点", "�
         <ol class="archive-list">
           {newestFirst.map((issue) => (
             <li data-columns={issue.data.columns.join(",")}>
-              <a href={sitePath(`daily/${issue.id}/`)}>
+              <a href={sitePath(`${issue.kind}/${issue.id}/`)}>
                 <time datetime={formatIsoDate(issue.data.date)}>{formatLongDate(issue.data.date)}</time>
                 <span>
                   <span class="archive-title">{issue.data.title}</span>
+                  {issue.kind === "weekly" && <span class="archive-must">周报</span>}
                   {issue.data.must_read.length > 0 && (
                     <span class="archive-must">必读 {issue.data.must_read.join(" · ")}</span>
                   )}

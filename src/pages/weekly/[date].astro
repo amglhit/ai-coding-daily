@@ -1,0 +1,44 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import DailyReader from "../../components/DailyReader.astro";
+import { decorateIssues } from "../../lib/digest.mjs";
+import { sitePath } from "../../lib/paths.mjs";
+import { formatChipDate, storyDescription } from "../../lib/stories.mjs";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("weekly");
+  return entries.map((entry) => ({
+    params: { date: entry.id },
+    props: { id: entry.id },
+  }));
+}
+
+const { id } = Astro.props;
+const entries = await getCollection("weekly");
+const { newestFirst } = decorateIssues(entries);
+const index = newestFirst.findIndex((entry) => entry.id === id);
+const issue = newestFirst[index];
+if (!issue) throw new Error(`找不到周报 ${id}`);
+
+const newer = newestFirst[index - 1];
+const older = newestFirst[index + 1];
+const stories = issue.data.stories ?? [];
+const linkFor = (entry) => (entry ? { href: sitePath(`weekly/${entry.id}/`), title: entry.data.title } : null);
+const description = stories.length > 0 ? storyDescription(stories) : issue.data.masthead || issue.data.title;
+---
+
+<Base surface="reader" title={issue.data.title} description={description}>
+  <DailyReader
+    title={issue.data.title}
+    chipHref={sitePath()}
+    chipLabel={formatChipDate(issue.data.date)}
+    stories={stories}
+    older={linkFor(older)}
+    newer={linkFor(newer)}
+    masthead={issue.data.masthead}
+    themes={issue.data.themes}
+    practices={issue.data.practices}
+    feedLabel="AI Coding 周报"
+  />
+</Base>

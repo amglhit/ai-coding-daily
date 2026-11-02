@@ -1,4 +1,6 @@
 ---
+import { getCollection } from "astro:content";
+import { decorateIssues } from "../lib/digest.mjs";
 import { sitePath } from "../lib/paths.mjs";
 
 const home = sitePath();
@@ -6,6 +8,9 @@ const archive = sitePath("archive/");
 const path = Astro.url.pathname;
 const onArchive = path.includes("/archive");
 const onHome = path === home || path === home.replace(/\/$/, "");
+const onWeekly = path.includes("/weekly/");
+const latestWeekly = decorateIssues(await getCollection("weekly")).newestFirst[0];
+const weeklyHref = latestWeekly ? sitePath(`weekly/${latestWeekly.id}/`) : "";
 ---
 
 <header class="masthead">
@@ -15,6 +20,13 @@ const onHome = path === home || path === home.replace(/\/$/, "");
     </a>
     <nav class="mast-nav" aria-label="站点">
       <a href={home} aria-current={onHome ? "page" : undefined}>本期</a>
+      {
+        weeklyHref && (
+          <a href={weeklyHref} aria-current={onWeekly ? "page" : undefined}>
+            周报
+          </a>
+        )
+      }
       <a href={archive} aria-current={onArchive ? "page" : undefined}>归档</a>
     </nav>
   </div>

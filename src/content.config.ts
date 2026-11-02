@@ -47,6 +47,30 @@ const story = z
   })
   .strict();
 
+const issueFields = {
+  title: z.string(),
+  date: z.coerce.date(),
+  columns: z.array(z.string()).default([]),
+  must_read: z.array(z.string()).default([]),
+  masthead: z.string().optional(),
+  stories: z.array(story).optional(),
+};
+
+const themeLink = z
+  .object({
+    label: z.string().min(1),
+    href: z.string().url(),
+  })
+  .strict();
+
+const theme = z
+  .object({
+    title: z.string().min(1),
+    summary: z.string().min(1),
+    links: z.array(themeLink).default([]),
+  })
+  .strict();
+
 const daily = defineCollection({
   loader: glob({
     pattern: "**/*.{md,json}",
@@ -54,14 +78,23 @@ const daily = defineCollection({
     generateId: ({ entry }) => entry.replace(/^\.\//, "").replace(/\.(md|json)$/i, ""),
   }),
   schema: z.object({
-    title: z.string(),
-    date: z.coerce.date(),
+    ...issueFields,
     type: z.string().default("daily"),
-    columns: z.array(z.string()).default([]),
-    must_read: z.array(z.string()).default([]),
-    masthead: z.string().optional(),
-    stories: z.array(story).optional(),
   }),
 });
 
-export const collections = { daily };
+const weekly = defineCollection({
+  loader: glob({
+    pattern: "**/*.{md,json}",
+    base: "./src/content/weekly",
+    generateId: ({ entry }) => entry.replace(/^\.\//, "").replace(/\.(md|json)$/i, ""),
+  }),
+  schema: z.object({
+    ...issueFields,
+    type: z.literal("weekly"),
+    themes: z.array(theme).default([]),
+    practices: z.array(z.string().min(1)).default([]),
+  }),
+});
+
+export const collections = { daily, weekly };

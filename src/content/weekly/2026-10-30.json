@@ -1,0 +1,457 @@
+{
+  "title": "AI Coding 周报 · 2026-10-30（周五）",
+  "date": "2026-10-30",
+  "type": "weekly",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点"
+  ],
+  "must_read": [
+    "dave-egm",
+    "nikolas-10h"
+  ],
+  "masthead": "10 月 30 日 · AI Coding 周报",
+  "themes": [
+    {
+      "title": "设计文档与 Spec 成了新的源码",
+      "summary": "用 AI 加速却不把设计判断前移，容易量产错误。本周多条线汇合：设计文档喂上下文（EGM）、Spec→Tests→Plan→Impl、以及 Microsoft 把 properties 交给人批准、agent 去找证明。",
+      "links": [
+        {
+          "label": "大象与金鱼（日报 10-29）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-29/"
+        },
+        {
+          "label": "Spec-driven（日报 10-29）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-29/"
+        },
+        {
+          "label": "Code is cheap（日报 10-28）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-28/"
+        }
+      ]
+    },
+    {
+      "title": "写代码的量上去了，review 与质量环必须持续跑",
+      "summary": "Claude Code 团队合并量翻倍、revert 占比下降；Google 用 Agents CLI 做 hill-climbing 与生产 Outer loop（AQuA）。门禁从流程末尾变成持续拼写检查，人的注意力留给风险与意图。",
+      "links": [
+        {
+          "label": "Claude Code review（日报 10-28）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-28/"
+        },
+        {
+          "label": "Hill-climbing eval（日报 10-29）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-29/"
+        },
+        {
+          "label": "Outer loop AQuA（日报 10-29）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-29/"
+        }
+      ]
+    },
+    {
+      "title": "长跑与无人值守：人花在跑前跑后",
+      "summary": "连跑 10 小时靠票图、自测与 Goal-mode；定时自动化用 bookmark 而不是固定时间窗；长跑 agent 要显式 state，不能靠聊天记录续命。",
+      "links": [
+        {
+          "label": "10 小时 setup（日报 10-29）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-29/"
+        },
+        {
+          "label": "Agent 自动化六条（日报 10-29）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-29/"
+        },
+        {
+          "label": "ADK 长跑 state（日报 10-28）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-28/"
+        }
+      ]
+    },
+    {
+      "title": "人的角色更集中：定义问题、判断质量、为结果负责",
+      "summary": "Manus 一人跨端、产品经理直接交代码；Anthropic 多数时候把 subagent 折进主循环；工程判断练习强调先写可观察问题与可改口证据。Code 变 cheap 之后，人很容易给自己加更大一笔单。",
+      "links": [
+        {
+          "label": "用 Manus 改造 Manus（日报 10-28）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-28/"
+        },
+        {
+          "label": "Fold subagents（日报 10-28）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-28/"
+        },
+        {
+          "label": "工程判断（日报 10-29）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-29/"
+        }
+      ]
+    },
+    {
+      "title": "Agent 规模开始顶穿为人设计的基础设施",
+      "summary": "Anthropic 日合并从约 2,500 涨到超过 30,000，自研 Scion 替代 git；Microsoft 在亿行级仓做迁移与 formal verification。信任与基建，正在变成比写代码更稀缺的部分。",
+      "links": [
+        {
+          "label": "Scion 源控（本周深读）",
+          "href": "https://www.anthropic.com/research/redesigning-source-control"
+        },
+        {
+          "label": "Cheap code, precious trust（日报 10-28）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-10-28/"
+        }
+      ]
+    }
+  ],
+  "practices": [
+    "新功能先写设计文档真源（Problem → Technical Plan → Alternatives → Detailed Implementation），再用零记忆 session（Goldfish）只凭文档复述与实现；崩了重开 session 投喂同一份文档。",
+    "跨服务或规则含糊时走 Spec → Tests（人审边界）→ Plan → Implementation → Verification；禁止为变绿削弱或删除测试。",
+    "Review 多层持续跑：可跑验证 + 新鲜 context 审 diff + PR 上 AI review；人按风险进场。目标是少花人的时间和注意力，同时 revert 和事故不升高。",
+    "定时自动化每个源用 bookmark，读失败报成读不到、绝不报成安静的一天；发帖成功后再推进 ledger。",
+    "长跑前写清目标、停止条件与只有人能做的事；跑中用 progress.md 作重启检查点；人的时间放在跑前与跑后。"
+  ],
+  "stories": [
+    {
+      "id": "ms-trust",
+      "company": "Microsoft",
+      "companyColor": "#0078D4",
+      "column": "行业动向",
+      "title": "Code is cheap 之后，稀缺的是信任",
+      "originalTitle": "Cheap code, precious trust: Code modernization at scale",
+      "byline": "Sriram Rajamani、Tim Bozarth · Microsoft CoreAI · 10-26",
+      "sourceUrl": "https://commandline.microsoft.com/agentic-software-engineering-large-scale-code-migration-language-modernization-spec-driven-development/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "essay",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Agent 改起代码来，可以比人审这些改动快几个数量级。我们在 Windows 和 Azure 的代码库上做这件事：把一个 4 亿行的代码库迁到新的编译器工具链，把遗留 C/C++ 现代化成 Rust，并越来越多地做 formal verification。写出代码正在变成容易的部分；真正难的是知道该不该信任它。"
+          },
+          {
+            "kind": "p",
+            "text": "控制流反过来了。我们起初把 LLM 硬编码成 pipeline 里的子程序；到 2025 年 5 月，agent 比这些 pipeline 更会规划，我们的工作变成给它造工具。最有用的，是让 agent 和后面的工程师都知道这次改对了没有。人的注意力成了最稀缺的资源，工具要把它花在最要紧的地方。"
+          },
+          {
+            "kind": "h",
+            "text": "Migration"
+          },
+          {
+            "kind": "p",
+            "text": "大规模迁移由很小的专家团队驱动，不把所有权摊给整个工程组织。Agent 从抽样里学出 knowledge base；专家批准的是这份 knowledge base，不是每一个 patch。人的反馈仍不可少，但放在杠杆最高的地方：批准知识，以及处理新的或含糊的情况。"
+          },
+          {
+            "kind": "h",
+            "text": "Language modernization"
+          },
+          {
+            "kind": "p",
+            "text": "C/C++ 迁到 Rust，按 feature 走比逐行翻译更稳。每个 feature 用场景测试做端到端验证；differential testing 比较新旧行为；holdout 测试不给 agent 看，免得它过拟合。最近开始从源码抽出 formal specification，带到目标语言，再用 Verus 证明现代化后的代码满足它们。"
+          },
+          {
+            "kind": "h",
+            "text": "Specification-driven development"
+          },
+          {
+            "kind": "p",
+            "text": "Agent 产出变更的速度，已经超过人评估的速度。我们把意图写清楚：工程师批准系统必须满足的 properties；agent 去找证明这些 properties 所需的 inductive invariants。规格越完整，也能锚定现代化——这也是我们把 C/C++ 译成 Verus 验证过的 Rust 的做法。"
+          },
+          {
+            "kind": "pull",
+            "text": "生成代码正在变成容易的部分。真正难的是知道该不该信任它。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anth-scion",
+      "company": "Anthropic",
+      "companyColor": "#D4A27F",
+      "column": "行业动向",
+      "title": "为人设计的 git，撑不住 agent 的合并量",
+      "originalTitle": "Redesigning source control at Anthropic",
+      "byline": "Nick G. 与 source control 团队 · 10-13",
+      "sourceUrl": "https://www.anthropic.com/research/redesigning-source-control",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "essay",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "写代码不再是瓶颈。Claude 能自主迭代 research loop、微优化复杂程序、从零搭服务。瓶颈变成了为人规模设计的开发者基础设施：源控、构建、CI。2026 年 5 月我们平均每天合并约 2,500 次变更；到 9 月每天超过 30,000 次。需求几乎无限；每拿掉一个瓶颈，产出立刻再涨。"
+          },
+          {
+            "kind": "p",
+            "text": "五个月内我们自研 Scion，把 monorepo 从 git 迁完，并顺手做了 code review 面 Antique、代码搜索、源控 IAM，以及大量已审代码的落地方式。Claude 既把我们推进这个局面，也让我们能快速做出高质量、可扩展的系统来接住它。"
+          },
+          {
+            "kind": "h",
+            "text": "Growing our monorepo"
+          },
+          {
+            "kind": "p",
+            "text": "主分支历史 alone 近 100 GB，压缩工作副本超过 25 GB。仅 CI 每天大约 2,500 万次 checkout，天真地算会是每天超过 600 PB 的 git 流量。shallow clone、sparse checkout、内部 mirror、blob seed 我们都用过——高峰时跑过几百个内部 mirror。它们买到了时间，却越来越难运维。"
+          },
+          {
+            "kind": "p",
+            "text": "我们其实一直把 git 当中心化系统用，而几乎所有客户端都是天生在线的 agent 与 job。为分布式离线设计的那些性质，反过来拖垮了扩展。于是问：如果一开始就按「agent 永远在线」来设计源控，会长成什么样？"
+          },
+          {
+            "kind": "h",
+            "text": "Principles for agent-scale source control"
+          },
+          {
+            "kind": "p",
+            "text": "客户端永远在线；client-server 不对称——历史、blame、commit、merge、rebase 在服务端做，客户端只维护有界缓存与工作副本；源控查询全部走 API，很多 job 根本不需要本地仓；一切水平扩展，仓库数据分布式，服务器上也不存在完整物化副本；commit 必须便宜、增量、无锁；工作副本可选，默认 sparse / 按需虚拟化。"
+          },
+          {
+            "kind": "h",
+            "text": "How Scion works"
+          },
+          {
+            "kind": "p",
+            "text": "工作单元是 write-ahead log 里的 changeset：相对第一父提交记录改过的文件，内容寻址进 blob 存储。服务端创建、立刻全局可见。history / blame 等「派生数据」从 changeset 递归算出，可急可缓。checkout 协议只按客户端要的 tree/blob 拉取，任意缓存层都能答；各层命中率超过 99%。相对过去的 git mirror，基础设施 footprint 大约小了 200 倍；CI 与 research job 的 checkout 快两个数量级，CI  alone 省下约 25% CPU。"
+          },
+          {
+            "kind": "h",
+            "text": "What we learned building Scion"
+          },
+          {
+            "kind": "p",
+            "text": "七人团队在合并量涨约 10 倍的同时，五个月建成并迁完 Scion 与 Antique。工程师提供系统边界与取舍，经常要告诉 Claude「不行」——agent 会为不该存在的模式违反核心约束。我们仍审每一笔变更，但看的是意图，不再逐行读完。Claude 也随手做出 hermetic 模拟、fuzz、限流，以及索引上的算法优化。全局 merge queue 的「仓库大锁」在 agent 规模几乎复刻不了，我们改为更多 post-merge / pre-deploy 自动化测试：并发可能冲突，但 Claude 修冲突往往比人发现冲突还快。"
+          },
+          {
+            "kind": "pull",
+            "text": "Scion 不是通用 git 替代品；这些取舍主要对巨大 monorepo、成千上万工程师或海量写码 agent 才说得通。我们更希望把思考分享出去，让别人把成功的部分带回 git，而不必整体换掉模型。"
+          },
+          {
+            "kind": "aside",
+            "text": "日报本周未收；作行业动向补读。文中数字与架构细节均来自 Anthropic 原文。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dave-egm",
+      "company": "个人",
+      "companyColor": "#F59E0B",
+      "column": "工程化实践",
+      "title": "大象与金鱼：设计文档才是新的源码",
+      "originalTitle": "Elephants, Goldfish and the New Golden Age of Software Engineering",
+      "byline": "Dave Rensin · 4 月撰；10-21 更新开源",
+      "sourceUrl": "https://drensin.medium.com/elephants-goldfish-and-the-new-golden-age-of-software-engineering-c33641a48874",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "pull",
+            "text": "一不小心，我们就不只是写代码更快，而是在量产错误。\nIf we aren't careful, we aren't just writing code faster. We are mass-producing our mistakes."
+          },
+          {
+            "kind": "p",
+            "text": "用 AI 加速却不维持信噪比，生产力其实在倒退。session 中途崩溃后，模型对前一小时毫无记忆。后来发现：sizeof(docs) ≪ sizeof(code)——用英文设计文档喂上下文，比逼它读海量源码更便宜、更快、更稳。Design is the new code。"
+          },
+          {
+            "kind": "p",
+            "text": "Elephant-Goldfish Model（EGM）：Elephant 是高上下文、帮你写出设计文档的 AI session；Goldfish 是全新零记忆 session，只知道眼前材料。每个新功能：先喂饱 Elephant，再用 Goldfish 验。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "Phase 1 还不写代码：让 AI 读相关设计/代码并复述，误解立刻纠正；强制「不要写代码，只做设计讨论并追问假设」；它变谄媚时说「同意我并没有帮助，挑战我的想法」；再用 prose 和框图出第一版技术方案，辩论到站得住。",
+              "Phase 2 在同一会话里分段写 markdown 真源：Problem → Technical Plan → Alternatives（否决项写成未来幻觉的护栏）→ Detailed Implementation（逐文件变更与理由）。这文件进仓库，就是功能的新「源码」。",
+              "Phase 3 Goldfish：新 session 只凭文档和它引用的文件复述系统——说不清就补文档；再扮苛刻 reviewer；再问「首遍是否够实现」；通过后才说「严格按文档实现」。实现崩了，新开 session 再投喂文档即可续上。",
+              "代码写完后做「刻薄」review：明确说你觉得代码质量差，请它撕到只剩 nit；并要求几乎每十行要有注释级的可读性。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "存量百万行仓库也可以约一周「喂花生与干草」：叶子目录让 AI 写 README，人花 5–10 分钟修大约一半错，再层层向上汇总。为速度而来，为理解留下。"
+          },
+          {
+            "kind": "aside",
+            "text": "2026-10-21 更新：团队内部用的 AI coding assistant plugin 已开源，见 egm.dev。文中是个人路径，请自行验证。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "manus",
+      "company": "Manus",
+      "companyColor": "#E07A3D",
+      "column": "工程化实践",
+      "title": "用 Manus 改造 Manus",
+      "byline": "张涛 · 潜云思绪 · 10-26",
+      "sourceUrl": "https://mp.weixin.qq.com/s/I_hNNAf7LFBf5nJ0rEJHig",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "quote",
+            "text": "我给工程师提了几条需求和 Bug，过一会儿去问进展。我看到工程师的电脑上开着的一排 Codex 和 Manus 的 Session，随便点开一个，这些 Session 的输入就是我刚刚在 Slack 上发给他的需求原文，一字未改。"
+          },
+          {
+            "kind": "p",
+            "text": "不管是新需求还是新 Bug，大家基本直接交给 AI。一个工程师同时处理十几、二十个需求，在今天的 Manus 已成为常态。过去最大的损耗在联调：前后端分别理解需求再约定接口。既然 AI 能跨端写代码，一个人理解清楚需求再推进各端，就能减少对接损耗——但代码分散在不同仓库，AI 仍看不到全貌。"
+          },
+          {
+            "kind": "p",
+            "text": "于是我们做了 Manus-mono：没有把代码合并到一起，而是提供统一入口，配上一本给 AI 看的说明书。Mono 是一步步长起来的："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "让 AI 看见全局。补齐独立仓库之外的业务知识，再通过 Git worktree 支持并行开发。",
+              "让 AI 在本地验证。过去推到测试环境要等 5 到 10 分钟；现在完整的 Manus 可以跑在本地，验证只需几秒。",
+              "让 AI 排查线上问题。在权限控制下，Mono 可以读取线上日志、配置和异常记录。",
+              "让 AI 走完发布流程。补齐容易卡住的操作能力；审批权仍在人这里。",
+              "让 AI 完成端到端验证。用测试账号走真实流程，在浏览器和手机模拟器里检查结果。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "团队共识：一个需求，一个人可以写完所有端。移动端一直只有 7 个人，同时负责 2 个产品、共 4 个移动应用，进度和网页版基本同步。产品侧约一半产品经理能独立完成需求并上线。"
+          },
+          {
+            "kind": "pull",
+            "text": "AI 的完成度已经很高，但「做什么」仍由人决定。人的角色没有变小，而是更集中了：定义问题，判断质量，决定什么值得做，并为结果负责。"
+          },
+          {
+            "kind": "aside",
+            "text": "9 月公司 AI 开销人均超过 1 万美元。这笔钱买的不是人力，而是时间和注意力；积累下来的工作方式，才是更宝贵的资产。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nikolas-10h",
+      "company": "个人",
+      "companyColor": "#F59E0B",
+      "column": "社区热点",
+      "title": "怎么让 coding agent 连跑 10 小时",
+      "originalTitle": "How I let coding agents run for 10 hours: the setup",
+      "byline": "Nikolas Barwicki · 10-07",
+      "sourceUrl": "https://nbarwicki.com/blog/29-how-i-let-coding-agents-run-for-10-hours/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "quote",
+            "text": "如果跑到一半还需要你，多半是某个决定被你留到了后来。"
+          },
+          {
+            "kind": "p",
+            "text": "一句 prompt 后我不再碰键盘。最长一次约 10 小时；第一个项目约 26,000 行，实现循环里它从没问我。同一套流程用在 Swift iOS、Cloudflare Workers 后端、公司内部 CRM，合计一百多张票，实现环里没有人。人的活在跑前和跑后。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "单一真相源：移植就让旧代码只读当 spec；重写/绿地就用写死的决策和架构指南。",
+              "开放问题由 agent 读代码列出选项并给推荐，人批量回答；再用另一家模型冷审计划。",
+              "票图：每票是带 Status / Depends on 的 markdown；agent 取依赖已完成的下一张。",
+              "架构先于功能：新 agent 只拿架构指南在丢弃副本上做小功能，修到它不再困惑。",
+              "列出只有人能做的事（凭证、审批），第一天就让它知道并绕开。",
+              "让它自测：可执行 spec、真库测试、浏览器/模拟器/curl 看活应用、架构检查器、一条「完成」命令、两个只读 reviewer。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "Goal-mode prompt 写清目标与停止条件、重启先读 progress.md、票循环、哪些仍归人、完成要有证据。progress.md 是重启检查点。"
+          },
+          {
+            "kind": "pull",
+            "text": "把时间花在跑之前和跑之后。"
+          },
+          {
+            "kind": "aside",
+            "text": "需要事先写清「何为正确」。同目录并行会撞车。UI 缺 foundation 与可靠驱动时，曾出现测试全绿但一屏空白。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "thorsten",
+      "company": "个人",
+      "companyColor": "#F59E0B",
+      "column": "社区热点",
+      "title": "我怎么和 Agents 一起干活",
+      "originalTitle": "How I work with Agents",
+      "byline": "Thorsten Ball · 10-25",
+      "sourceUrl": "https://x.com/thorstenball/status/2114386050638336082",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "essay",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "截至 2026 年 10 月，我是这样和 Agents 一起干活的。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 用最新、最强的模型"
+          },
+          {
+            "kind": "p",
+            "text": "别的都可能是在浪费时间。一个模型如果有 10% 的时候是错的，你并不知道是哪 10%，结果就得多试几次。"
+          },
+          {
+            "kind": "h",
+            "text": "2. Prompt 写 What，不写 How"
+          },
+          {
+            "kind": "p",
+            "text": "说清楚你要什么，别规定你会怎么做，往往更好。「把 bytecode compiler 和 VM 做到你能做到的最快。不到 2 倍别停。」"
+          },
+          {
+            "kind": "h",
+            "text": "3. 让整个 SDLC 对 agent 可见"
+          },
+          {
+            "kind": "p",
+            "text": "把 hallucination 压下去的，是 tool call。看不见的东西，它就会编。让它把做出的东西端到端跑通：读生产日志、部署、看 rollout、发版、翻 flag、分诊 bug。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 别跟它来回试，让它造工具来试"
+          },
+          {
+            "kind": "p",
+            "text": "换成：「生成 20 个变体，再做一页能组合、能试的小页面。」「给出四个变慢的假说，然后四个都查一遍。」"
+          },
+          {
+            "kind": "h",
+            "text": "5. 要不可反驳的证据"
+          },
+          {
+            "kind": "p",
+            "text": "Agent 很擅长交证明：端到端 walkthrough、demo 视频、前后数字。也可以在 AGENTS.md 里写上「这不算证据」。"
+          },
+          {
+            "kind": "h",
+            "text": "6. 异步：让它们等你"
+          },
+          {
+            "kind": "p",
+            "text": "别等着你的 agent。给更大、更有野心的任务，批量交。定时、唤醒、heartbeat 是杀手锏。"
+          },
+          {
+            "kind": "h",
+            "text": "7. 别再手工管 context"
+          },
+          {
+            "kind": "p",
+            "text": "花心思猜「现在用了 30 万还是 38 万 token」是浪费。Compaction 很好用。一个 thread 一件事。"
+          },
+          {
+            "kind": "h",
+            "text": "8. 只审高 blast radius 的代码"
+          },
+          {
+            "kind": "p",
+            "text": "中心文件不到 5 个，那些我审；数据库迁移也审。能跑通吗？箭头图的层面我能懂吗？agent 做过端到端测试吗？一个月后我还能改吗？如果是，也许会再看这段代码。"
+          }
+        ]
+      }
+    }
+  ]
+}
