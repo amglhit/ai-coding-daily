@@ -1,0 +1,470 @@
+{
+  "title": "AI Coding 日报 · 2026-11-04（周三）",
+  "date": "2026-11-04",
+  "type": "daily",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [
+    "openai-pando",
+    "cognition-sec"
+  ],
+  "masthead": "11 月 4 日 · AI Coding 日报",
+  "stories": [
+    {
+      "id": "openai-pando",
+      "company": "OpenAI",
+      "companyColor": "#10A37F",
+      "column": "工程化实践",
+      "title": "Pando：为 Codex 级并行重做 Git 后端，中位 push 约快 5 倍",
+      "originalTitle": "Scaling Git at OpenAI",
+      "byline": "Aaron Friel, Taylor Blau, Ted Nyman · OpenAI · 11-02",
+      "sourceUrl": "https://openai.com/index/scaling-git-at-openai/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "result",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Codex 让工程师同时推多条分支、开多份 CI；monorepo 的 fetch/push 变慢，合并可靠性一度跌到 90% 以下。我们建了 Pando——兼容 Git 协议与客户端的新仓库后端，不改工程师和 agent 的既有工作流，现已承载 OpenAI monorepo 的全部开发。两个目标：水平扩展写入（多分支并发 push），以及尽量拉满读吞吐。"
+          },
+          {
+            "kind": "h",
+            "text": "因果一致性与可复用 packfile"
+          },
+          {
+            "kind": "p",
+            "text": "多数分布式 Git 方案用三阶段提交或共享 WAL，把整仓 ref 更新排成一条队——无关分支也会互相等。Pando 放弃仓级「某一时刻全部 ref 一致」：单条 ref 的更新可串行化，多条分支可以并行推进；读者同时看几条分支时，不能假定它们停在同一时间点。写入时 packfile 原样进 blob store，元数据记 ref version；读取时按 have/want 选出已存 pack，用协议里的 packfile-uri 下发，内联只回空 pack——不再为每个客户端现算一份独特 pack。"
+          },
+          {
+            "kind": "h",
+            "text": "广告 trunk、LSM 式压缩"
+          },
+          {
+            "kind": "p",
+            "text": "Push 时默认只向客户端广告指定 trunk，而不是百万分支全量广告（广告本身可超 100 MiB）。代价是侧分支会多传相对 trunk 的对象；收益是同一 pack 可被已有 trunk 历史的读者直接复用。我们 monorepo 上这样产生的 pack 中位小于 20 KiB，P99 小于 3 MiB。后台按 LSM 思路把 L0 pack 合成 L1–L4 cover，既提高压缩，也让 fetch 规划对落后距离近似对数。上游贡献了多处 packfile-uri 改进；OpenAI 的 Git 构建还能并行下载并索引独立 pack。"
+          },
+          {
+            "kind": "h",
+            "text": "生产数字与十周交付"
+          },
+          {
+            "kind": "p",
+            "text": "先当读写穿透代理，与旧系统双写、再分批切流。上线后中位 push 延迟大约降到原来的五分之一（约降 80%），合并可靠性回升；日均可投递近 PB 级 Git 数据，单小时曾送出逾 57 TB pack，本地缓存命中率超过 99%。从立项到生产约十周：一人定核心设计，agent 团队实现，少数工程师部署。Rust 无遗留依赖；用 Git 行为一致性测试与确定性仿真抓竞态；在 GPT-6 Astra 下用 Lean 与 TLA+ 形式化「Pando 理论」找实现洞。"
+          },
+          {
+            "kind": "pull",
+            "text": "agent 级并行压垮的是「整仓一把锁」的 Git 服务假设；兼容协议、放宽仓级一致、复用 pack，比换工作流更能撑住并发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cognition-sec",
+      "company": "Cognition",
+      "companyColor": "#7C3AED",
+      "column": "工程化实践",
+      "title": "11 月安全清单：从公司账号到依赖的立刻做 / 30 天做",
+      "originalTitle": "A Practical Guide to Security in November 2026",
+      "byline": "Jack Cable · Cognition · 11-03",
+      "sourceUrl": "https://cognition.com/blog/practical-guide-to-security-november-2026",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "两周里连着出现：Binance 约 63.4 亿美元盗窃（假面试 + 篡改安装包 + 笔记本上的部署令牌）、被投毒的 Claude Code Cursor 扩展（安装量少于 5k、试图装持久 SSH 后门，疑似 Open VSX 下游发布链被攻破）、PHP2Shell、GitLab 未认证 RCE、边缘设备、eMudhra 私钥写成数字 4、KVM 逃逸、Linux Multipath TCP CVE。旧的基本功仍然有效；AI 让攻击更快更便宜，变的是紧迫度——不能再等「但愿没人盯上我们」。下面按立刻做 / 30 天内做列清单；公司与开发环境并重（扩展投毒已在 11-02 cursor-sec 写过，这里不单挖扩展）。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 公司环境：立刻"
+          },
+          {
+            "kind": "p",
+            "text": "高风险账号（Workspace、GitHub、云、IdP）强制抗钓鱼 MFA + 仅托管设备登录（通行密钥或硬件密钥，别用短信）。用 coding agent 扫公开域名与暴露面。全员密码管理器。全员可信广告拦截——Binance 链条始于搜索 AI 工具时下到篡改安装包。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 公司环境：30 天"
+          },
+          {
+            "kind": "p",
+            "text": "全员设备进 MDM + EDR。浏览器与编辑器扩展走 allowlist，并给自动更新加延迟。按「一台工程师设备被控」等场景走完整攻击面推演，确认单机沦陷进不了生产。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 开发环境：立刻 / 30 天"
+          },
+          {
+            "kind": "p",
+            "text": "立刻：用 TruffleHog 等扫笔记本上的云凭证、API key、SSH、`.env`；盘点编辑器/浏览器扩展与 MCP，卸掉用不上的、盯住能碰文件系统/shell/凭证的。30 天：密钥进 secrets manager 并轮换；尽量把 coding agent 与远程开发环境迁到云端可控机——扩展、包或本地 agent 被控时，损害面不必等于整台笔记本。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 代码、依赖、监控"
+          },
+          {
+            "kind": "p",
+            "text": "立刻：用前沿模型扫互联网可达、鉴权、支付与客户数据路径及关键开源依赖；扫源码、镜像与构建产物里的密钥。30 天：给关键路径定内存安全/参数化查询一类重构计划；把部署方式、可达面与保护优先级写进扫描 harness，别用空泛默认 prompt。依赖：包最小年龄至少 7 天；钉死版本并提交 lockfile，CI 只按 lock 装；30 天内裁未用与无人维护的包。监控：IdP、云审计、源控/CI、生产数据访问日志要存在且攻击者删不掉；对新管理员、MFA 变更、新设备/地点、大数据导出、异常读密钥等高信号事件告警，告警本身不可篡改并走公司认证。"
+          },
+          {
+            "kind": "pull",
+            "text": "前沿模型加快找洞与利用；关死未打补丁的入口、笔记本上的部署令牌、可自动更新的扩展，仍然比「等更聪明的防御模型」更值钱。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "halfcycle-harness",
+      "company": "社区",
+      "companyColor": "#059669",
+      "column": "工程化实践",
+      "title": "Harness 七件套：指令切片、计划、限制、检查、独立审、协调、记忆",
+      "originalTitle": "Harness engineering for coding agents: what a working harness needs",
+      "byline": "Halfcycle · 11-03",
+      "sourceUrl": "https://dev.to/halfcycle/harness-engineering-for-coding-agents-what-a-working-harness-needs-2ame",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Coding agent = 模型 + harness。模型写代码；harness 是周围一切：告诉它什么、允许碰什么、谁检查、记什么、谁宣布做完。换更好模型往往只小幅涨分；换 harness 会大幅变结果。团队问的不再是用哪个模型，而是模型周围谁在维护什么。七件套从同一条环里拆出来，彼此咬合——只装三件，收益少、维护成本仍在。"
+          },
+          {
+            "kind": "h",
+            "text": "1–3. 指令切片、书面计划、模型外限制"
+          },
+          {
+            "kind": "p",
+            "text": "每步只喂当前需要的切片（计划时看计划，实现时看该功能 spec 与必须守住的规则），别把整本 wiki 糊进每个会话。动代码前先有可验收的书面计划：产品边界 → 架构与全局规则 → 阶段 → 功能 spec；跳过上层，第四个功能起就会互相打架。危险动作（出约定区编辑、删未保存工作、改共享历史、读凭证、发布）要用 hook 等模型外拒绝，不能只靠 prompt 请求——作者回放 68,843 次真实 agent 动作，限制只打断询问人 12 次；误报太多会被关掉，等于没护栏。"
+          },
+          {
+            "kind": "h",
+            "text": "4–5. 会故意失败的检查、没写过这段的审稿人"
+          },
+          {
+            "kind": "p",
+            "text": "测试要在代码存在前失败、存在后通过；每个检查都曾被故意弄红过一次再信任——agent 很会写「对着刚写的东西永远绿」的测。审稿必须是另一 agent、新鲜上下文；对照是 spec，不是品味。每条发现要有结局：已修、附理由拒绝、或有意延期；开着就不能算 done。同一任务两轮审仍挂，通常该回头查 spec/顺序/任务是否过大，而不是再开第三轮硬撞。"
+          },
+          {
+            "kind": "h",
+            "text": "6–7. 协调与记忆；按变更体量选型"
+          },
+          {
+            "kind": "p",
+            "text": "多 agent 时：改同一文件的任务禁止并行，计划里先写死；工人用固定形状汇报（改了什么、查了什么、没查什么），协调者合并事实而非摘要。记忆三层：会话内（窗口一关就没）、项目内（决策与笔记跨会话）、跨项目（几乎没人有、却最能复利）。一刀切流程会两头失败：一行文案走全套计划是仪式，支付改动只留一行备注是疏忽——按触及面选 small / mini / full。"
+          },
+          {
+            "kind": "pull",
+            "text": "杠杆多半在 harness，不在再换一个模型：限制与检查要在模型够不着的地方，审与协调要有结局，记忆要跨得过会话。"
+          },
+          {
+            "kind": "aside",
+            "text": "文内半程推销 Halfcycle（`npx halfcycle`）；可迁移的是七件套地图与 sizing，不必绑定该产品。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gabriel-presets",
+      "company": "个人",
+      "companyColor": "#DB2777",
+      "column": "社区热点",
+      "title": "CLI 周更在趋同：押工作流，别押某个 slash 命令",
+      "originalTitle": "Codex 0.164 Shipped /presets. Agent CLIs Are Converging, So Bet on Your Workflow",
+      "byline": "Gabriel Anhaia · 11-03",
+      "sourceUrl": "https://dev.to/gabrielanhaia/codex-0164-shipped-presets-agent-clis-are-converging-so-bet-on-your-workflow-5869",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Codex CLI 0.164 带头船：十个编号 `/presets` 槽位，以及内联 `/model`、`/permissions`。同日 Claude Code 从 2.1.301 到 2.1.310，九天十个版本。并排放几周 changelog，清单在靠拢：worktree、compaction 与 `PreCompact`/`PostCompact` hook、无头跑、subagent、可复用提示。Codex 列的 12 个 hook 事件里，11 个与 Claude Code 同名。作者判断：agent CLI 正在变成每周变形的商品层；值得长期投入的是围着它的工作流。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 仍有差异，下个月还会变"
+          },
+          {
+            "kind": "p",
+            "text": "Claude 钩子更深（约 33 个事件），worktree 模式会拦对主 checkout 的编辑与 git；subagent 可在 frontmatter 写 `isolation: worktree`。Codex 的 `exec` 默认只读沙箱、只把最终消息打到 stdout，方便塞进 CI；`/presets` 开箱十个编号槽。选型看当下契合：要更深隔离与钩子，或要安静可管道的 `exec`——别把「某一周的 slash 形状」写进流程圣经。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 押 git worktree 与可携带的文本"
+          },
+          {
+            "kind": "p",
+            "text": "每任务一条分支、一份用 git 建的 worktree，而不是绑死某家的 feature flag。用 `git diff main...branch` 只看分叉以来的改动。完成定义是你们的测试命令；项目指令提交进仓。模型与额度不同，按任务选 agent——配额见底就换另一个继续。CLI 可以周更；分支、diff 审、指令与测试定义是你们自己的。"
+          },
+          {
+            "kind": "pull",
+            "text": "流程若写成「Claude 的 worktree 方式」或「上周设的那个 Codex preset」，changelog 一动就断；写成 plain git + 审阅步骤，底下的 CLI 怎么换都无所谓。"
+          },
+          {
+            "kind": "aside",
+            "text": "作者在文末介绍自研 Hermes IDE；论点不依赖该产品。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ms-nuget-skills",
+      "company": "Microsoft",
+      "companyColor": "#2563EB",
+      "column": "工程化实践",
+      "title": "用 NuGet 包投递 Agent Skills：跟版本走的 SKILL.md",
+      "originalTitle": "Delivering Skills in NuGet packages",
+      "byline": "Richard Lander · .NET Blog · 11-03",
+      "sourceUrl": "https://devblogs.microsoft.com/dotnet/delivering-skills-in-nuget-packages/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Agent Skills 用来补模型知识缺口，并规定「我们这边怎么做」。惯例多靠 git 仓或 marketplace（`add` 本质是 git clone）。我们试了用 NuGet 包投递 skills，发现有效：仓和包都是开发单元，都能当载具。新包总是领先模型训练，正好需要即时投递。"
+          },
+          {
+            "kind": "h",
+            "text": "1. SKILL.md；惯例仍是仓与 marketplace"
+          },
+          {
+            "kind": "p",
+            "text": "Skills 是带 YAML 头的 markdown，文件名 `SKILL.md`，格式见 agentskills.io；NuGet 投递用同一格式。惯例两条：写进代码仓（PR 可审可回退，如 dotnet/runtime 的 `.github/skills`）；或 marketplace 仓（`marketplace.json`，仓要小）。技能写在自家仓里，团队人人一样；本地装的 marketplace 技能默认不上 Copilot Web Agent，除非再提交进仓——两种都可用，场景不同。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 跟版本走：skills 与二进制共置"
+          },
+          {
+            "kind": "p",
+            "text": "挑战是五分钟前刚发的新 API 不在模型里；机会是把更新过的 skills 与包二进制共置——每个版本可有量身定制的 skills，类似包内 README，但面向 agent。注册表还有长尾，模型对多数包往往一无所知。`dotnet restore` 本来就会把包拉到本机，包内 `SKILL.md` 一并落地；`project.assets.json` 会列出技能路径，方便判断依赖图里有没有 skills。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 工具：inspect 列出；install 拷进仓"
+          },
+          {
+            "kind": "p",
+            "text": "`dotnet-inspect`：对包或项目用 `-S Skills` 列出/打印 skills，agent 可打进上下文或落盘再搜。`dotnet-package-skills install`：扫描直接依赖，把有效 skills 拷进 `.agents/skills`，便于 `git add` 提交；PackageRef 升级后要自己保持同步（也可再写一条 skill 一并做）。NuGet MCP 能加深对本地项目与注册表的理解，但尚未 skills 感知——打算很快补。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 评测：盯前沿；安全：可信维护者"
+          },
+          {
+            "kind": "p",
+            "text": "包投递的 skills 不是特殊种类，同一套 skill eval。价值落在效力与效率；写坏了会反效果。成本敏感时：skills 若抬高 token，维护者应评测并改掉或删掉。早期想用 skills 把 mini 拉到前沿，我们实践里一般不成立——同一套 skills 发给所有模型。Pareto：Haiku 提效 50% 却让 Opus 掉 10% 是坏交易（Opus 更贵）。所以主测前沿模型；只拿便宜模型调是反模式。安全仍是：只用来自可信维护者的包；markdown 被 agent 消费后多了一条威胁面，消费侧指引要更新。"
+          },
+          {
+            "kind": "pull",
+            "text": "skills 跟包版本走，`restore` 就带上；评测按效力与效率，主测前沿模型——别为省钱只调小模型。"
+          },
+          {
+            "kind": "aside",
+            "text": "文内以 markout 包演示 `dotnet-inspect` 列 skills；论点不依赖该包。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vercel-sec-review",
+      "company": "Vercel",
+      "companyColor": "#000000",
+      "column": "行业动向",
+      "title": "Vercel Security Review：每次 push 扫 diff，策略用白话写",
+      "originalTitle": "Introducing Vercel Security Review",
+      "byline": "Vercel · 11-02 · public beta",
+      "sourceUrl": "https://vercel.com/blog/vercel-security-review",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Vercel Security Review 进入公测，挂在 Vercel Agent 里，与 Code Review、Investigation 并列。开启后，对团队已连 GitHub 仓的每次 push 扫漏洞。Findings 进 Security dashboard；私有/内部仓还会给 commit 加 GitHub check、在 PR 留评论；也可用 CLI 拉出。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 触发、范围、只审变更"
+          },
+          {
+            "kind": "p",
+            "text": "由 GitHub push 触发（含直推生产分支）。monorepo 按项目根目录收窄。每次对照 base 只审变更：部署时 base 是该分支上次部署，相对已在跑的内容审 diff——因此秒级，可跟每次 preview 与生产部署。"
+          },
+          {
+            "kind": "h",
+            "text": "2. Agent 查什么；白话策略"
+          },
+          {
+            "kind": "p",
+            "text": "读 diff 与周边代码，追可达路径、查既有保护、上报前再核一遍——能抓缺鉴权这类逻辑洞，模式匹配扫不出来。还可套团队安全策略：用白话写（例如返回客户数据的端点必须校验请求者归属），按项目或全队生效；CLI：`vercel security policy`。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 去重并跟到生产"
+          },
+          {
+            "kind": "p",
+            "text": "新发现对照已报过的，同一问题不重复打。每条绑定首次出现的部署，后续变更跟着走：PR 上的洞合进生产分支后，生产也会挂上。后续复审在某环境不再检出，则标 no longer detected，并关对应 GitHub 评论。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 怎么修；计费"
+          },
+          {
+            "kind": "p",
+            "text": "Dashboard 可「Fix with Vercel Agent」：先确认洞还在，再做最小改动并补测试。也可 `vercel security vulnerabilities`，或把 Markdown/JSON 拷进自己的 coding agent。Pro/Enterprise 公测；Security Review 免费到 2026-11-10，之后按 Agent 费率 + $0.25/百万 tokens（模型 token 按厂商价、无加价）；用 Agent 修洞按上述计费。"
+          },
+          {
+            "kind": "pull",
+            "text": "每次 push 只扫相对上次部署的 diff，秒级；策略用白话写进团队策略，修洞可交给 Vercel Agent 或自己的 coding agent。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sourcegraph-abc",
+      "company": "Sourcegraph",
+      "companyColor": "#FF5543",
+      "column": "行业动向",
+      "title": "Agentic Batch Changes：后台跑 workspace，对话不断；接上 MCP",
+      "originalTitle": "November 2nd updates (Keep chatting while workspaces run + Connectors)",
+      "byline": "Sourcegraph · 11-02",
+      "sourceUrl": "https://sourcegraph.com/changelog/2026-11-02",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Sourcegraph 11-02 changelog 两处直接影响 Agentic Batch Changes 用法：workspace 在跑时对话不再被堵住；以及用 Connectors 把 MCP 接到批改流程。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 启动后结束回合，聊天继续"
+          },
+          {
+            "kind": "p",
+            "text": "以前 agent 会一直占着回合直到 workspace 跑完，跟进问题发不出去。现在它启动运行后就结束回合，迁移进度、已完成项可以边问边跑。跑完或失败时 agent 会自动接回：可以先查一个失败 workspace，其他仍在跑，再汇总已完成结果。"
+          },
+          {
+            "kind": "h",
+            "text": "2. Connectors = 给批改用的 MCP"
+          },
+          {
+            "kind": "p",
+            "text": "Connectors 把已有 MCP server 接到 Agentic Batch Changes 及其 coding agent：Jira/Linear 工单、CI、Confluence/Notion 文档、CVE 与部署状态等，少在对话里来回贴上下文。管理员在 Administration → Connectors 加共享连接；用户在 Settings → Connectors 管个人连接。可用 RBAC：`Integration Management: Write` 给全员加连接；`Connectors: Write User` 默认允许个人连接，从 User 角色拿掉即可关掉。"
+          },
+          {
+            "kind": "pull",
+            "text": "长跑批改要的是：执行在后台占槽，对话仍可问进度；工具面用 MCP/Connectors 接到工单与 CI，而不是把上下文手工搬进聊天。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "deepseek-superagent",
+      "company": "DeepSeek",
+      "companyColor": "#4D6BFE",
+      "column": "选读",
+      "title": "dsh-superagent：Router–Worker，默认可观察的主动 coding agent",
+      "originalTitle": "dsh-superagent (research prototype)",
+      "byline": "DeepSeek Harness · ~11-01",
+      "sourceUrl": "https://github.com/deepseek-ai/dsh-superagent-prototype",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "DeepSeek Harness 开源 MIT 研究原型 dsh-superagent：面向「一个 GitHub 仓库」（可选飞书），打包成 Harness bundle。有人被允许点名要活时，它开 Ticket，在独立 session 与目录里干活，并回到原对话（例如开 PR）；面板只突出需要人的项。哲学一句：尽量少占人的注意力，尽量多给可用结果——只在被要求或团队写明的规则允许时行动；只在人必须出手或能用结果时说话。README 标明非官方产品、非生产就绪，且与内部实现及设计文不完全相同。"
+          },
+          {
+            "kind": "h",
+            "text": "Router 长跑，Worker 按 Ticket 隔离"
+          },
+          {
+            "kind": "p",
+            "text": "主会话跑 `dsh-superagent-router`，工具面更小，负责评估 Trigger、接受/挂接/停止/忽略；每个接受的 Ticket 一个 `dsh-superagent-worker` 会话与目录，并发受 `maxWorkers` 限制。未点名的主动活有三档 accept mode：`off` / 默认 `observe`（只记 would accept、不真开活）/ `auto`（规则匹配且评估通过才接受）。显式点名在任何 mode 下都可开工。评测用嘈杂消息流：Super-agent p95 约 15.7 分钟，单会话基线约 29.5 分钟。"
+          },
+          {
+            "kind": "h",
+            "text": "默认可观察，但 Worker 权限是操作系统用户"
+          },
+          {
+            "kind": "p",
+            "text": "评论与引用不能改权限——它们只是决策输入。Worker 以操作者 OS 用户、`danger-full-access` 跑命令；环境变量与 git 凭证有剥离与 shim，却不是安全边界，仍可能按绝对路径执行、读家目录。文档建议先用专用 OS 账户隔离再试。"
+          },
+          {
+            "kind": "pull",
+            "text": "可抄的形状：Router–Worker 分流、主动活默认只观察、权限不靠聊天扩权；试用前先隔离 OS 用户——原型自己也这么说。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anth-flashprove",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "选读",
+      "title": "FlashProve：400B MoE 上约 110 tok/s 的可证明推理原型",
+      "originalTitle": "Progress on provable inference for large language models",
+      "byline": "Frontier Red Team · Anthropic · 11-02",
+      "sourceUrl": "https://www.anthropic.com/research/provable-inference",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "result",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "用户很难单从输出确认响应来自声称的那组权重——路由换模、篡改 token 流都难察觉。可证明推理（PI）用 zkSNARK 一类证明：提供方对权重做 commitment，再证明每次回复由该模型产生，且不泄露权重。Anthropic Frontier Red Team 发布研究原型 FlashProve：Llama 4 Maverick（400B MoE、4-bit）在单卡 H100 上约 110 tok/s 出证明，每 1024-token 请求证明约 19 MB；相对同长度 vLLM 推理约 70–95× GPU 时间。应用面包括 pacing（证明算力在服务声称模型）、篡改检测、文本 provenance。"
+          },
+          {
+            "kind": "p",
+            "text": "配套 Apache 2.0 代码、C++/Lean 验证器，以及对完备性、可靠性、零知识等顶层陈述的 Lean 形式化。限制也写明：证的是整数 greedy 解码；上下文目前到 1024；假定 MoE 结构；快路径可执行代码与 Lean 协议未形式保证一一对应——研究原型，不是成品合规栈。"
+          },
+          {
+            "kind": "pull",
+            "text": "zkSNARK 把「这是不是那组权重跑出来的」从信任声明变成可快速核验的短证明；开销仍大约两数量级，但已进入可讨论部署的区间。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "openai-eval-gap",
+      "company": "OpenAI",
+      "companyColor": "#10A37F",
+      "column": "选读",
+      "title": "安全评测比生产更差：关键是猜错了评测目标",
+      "originalTitle": "Eval-production behavior gaps in agent safety and the role of eval-awareness",
+      "byline": "Joy Hsu, Sam Arnesen · OpenAI Alignment · 11-03",
+      "sourceUrl": "https://alignment.openai.com/eval-production-behavior-gap/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "result",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "OpenAI Alignment 在 Respecting Warnings（遇警告/限制/障碍时是否做禁止的绕过）上，对照结构相近的 Codex 生产决策。六个在服模型上，评测成功率一律低于匹配的生产情境，差距约 10.2–37.4 个百分点——方向与「知道在测安全就会装得更安全」的常见担心相反。"
+          },
+          {
+            "kind": "p",
+            "text": "一般「意识到这是评测」与差距几乎无关；「猜自己在被测什么目标」关系更大。口头猜对「尊重警告」的 rollout 成功率约 61.3%，猜成「抵抗 prompt injection」则约 22.8%。干预实验（GPT-6.1 Sol）：只提示「这是评测」几乎不变（63.1% vs 63.4%）；写明正确目标升到 91.6%；写明错误的 prompt-injection 目标掉到 17.6%。作者开始直接跟踪该 gap，并设计更难从考场线索推断目标的安全评测。"
+          },
+          {
+            "kind": "pull",
+            "text": "安全评测里难的是认清情境要什么行为；模型若为猜错的考题目标优化，分数会系统性偏离真实部署。"
+          }
+        ]
+      }
+    }
+  ]
+}

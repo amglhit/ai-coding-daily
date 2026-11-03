@@ -17,7 +17,7 @@ const section = z.discriminatedUnion("kind", [
 
 const body = z
   .object({
-    pattern: z.enum(["practice", "benchmark", "advice", "framework", "experiment", "essay"]),
+    pattern: z.enum(["practice", "benchmark", "advice", "framework", "experiment", "essay", "result"]),
     sections: z.array(section).min(1),
   })
   .strict()
