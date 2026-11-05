@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { ensureAstroBuild } from "./helpers/astro-build.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const issuePath = path.join(root, "src/content/weekly/2026-11-06.json");
@@ -37,13 +37,8 @@ test("2026-11-06 weekly keeps the source issue", () => {
 });
 
 test("build emits /weekly/2026-11-06/", { timeout: 180000 }, () => {
-  const htmlPath = path.join(root, "dist", "weekly", "2026-11-06", "index.html");
-  execFileSync("npx", ["astro", "build"], {
-    cwd: root,
-    stdio: "pipe",
-    timeout: 170000,
-  });
-  const html = fs.readFileSync(htmlPath, "utf8");
+  ensureAstroBuild();
+  const html = fs.readFileSync(path.join(root, "dist", "weekly", "2026-11-06", "index.html"), "utf8");
   assert.match(html, /11 月 6 日 · AI Coding 周报/);
   assert.match(html, /本周主线/);
   assert.match(html, /落地实践/);
@@ -54,4 +49,7 @@ test("build emits /weekly/2026-11-06/", { timeout: 180000 }, () => {
   assert.match(html, /href="https:\/\/cursor\.com\/blog\/claude-code-extension-security-notice"/);
   const archive = fs.readFileSync(path.join(root, "dist", "archive", "index.html"), "utf8");
   assert.match(archive, /\/weekly\/2026-11-06\//);
+  assert.match(archive, /\/weekly\/2026-10-30\//);
+  const home = fs.readFileSync(path.join(root, "dist", "index.html"), "utf8");
+  assert.match(home, /\/weekly\/2026-11-06\//);
 });
