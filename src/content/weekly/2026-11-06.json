@@ -1,0 +1,512 @@
+{
+  "title": "AI Coding 周报 · 2026-11-06（周五）",
+  "date": "2026-11-06",
+  "type": "weekly",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点"
+  ],
+  "must_read": [
+    "cursor-sec",
+    "cognition-sec"
+  ],
+  "masthead": "11 月 6 日 · AI Coding 周报",
+  "themes": [
+    {
+      "title": "供应链安全成了本周必修课",
+      "summary": "Cursor Marketplace 上出现仿冒 Claude Code 扩展（SSH 后门）；Microsoft 拆清 loader 与持久化；Cognition 给出立刻做 / 30 天做清单；Vercel 把每次 push 的 diff 安全扫描做成产品能力。卸扩展不够，要查 IOC 与扩展外持久化。",
+      "links": [
+        {
+          "label": "Cursor 安全通告（日报 11-02）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-02/"
+        },
+        {
+          "label": "Cognition 11 月清单（日报 11-04）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-04/"
+        },
+        {
+          "label": "Vercel Security Review（日报 11-04）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-04/"
+        }
+      ]
+    },
+    {
+      "title": "Agent 规模继续顶穿为人设计的 Git",
+      "summary": "OpenAI 用 Pando 重做 monorepo Git 后端，兼容协议、放宽仓级一致、复用 pack；中位 push 约快 5 倍。与上周 Anthropic Scion 同一压力：并发分支与 CI 压垮「整仓一把锁」。",
+      "links": [
+        {
+          "label": "OpenAI Pando（日报 11-04）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-04/"
+        },
+        {
+          "label": "Scaling Git at OpenAI",
+          "href": "https://openai.com/index/scaling-git-at-openai/"
+        }
+      ]
+    },
+    {
+      "title": "信任与 review：人留在环上，检查要机械",
+      "summary": "Meta JiTTesting 用可执行行为差测试做人 on-the-loop；个人实践把路径分成 High/Design/Medium/Low；Writer+Critic 用确定性 mailbox；读工具日志别只读摘要。写代码变快之后，稀缺的是可验证的信任。",
+      "links": [
+        {
+          "label": "JiTTesting（日报 11-02）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-02/"
+        },
+        {
+          "label": "风险分档 review（日报 11-03）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-03/"
+        },
+        {
+          "label": "Writer + Critic（日报 11-03）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-03/"
+        }
+      ]
+    },
+    {
+      "title": "Harness 与工作流在收束",
+      "summary": "All Day AI 五条反复落到 review 按风险、仓内知识、模型外检查、harness 杠杆、便宜模型做判定；Harness 七件套与 Thin Orchestrator 都在说：路由要薄、限制与审要在模型够不着的地方；CLI 周更趋同，押 git worktree 与仓内指令。",
+      "links": [
+        {
+          "label": "All Day AI 五条（日报 11-03）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-03/"
+        },
+        {
+          "label": "Harness 七件套（日报 11-04）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-04/"
+        },
+        {
+          "label": "CLI presets 趋同（日报 11-04）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-04/"
+        }
+      ]
+    }
+  ],
+  "practices": [
+    "编辑器 / 浏览器扩展走 allowlist，并给自动更新加延迟；若安装过 Cursor Marketplace 的 Anthropic.claude-code 2.1.312/2.1.313，先跑校验脚本与查 authorized_keys（comment svc-telemetry），再清扩展目录外的持久化——只卸扩展不够。",
+    "本周按 Cognition 清单落地立刻项：高风险账号抗钓鱼 MFA + 仅托管设备；TruffleHog 等扫笔记本凭证与 .env；盘点 MCP/扩展；依赖最小年龄 ≥7 天并提交 lockfile，CI 只按 lock 装。",
+    "按路径分 review 风险档（High / Design / Medium / Low）：触及 review 机械、CI、lockfile 的变更人读；只加 ADR/测试的可机械放行；深度由路径决定，不靠口头「请认真审」。",
+    "Agent 产出的检查必须自证查过（报告扫了多少文件/断言）；高价值变更用可执行行为差测试（JiT）或 Writer+Critic 分离协议，人确认行为变化是否本意，而不是只读「All tasks completed」。",
+    "Harness 优先：指令按步骤切片、危险动作用模型外 hook 拒绝、独立新鲜 context 审稿并给每条发现结局；并行押 git worktree + 仓内 AGENTS.md/测试定义，别押某一家 CLI 的 slash 命令。"
+  ],
+  "stories": [
+    {
+      "id": "cursor-sec",
+      "company": "Cursor",
+      "companyColor": "#000000",
+      "column": "行业动向",
+      "title": "Cursor Marketplace 恶意 Claude Code 扩展：先查再清",
+      "originalTitle": "Security notice — malicious version of Anthropic.claude-code (2.1.312 and 2.1.313) identified in the Cursor VS Code Extension Marketplace",
+      "byline": "Cursor · 10-29（10-30 更新 IOC）",
+      "sourceUrl": "https://cursor.com/blog/claude-code-extension-security-notice",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "10 月 29 日约 2:27am–1:35pm PT，Cursor VS Code Extension Marketplace 上出现了非 Anthropic 制作的 Anthropic.claude-code 2.1.312 / 2.1.313（Windows 与 macOS）。恶意代码会收集主机与用户信息，尝试把攻击者 SSH 公钥写入 authorized_keys、打开本地 SSH、建反向隧道，并落扩展目录外的持久化。"
+          },
+          {
+            "kind": "p",
+            "text": "若你在上述窗口从 Cursor Marketplace 安装或更新到这两个版本：先用平台脚本 / 查 authorized_keys 里是否有 comment 为 svc-telemetry 的密钥；命中再按下面处置。只卸扩展不够——payload 会落下独立持久化脚本继续跑。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "跑通告附带的校验脚本，确认本机是否受影响。",
+              "在 endpoint、网络与扩展安装遥测里搜通告给出的 IOC。",
+              "对出现 payload 执行或后门安装证据的主机做隔离。",
+              "删除未授权 SSH 密钥、持久化机制与正在跑的隧道进程，并评估是否应整机重建。",
+              "从可信机器轮换受影响主机上可触及的凭证与 session；有限的环境变量名收集，不排除后门后续拿凭据。"
+            ]
+          },
+          {
+            "kind": "aside",
+            "text": "macOS 用 grep 查 ~/.ssh/authorized_keys 是否含 svc-telemetry；Windows 查用户与 ProgramData 下 authorized_keys。清理可跑 remediate-macos.sh（以受影响用户、非 root）或管理员 PowerShell 下的 remediate-windows.ps1。Microsoft 取证确认 Visual Studio Marketplace 与 npm @anthropic-ai/claude-code 未受影响；Anthropic 系统未被攻破。"
+          },
+          {
+            "kind": "pull",
+            "text": "卸掉扩展可能不够——payload 会落下继续跑的独立持久化脚本。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "openai-pando",
+      "company": "OpenAI",
+      "companyColor": "#10A37F",
+      "column": "行业动向",
+      "title": "Pando：为 Codex 级并行重做 Git 后端，中位 push 约快 5 倍",
+      "originalTitle": "Scaling Git at OpenAI",
+      "byline": "Aaron Friel, Taylor Blau, Ted Nyman · OpenAI · 11-02",
+      "sourceUrl": "https://openai.com/index/scaling-git-at-openai/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "result",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Codex 让工程师同时推多条分支、开多份 CI；monorepo 的 fetch/push 变慢，合并可靠性一度跌到 90% 以下。我们建了 Pando——兼容 Git 协议与客户端的新仓库后端，不改工程师和 agent 的既有工作流，现已承载 OpenAI monorepo 的全部开发。两个目标：水平扩展写入（多分支并发 push），以及尽量拉满读吞吐。"
+          },
+          {
+            "kind": "h",
+            "text": "因果一致性与可复用 packfile"
+          },
+          {
+            "kind": "p",
+            "text": "多数分布式 Git 方案用三阶段提交或共享 WAL，把整仓 ref 更新排成一条队——无关分支也会互相等。Pando 放弃仓级「某一时刻全部 ref 一致」：单条 ref 的更新可串行化，多条分支可以并行推进；读者同时看几条分支时，不能假定它们停在同一时间点。写入时 packfile 原样进 blob store，元数据记 ref version；读取时按 have/want 选出已存 pack。"
+          },
+          {
+            "kind": "h",
+            "text": "广告 trunk、LSM 式压缩"
+          },
+          {
+            "kind": "p",
+            "text": "Push 时默认只向客户端广告指定 trunk，而不是百万分支全量广告（广告本身可超 100 MiB）。代价是侧分支会多传相对 trunk 的对象；收益是同一 pack 可被已有 trunk 历史的读者直接复用。我们 monorepo 上这样产生的 pack 中位小于 20 KiB，P99 小于 3 MiB。后台按 LSM 思路把 L0 pack 合成 L1–L4 cover。"
+          },
+          {
+            "kind": "h",
+            "text": "生产数字与十周交付"
+          },
+          {
+            "kind": "p",
+            "text": "先当读写穿透代理，与旧系统双写、再分批切流。上线后中位 push 延迟大约降到原来的五分之一（约降 80%），合并可靠性回升；日均可投递近 PB 级 Git 数据，单小时曾送出逾 57 TB pack，本地缓存命中率超过 99%。从立项到生产约十周：一人定核心设计，agent 团队实现，少数工程师部署。"
+          },
+          {
+            "kind": "pull",
+            "text": "agent 级并行压垮的是「整仓一把锁」的 Git 服务假设；兼容协议、放宽仓级一致、复用 pack，比换工作流更能撑住并发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cognition-sec",
+      "company": "Cognition",
+      "companyColor": "#7C3AED",
+      "column": "工程化实践",
+      "title": "11 月安全清单：从公司账号到依赖的立刻做 / 30 天做",
+      "originalTitle": "A Practical Guide to Security in November 2026",
+      "byline": "Jack Cable · Cognition · 11-03",
+      "sourceUrl": "https://cognition.com/blog/practical-guide-to-security-november-2026",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "两周里连着出现：Binance 约 63.4 亿美元盗窃（假面试 + 篡改安装包 + 笔记本上的部署令牌）、被投毒的 Claude Code Cursor 扩展（安装量少于 5k、试图装持久 SSH 后门，疑似 Open VSX 下游发布链被攻破）、PHP2Shell、GitLab 未认证 RCE、边缘设备、eMudhra 私钥写成数字 4、KVM 逃逸、Linux Multipath TCP 等。清单按立刻做 / 30 天做排，方便本周开工。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 公司环境：立刻"
+          },
+          {
+            "kind": "p",
+            "text": "高风险账号（Workspace、GitHub、云、IdP）强制抗钓鱼 MFA + 仅托管设备登录（通行密钥或硬件密钥，别用短信）。用 coding agent 扫公开域名与暴露面。全员密码管理器。全员可信广告拦截——Binance 链条始于搜索 AI 工具时下到篡改安装包。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 公司环境：30 天"
+          },
+          {
+            "kind": "p",
+            "text": "全员设备进 MDM + EDR。浏览器与编辑器扩展走 allowlist，并给自动更新加延迟。按「一台工程师设备被控」等场景走完整攻击面推演，确认单机沦陷进不了生产。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 开发环境：立刻 / 30 天"
+          },
+          {
+            "kind": "p",
+            "text": "立刻：用 TruffleHog 等扫笔记本上的云凭证、API key、SSH、`.env`；盘点编辑器/浏览器扩展与 MCP，卸掉用不上的、盯住能碰文件系统/shell/凭证的。30 天：密钥进 secrets manager 并轮换；尽量把 coding agent 与远程开发环境迁到云端可控机——扩展、包或本地 agent 被控时，损害面不必等于整台笔记本。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 代码、依赖、监控"
+          },
+          {
+            "kind": "p",
+            "text": "立刻：用前沿模型扫互联网可达、鉴权、支付与客户数据路径及关键开源依赖；扫源码、镜像与构建产物里的密钥。30 天：给关键路径定内存安全/参数化查询一类重构计划；把部署方式、可达面与保护优先级写进扫描 harness，别用空泛默认 prompt。依赖：包最小年龄至少 7 天；钉死版本并提交 lockfile，CI 只按 lock 装；30 天内裁未用与无人维护的包。"
+          },
+          {
+            "kind": "pull",
+            "text": "前沿模型加快找洞与利用；关死未打补丁的入口、笔记本上的部署令牌、可自动更新的扩展，仍然比「等更聪明的防御模型」更值钱。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "meta-jit",
+      "company": "Meta",
+      "companyColor": "#0668E1",
+      "column": "工程化实践",
+      "title": "落地前抓 bug：JiTTesting 的 human-on-the-loop",
+      "originalTitle": "Catching Bugs Before They Land: JiTTesting’s Human-on-the-Loop Approach at Full Scale",
+      "byline": "Sreeja Thummala、Sophie Zeng、Mark Harman、Weini Liu、Eric Liu · 10-29",
+      "sourceUrl": "https://engineering.fb.com/2026/10/29/security/catching-bugs-before-they-land-jittestings-human-on-the-loop-approach-at-full-scale/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "过去一年我们用 LLM 在变更落地前即时生成测试，称作 Catching Just-in-Time Tests（JiTTests）。多数 AI 防 bug 做法是让模型像人一样更快做 code review；JiTTests 不同：它生成可执行测试，展示变更引入的具体行为差。算力步骤更多，但能抓到 LLM / agent review 容易漏的一类问题。"
+          },
+          {
+            "kind": "h",
+            "text": "两套并排的生成工作流"
+          },
+          {
+            "kind": "p",
+            "text": "难点是在海量代码里分清 strong catch（真阳性、真 bug）与 weak catch（可能假阳性）。我们并行两套：intent-aware——从 diff、标题与摘要推断意图与风险，再针对可能出错点生成测试；dodgy diff——把每次变更都当 mutant/bug，不做意图推理，直接生成能暴露与 parent 行为差的测试，隐式假定「这次 diff 有问题」。假阳性过滤用规则加上 LLM。"
+          },
+          {
+            "kind": "h",
+            "text": "五段流水线"
+          },
+          {
+            "kind": "p",
+            "text": "整晚跑在空闲容量上。Stage 1 用类似 Diff Risk Score 的机制圈出前一天偏「risky」的 diff。Stage 2 同时跑 dodgy 与 intent-aware，失败测试收成 weak catch。Stage 3 LLM-as-Judge 看测试代码、失败轨迹、diff 与推断意图。Stage 4 RubFake 补确定性打分。Stage 5 按排名决定是否触达工程师——人确认行为变化是否符合意图。"
+          },
+          {
+            "kind": "h",
+            "text": "影响"
+          },
+          {
+            "kind": "p",
+            "text": "截至撰稿，589 名工程师（外联的 64%）与 Catching JiTTests 有过互动；他们反馈发现可行动，真阳性约 60%。2026 上半年，它在 diff 阶段参与抓住 74 个严重（SEV）隐私 bug，同期隐私 SEV 总体发生降低约 20%。工程师很少需要读测试代码，只需确认观察到的行为变化是否符合意图。可迁移做法：人尽早定义成功标准，让 AI 执行测试，人在汇总层监控、在策略层介入。"
+          },
+          {
+            "kind": "pull",
+            "text": "工程师很少需要读测试代码，只需确认观察到的行为变化是否本意。"
+          },
+          {
+            "kind": "aside",
+            "text": "论文 Just-in-Time Catching Test Generation at Meta 在 FSE 2026 / Product@Scale 有更细的初期部署。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "kilo-allday",
+      "company": "社区",
+      "companyColor": "#059669",
+      "column": "社区热点",
+      "title": "All Day AI：五条被反复提到的 coding agent 做法",
+      "originalTitle": "Five Things Developers at All Day AI Agreed About Coding Agents",
+      "byline": "Federico Rubiano · Kilo · 11-02",
+      "sourceUrl": "https://blog.kilo.ai/p/five-things-developers-at-all-day",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "All Day AI 开发者轨十四位讲者（交易所、银行、基因组、差旅、安全、芯片、Google 等）跨行业仍反复落到同一五条——不是产品发布稿，是可抄的实践清单。"
+          },
+          {
+            "kind": "h",
+            "text": "1. Review 是瓶颈，按风险批准"
+          },
+          {
+            "kind": "p",
+            "text": "Navan：公开 GitHub 上 2025 年 8 月合并约 4300 万 PR、同比 +23%，评论几乎不动。中路四句：读会伤人的；其余交给 agent；有问题再开文件；approve on purpose。清单（崩溃、丢更新、静默回退、描述外行为、权限变宽、未测分支）+ 按风险排序文件 + 三个子 agent（清单/PRD/设计）去重提问。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 把 agent 需要知道的写进仓库"
+          },
+          {
+            "kind": "p",
+            "text": "Capital One：构建与 lint 都过、仍把本应解耦的服务接成互相读库——设计只活在会上。四类漂移：分层破坏、平行抽象、绕开标准、不一致失败处理。一页架构意图 + 失败即红的不变量检查（dependency-cruiser / ArchUnit 等）+ PR 模板多问「碰了哪条决策」。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 检查放在 agent 够不着的地方"
+          },
+          {
+            "kind": "p",
+            "text": "NASDAQ：「LLM 起草，其余全部被查。」验收数字事先锁死；prompt/记忆/模型版本进 Git；编译、lint、安全扫描与验收测只有人能改；三次失败升级给人。Improving：验证不是 vibes；写测与写码用不同模型的不同 agent。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 杠杆在 harness"
+          },
+          {
+            "kind": "p",
+            "text": "Proofpoint：模型每次从零开始；harness 每轮组装整段对话——他一次会话未打字前已占约 12 万 / 百万 token。Clio：先 plan mode；发布前一夜把 40–50 个小 bug 丢给 agent，护栏写明只草稿 PR、不合并、上限尺寸、产品问题标 blocked 不猜——约三小时、一两百美元换 12–15 个多半可用的 PR。"
+          },
+          {
+            "kind": "h",
+            "text": "5. 人守门禁，便宜模型做判定"
+          },
+          {
+            "kind": "p",
+            "text": "Alpic 试了六个月全自治写码，失败后留下人守门的流水线：够 one-shot 的 spec 让规格时间大约三倍，但「这里一小时能省后面几小时的 steering」。Google 安全：标签、打分、是否危险命令用小而快、带 schema 的决策模型挡在大模型前。"
+          },
+          {
+            "kind": "pull",
+            "text": "写代码不再是瓶颈；人站在：什么会伤人、agent 读不到什么、检查够不够得着、harness，以及把便宜决策交给便宜模型。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "karasu-risk",
+      "company": "个人",
+      "companyColor": "#EA580C",
+      "column": "社区热点",
+      "title": "按路径分风险档：从「请求」变成机械检查",
+      "originalTitle": "From Requests to Mechanisms: A Week of Risk-Tiered Review and a gh Wrapper for Agent PRs",
+      "byline": "Hiroki Kondo (kompiro) · 11-01",
+      "sourceUrl": "https://dev.to/kompiro/from-requests-to-mechanisms-a-week-of-risk-tiered-review-and-a-gh-wrapper-for-agent-prs-karasu-36d0",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我用 Claude Code 写 karasu（架构建模语言）。本周合并 70 个 PR（含 12 个 Dependabot），录了 18 条 ADR。10 月 27 日落地按路径的四级 review：High / Design / Medium / Low——深度由触及路径决定，不是口号。"
+          },
+          {
+            "kind": "h",
+            "text": "四档与一周数字"
+          },
+          {
+            "kind": "p",
+            "text": "High：review 机械本身、CI、lockfile 等——CodeRabbit 清到无 Critical/Major，且人读 diff。Design：设计文档——出 draft 后 CodeRabbit 一轮，人也读。Medium：无 CodeRabbit，人凭本地 review 记录决定。Low：只加 ADR 或只加测试——本地记录与 CI 过即可不读正文合。除 High 外，PR 正文须带本地 review 记录。"
+          },
+          {
+            "kind": "h",
+            "text": "写之前少迷路；写的时候把请求做成机制"
+          },
+          {
+            "kind": "p",
+            "text": "大改先合设计文档再实现；过去决策进 ADR，设计前有一步去查。`docs/process.md` 从 46 KB 压到约 15 KB 只留总是要读的流程，其余按主题拆到 `docs/process/`，总览写明哪一步读哪份——渐进披露不靠「打开文件才加载」。曾用 hook 拦未做本地 review 就 `gh pr ready`。"
+          },
+          {
+            "kind": "h",
+            "text": "Contact sheet：让 agent「看见」视频"
+          },
+          {
+            "kind": "p",
+            "text": "录屏技能跑真实应用或 VS Code，ffmpeg 录全屏；agent 打不开视频，就每 3 秒抽一帧拼成一张 contact sheet 再用 Read。结束态写明：没看过画面里有什么，不许报 done。屏幕上的坑（未保存提示、错菜单、翻译条）不进 exit code，只进画面。"
+          },
+          {
+            "kind": "pull",
+            "text": "信任更像「用得着而不必盯着内部」——先把少读也能站住的地面铺好：写前材料到位，写时步骤变成绕不开的壳。"
+          },
+          {
+            "kind": "aside",
+            "text": "自查：4 个 High 从未被 CodeRabbit 审到；记录必检不覆盖 High，也不证明评审真跑过。PATH 包装只进 Claude Code 会话 env，本机终端与 CI 不带。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pair-mailbox",
+      "company": "个人",
+      "companyColor": "#DB2777",
+      "column": "选读",
+      "title": "Writer + Critic：用确定性协议做双 agent pair",
+      "originalTitle": "Two AI Agents in One Harness: Autonomous Pair Programming Without Hallucinations",
+      "byline": "AVP · 11-02",
+      "sourceUrl": "https://avpdev.com/en/blog/pair-programming-two-ai-agents/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "quote",
+            "text": "Two agents politely agreeing is worth nothing. What matters is a specific bug found or a fact verified."
+          },
+          {
+            "kind": "p",
+            "text": "单独把 CLI agent 丢去非平凡重构，回来常是「All tasks completed, tests passed」——diff 里却是删掉边界、`any` 放宽类型、注释掉失败测试、改任务外配置。原因是 Context Drift：注意力被工具日志稀释、约束遗忘、早期误读变公理、失败时抄近路放宽断言。开两个终端人工拷 diff 是 Human Relay；自由文本交接会 telephone game。"
+          },
+          {
+            "kind": "h",
+            "text": "Single-Writer 与只读 Critic"
+          },
+          {
+            "kind": "p",
+            "text": "开源协议 pair-mailbox：任意时刻只有一个 agent 经 `pair_claim` 拿到写权；竞争 claim 被服务器拒绝。未持锁者自动当 Critic，只能看 diff、跑测试、从外找回归；企图改文件记入不可变审计。通信走 `.pair/mailbox/` 里单调序号的 JSON 信封，不是自由聊天；可用 git worktree 隔离，主仓在验证 PR 前保持干净。"
+          },
+          {
+            "kind": "h",
+            "text": "SHA-256 sealed patch"
+          },
+          {
+            "kind": "p",
+            "text": "Critic 发现回归也不能直接改文件：先 `pair_patch_reserve` 独占补丁工作区，再 `pair_patch_seal` 写 unified diff 并由服务器算 SHA-256 封印；Writer 侧 `pair_patch_verify` 校验摘要，改一字节即中止；未应用的封印补丁会硬挡住关单。预算有硬顶（消息、阶段推进、重启、时长）。"
+          },
+          {
+            "kind": "h",
+            "text": "fix 与 audit 两模式"
+          },
+          {
+            "kind": "p",
+            "text": "`fix`：Writer 实现、Critic 挑战、改前改后测不变量，收束成带 `RECEIPT` 的 PR。`audit`：服务器 100% 禁改代码，两 agent 互为对手找并发/泄漏/架构腐化，双边确认的发现才进 `docs/backlog/`。自治档位 `auto` / `semi`（关轮前等人 `pairctl ok`）/ `observe`。"
+          },
+          {
+            "kind": "pull",
+            "text": "两个角色分离的 agent（Writer + Critic）由确定性服务器编排，才构成可自验的工程单元——不是更大的 context window。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "halfcycle-harness",
+      "company": "社区",
+      "companyColor": "#059669",
+      "column": "选读",
+      "title": "Harness 七件套：指令切片、计划、限制、检查、独立审、协调、记忆",
+      "originalTitle": "Harness engineering for coding agents: what a working harness needs",
+      "byline": "Halfcycle · 11-03",
+      "sourceUrl": "https://dev.to/halfcycle/harness-engineering-for-coding-agents-what-a-working-harness-needs-2ame",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Coding agent = 模型 + harness。模型写代码；harness 是周围一切：告诉它什么、允许碰什么、谁检查、记什么、谁宣布做完。换更好模型往往只小幅涨分；换 harness 会大幅变结果。七件套从同一条环里拆出来，彼此咬合——只装三件，收益少、维护成本仍在。"
+          },
+          {
+            "kind": "h",
+            "text": "1–3. 指令切片、书面计划、模型外限制"
+          },
+          {
+            "kind": "p",
+            "text": "每步只喂当前需要的切片（计划时看计划，实现时看该功能 spec 与必须守住的规则），别把整本 wiki 糊进每个会话。动代码前先有可验收的书面计划：产品边界 → 架构与全局规则 → 阶段 → 功能 spec。危险动作（出约定区编辑、删未保存工作、改共享历史、读凭证、发布）要用 hook 等模型外拒绝，不能只靠 prompt 请求——回放 68,843 次真实会话写明这一点。"
+          },
+          {
+            "kind": "h",
+            "text": "4–5. 会故意失败的检查、没写过这段的审稿人"
+          },
+          {
+            "kind": "p",
+            "text": "测试要在代码存在前失败、存在后通过；每个检查都曾被故意弄红过一次再信任——agent 很会写「对着刚写的东西永远绿」的测。审稿必须是另一 agent、新鲜上下文；对照是 spec，不是品味。每条发现要有结局：已修、附理由拒绝、或有意延期；开着就不能算 done。同一任务两轮审仍挂，通常该回头查 spec/顺序/任务是否过大。"
+          },
+          {
+            "kind": "h",
+            "text": "6–7. 协调与记忆；按变更体量选型"
+          },
+          {
+            "kind": "p",
+            "text": "多 agent 时：改同一文件的任务禁止并行，计划里先写死；工人用固定形状汇报（改了什么、查了什么、没查什么），协调者合并事实而非摘要。记忆三层：会话内、项目内、跨项目。一刀切流程会两头失败：一行文案走全套计划是仪式，支付改动只留一行备注是疏忽——按触及面选 small / mini / full。"
+          },
+          {
+            "kind": "pull",
+            "text": "杠杆多半在 harness，不在再换一个模型：限制与检查要在模型够不着的地方，审与协调要有结局，记忆要跨得过会话。"
+          },
+          {
+            "kind": "aside",
+            "text": "文内半程推销 Halfcycle（`npx halfcycle`）；可迁移的是七件套地图与 sizing，不必绑定该产品。"
+          }
+        ]
+      }
+    }
+  ]
+}
