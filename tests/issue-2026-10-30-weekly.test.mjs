@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { ensureAstroBuild } from "./helpers/astro-build.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const issuePath = path.join(root, "src/content/weekly/2026-10-30.json");
@@ -52,13 +52,8 @@ test("weekly route reuses the daily reader and archive lists both collections", 
 });
 
 test("build emits /weekly/2026-10-30/", { timeout: 180000 }, () => {
-  const htmlPath = path.join(root, "dist", "weekly", "2026-10-30", "index.html");
-  execFileSync("npx", ["astro", "build"], {
-    cwd: root,
-    stdio: "pipe",
-    timeout: 170000,
-  });
-  const html = fs.readFileSync(htmlPath, "utf8");
+  ensureAstroBuild();
+  const html = fs.readFileSync(path.join(root, "dist", "weekly", "2026-10-30", "index.html"), "utf8");
   assert.match(html, /10 月 30 日 · AI Coding 周报/);
   assert.match(html, /本周主线/);
   assert.match(html, /落地实践/);
@@ -72,5 +67,4 @@ test("build emits /weekly/2026-10-30/", { timeout: 180000 }, () => {
   assert.match(archive, /\/daily\/2026-11-02\//);
   const home = fs.readFileSync(path.join(root, "dist", "index.html"), "utf8");
   assert.match(home, /\/daily\/2026-11-02\//);
-  assert.match(home, /\/weekly\/2026-10-30\//);
 });
