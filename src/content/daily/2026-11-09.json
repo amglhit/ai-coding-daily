@@ -1,0 +1,631 @@
+{
+  "title": "AI Coding 日报 · 2026-11-09（周一）",
+  "date": "2026-11-09",
+  "type": "daily",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [
+    "anth-memory",
+    "hf-adapters"
+  ],
+  "masthead": "11 月 9 日 · AI Coding 日报",
+  "stories": [
+    {
+      "id": "anth-memory",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "工程化实践",
+      "title": "Dreaming：用闲时算力整理 agent memory——纠错、建 wiki、注入会话",
+      "originalTitle": "The components of agent memory",
+      "byline": "Lance Martin et al. · Anthropic · 11-06",
+      "sourceUrl": "https://www.anthropic.com/research/components-of-agent-memory",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "framework",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "克尔凯郭尔写过：人生只能往后理解，却必须往前过。设计 AI agent 的 memory 时，我们碰到类似的困境。人一边生活一边编码记忆，海马体即时抓住经历，使记忆很快形成、立刻可用；但只有一部分经历会巩固成长时知识。很多巩固发生在大脑离线时：睡眠和安静休息中，海马体回放近期经历，逐渐蒸馏并整合进储存大部分知识的新皮层。agent memory 可以用类似的分工。Agents 把大量工作记在 logs 或 transcripts 里；Letta 与 UC Berkeley 的研究者提出 sleep-time compute，让模型在交互之间的闲时重组已有 context。同一思路可以帮助 agents 整理 memory：回看 logs 来纠错，或写出新的 notes 与表征。这个过程常被叫做 dreaming。"
+          },
+          {
+            "kind": "pull",
+            "text": "Dreaming 能帮我们给 Claude 有效的 memory：纠正错误、写 notes、建立新的 memory 表征，或决定预先载入未来会话的内容。\nClaude can use dreaming to organize memory. This can correct mistakes, create notes, build new memory representations, or shape what's preemptively loaded into future sessions."
+          },
+          {
+            "kind": "h",
+            "text": "Memory notes"
+          },
+          {
+            "kind": "p",
+            "text": "我们说的 agent memory，是 Claude 从经验里获得的知识——包括与用户的互动和交给它的任务——并跨会话保留，存成日后可读的 context。它不包括模型学习或管理 context 的其他方式：改 weights（训练时设定的内部参数）、单次对话里的 in-context learning，以及 compaction（Claude 写下摘要替换更早的轮次，好在新的 context window 里继续工作）。人脑会在经历之前、期间或之后释放化学信号，把一段记忆标成重要；被标记的记忆在离线期回放得更多，这一过程叫做 replay，有助于把它们稳定并整合进长期记忆。类似地，Claude 可以在 session log 里给显著事件打标，方便以后找到，或写到 memory store，例如一文件夹 memory notes。但在还不知道接下来会发生什么时，当下怎么判断什么显著？"
+          },
+          {
+            "kind": "h",
+            "text": "Memory 可以是对未来所需的预测"
+          },
+          {
+            "kind": "p",
+            "text": "Memory 偶尔是一种预测。写下一条规则，agent 就是在预测它所描述的模式以后还会用到。例如，写下已验证的事实，是预测未来会话里的 agent 会想直接依赖它、不必再核对。随着时间推移，Claude 已经更擅长做这类预测。"
+          },
+          {
+            "kind": "p",
+            "text": "Continual Learning Bench（CL-Bench）1.0 衡量 agent 用 memory 处理长程任务的能力。其中一项任务让 Claude 查数据库回答一系列问题；它给出答案后会被告知正确答案，并可以写一条 memory 帮助回答后面的问题。这里 memory 可以支撑一个学习闭环：如果答错，它可以记下失败、提出关于出错原因的理论、检验这些理论，再把发现写成以后怎么回答的规则。我们用 Claude Managed Agents 跑这项任务。Claude 每道题都从新 session 开始，唯一例外是可以从跨会话持久的 memory 目录取文件。"
+          },
+          {
+            "kind": "p",
+            "text": "不同模型自己搭建学习闭环的程度不同。Claude Sonnet 4.6 能走到对答错原因提出理论；它的 memory 目录里是散落的文件，各列若干未检验的猜测。Claude Opus 4.7 把 notes 收成一份参考文档，开始标哪些事实已核对、哪些仍未确认。Claude Sonnet 5 在 grader 核对后把每条答案标为 confirmed，答错则写更正。Claude Opus 5 是这批模型里第一个闭环的：多数条目包含一条规则（以及它怎么知道这条规则为真）、先前问题的答案，以及对沿途发现的陷阱的明确警告。和 Opus 5 一样，Claude Opus 5.5 与 Claude Sonnet 5.5 也闭环了，用 memory 记下已验证的、以后怎么答题的规则。有 memory 时，两者分数与 Opus 5 大致相当，不过没有 memory 的 baseline 略高。"
+          },
+          {
+            "kind": "h",
+            "text": "Claude 已学会判断 salience"
+          },
+          {
+            "kind": "p",
+            "text": "我们也用玩 Pokémon Red 来评估 Claude 判断该把什么写入 memory——这款游戏考验它处理复杂长程任务的能力。每次 run 开始时，我们给每个模型一个可读可写的 memory 文件夹。我们比较了 Claude Sonnet 3.7 与 Claude Fable 5 各一次 run、大约走到 10,000 步时的 memory 文件夹。关键差别是各自觉得什么值得记住。Sonnet 3.7 假定什么都可能有用，不加选择地写：常常一场战斗、一件物品、一个 NPC 各一份文件。最终它写了 413 个 memory 文件、分布在 225 个文件夹，拿了 1 枚徽章。Fable 5 写了两个文件夹里的 9 个文件，外加顶层一份 `global.md`，拿了 4 枚徽章。"
+          },
+          {
+            "kind": "p",
+            "text": "Sonnet 3.7 的做法主要成问题，是因为 Pokémon 的游戏状态不停变化，这份细账不断过时。于是随着进度推进，Claude 花在翻 memory 上的时间和资源越来越多，而不是在玩游戏。大约第 10,000 步，例如，Sonnet 3.7 开始建第四个「master」memory 文件夹；随后 17 步里新建了 6 个文件、删了另外 9 个，游戏里一步没走。"
+          },
+          {
+            "kind": "p",
+            "text": "Fable 5 用 memory 记游戏不会明确告诉它的东西。Sonnet 3.7 写入 memory 的某些信息——玩家有多少钱、人在地图上哪里——每回合都能从屏幕读到，存下来是多余的。相反，关于策略、计划和已验证规则的 memory 文件，只有 Claude 自己推出来才会存在，不写下来就会消失。Fable 5 据此组织 memory。它的 `global.md` 像一块 dashboard：当前目标、预先写好的健身房（赢得徽章的挑战）计划，以及它自己使用 memory 的规则。`locations` 文件夹存放特定路线的导航计划，`gameplay` 文件夹存放它从游戏机制里学到的策略。例如，连续 7 个 Poké Ball 都没抓住 Magikarp（最容易抓的宝可梦之一）之后，Claude 写下：「If 3+ balls fail in a row, VARY the timing (insert extra ‘wait’ presses between menu steps) - the catch landed right after doing this。」memory 文件夹小得多，Fable 5 却在游戏里走得更远。Opus 5.5 做法类似：只保留一小夹追踪当前目标和下一步的 memory notes，边玩边改写，并通关了游戏。"
+          },
+          {
+            "kind": "h",
+            "text": "引导 Claude 写 memory"
+          },
+          {
+            "kind": "p",
+            "text": "我们发现，告诉 Claude memory 是干什么用的，而不是该怎么用，更有帮助。在 CL-Bench 上，我们只告诉 Claude 有一个 memory 文件夹可用。这样的一般指引就够 Opus 4.7 和 Opus 5 有效使用 memory，两者都有明显提升。我们还测试了给模型规定该写什么的具体规则，每次测试一条，并比较有无该规则时 memory 带来的增益。规定「只记录失败」时，Opus 5 和 Opus 4.7 都丢掉了 memory 带来的大部分提升。对更强的模型，让它们自己判断 salience，比事先定死规则更有效，那些规则反而可能削弱表现。"
+          },
+          {
+            "kind": "p",
+            "text": "我们也注意到，引导对较老的模型帮助最大。例如 Sonnet 4.6 常常不读 memory 目录里的文件，也不去检验关于答错原因的理论。这时，prompt 它在答题前先读 memory 文件，再明确检验理论，benchmark 分数几乎翻倍。Sonnet 5 自己就会做：不经 prompt，10 次里有 9 次答题前先读 memory；相比之下，Sonnet 4.6 这样做的比例不到一半。对前沿 Claude 模型，我们通常只给简单指引：在有人要求、或明显值得记住时创建 memory notes，判断交给 Claude。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以纠正 memory"
+          },
+          {
+            "kind": "p",
+            "text": "Claude 按会话中判断的 salience 写 memory，一条一开始就错、或随环境漂移的 note，可能在后续会话被读到并被信任。Dreaming 让 Claude 拿原始 transcripts 检验它的 notes。我们在用 Managed Agents、并挂载 memory 目录玩 Pokémon 时，看到过正面例子。"
+          },
+          {
+            "kind": "p",
+            "text": "游戏里有一段，玩家必须穿过 Mt. Moon：入口在地图西侧，出口在东侧。入口附近有一个陷阱：单向岩架，会把玩家掉回刚才来的路线，且没有明确的爬回去的办法。Claude 把山入口处的 PokéCenter 当路标，会不会走下岩架，取决于它以为 PokéCenter 在山的哪一侧。有一次 Claude 错误地记下 PokéCenter 在东侧。它走出 PokéCenter 时宣布「Mt Moon is behind me」，并更新 notes：「Mt Moon DONE。」但 Mt. Moon 并不在它身后。几步之后它走下岩架，回到来时的路线。它的导航工具没有显示落差，于是它得出「I overshot far west」，以为自己一直在正确的一侧。其实没有。"
+          },
+          {
+            "kind": "p",
+            "text": "我们随后测试 dreaming 能否帮 Claude 避开这个陷阱。我们对含有错误 PokéCenter 位置的 memory 文件夹跑了 dreaming：Claude 对照 session transcript 核对 note，抓住错误并重写。Transcript 给了它验证 memory 的 ground truth。note 纠正之后，Claude 直接走回 Mt. Moon，最终到达 Cerulean City。未纠正的那次 run 里，Claude 三次掉回先前的路线。第三次失败后它似乎放弃了，写下「I'm going to stop rather than keep looping。」我们设置里的自动回复让它继续。于是它一路退回山前的 Pewter City，希望在那里回复并补货。这次 run 结束时，Claude 从未到达 Cerulean City。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以建立新的 memory 表征"
+          },
+          {
+            "kind": "p",
+            "text": "有了 dreaming，Claude 可以建立帮助导航 memory 的表征。它使用的一类表征叫做 wiki：由 Claude 撰写和维护的一组页面，汇集它对某一主题所知，并链到其他 notes。这些链接相当于一张地图，让它筛选 memory、在需要时高效定位。"
+          },
+          {
+            "kind": "p",
+            "text": "这类表征可以帮助 Claude 穿越不断增长的知识库。我们用 Stainless（我们 5 月收购的软件公司）的内部文档语料——约 350,000 个文件、大约 420M tokens——探索 wiki 作为 memory 表征的收益。我们做了一组 25 个关于这份语料的问题，给 Claude 一个 search 工具去探索，并让它用 dreaming 基于这些文件建 wiki。在 128 个 sessions 里，我们 prompt Opus 5 agents 去探索文件、撰写或纠正带链接的 wiki 页面、合并重复、对照源核对主张。每个 session 建立在先前 agents 的进度之上，用共享 log 协调工作。随着 dreaming 从两个 sessions 扩到 128 个，这 25 个问题的表现从评分标准的 13% 升到 48%。"
+          },
+          {
+            "kind": "p",
+            "text": "Claude 增量地建 wiki。测试里，wiki 在同时给它 search 工具时帮助最大：同时用 search 和 wiki 时，随着 wiki 增长，综合分数从 54% 升到 61%；只用 search 是 53%。只用 wiki 答题时，最好成绩是 48%。同时用 search 和 wiki，每个问题大约节省 20,000 tokens。"
+          },
+          {
+            "kind": "p",
+            "text": "我们还想知道哪类任务受益于 wiki，于是用了 Harvey LAB benchmark，外加一套关于并购的文档。benchmark 给一组文档，让 Claude 据此生成法律 brief，再按标准打分。我们让 Claude 从文档建 wiki，再分别用 wiki 和直接文件 search 来回答问题（关于并购）或生成法律 briefs（LAB benchmark）。一项测试问了 24 个关于并购的问题，其中超过一半需要跨几份文档找信息，许多还需要判断或计算。在这些条目上，查阅 wiki 得 87%，只用 search 得 73%。另一些情况下 wiki 没那么有用：一项 LAB 任务里，brief 标准常常能靠单份文档的文本搜索拿到，wiki 相对 search 没有明显增益。另一项 LAB 任务里，wiki 长得比文档本身还大。就像博尔赫斯短篇《论科学的精确性》里的制图者，画出一张和帝国一样大的地图，Claude 做了一份极其详细、实际上什么也没抽象的 wiki。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以把 notes 提升到 memory 层级顶部"
+          },
+          {
+            "kind": "p",
+            "text": "Dreaming 也可以把 notes 浮到 memory 层级顶部，由 agent harness 在每个 session 开始时预先载入 Claude 的 context。这样 Claude 不必搜索，甚至不必知道有什么可搜。把 memories 提升进新会话（一种 context injection）必须谨慎：注入的 memories 会占用宝贵 tokens，一条错误的 note 会被带进每个 session。载入一条 note 也不保证 Claude 会照做：我们在 Claude Code 的文档里提醒，更长的指令文件会降低遵守程度。所以 memory 层级的顶层必须相对小，dreaming 在这里的大量工作就是维持这个小——把一些细节往下放，留下链接。Claude Code 的 auto memory 以同样方式保持注入层很小，由 Claude 在会话中维护。它不会把全部 auto memory 载入每个 session 的 context window，只载入 `MEMORY.md` 的前 200 行或 25 KB。这段 header 充当索引，告诉 Claude 它知道什么、去哪里找。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以让 memory 对准特定目标"
+          },
+          {
+            "kind": "p",
+            "text": "Dreaming 也可以塑造 memory 如何生长。例如 Claude Duet 这类助手，常常受益于按它正在帮助的人来组织 memories；dreaming 可以调成服务于特定目标。指导 memory 如何生长的说明因任务而异，告诉 Claude 什么信息真正重要。LAB benchmark 有一项任务模拟公司收购并提供一组合同，brief 按是否正确描述合同条款打分。我们先给了生成 wiki 的基本说明，没有告诉 Claude 该怎么用 wiki。这项任务高度依赖合同条款。建 wiki 时，几个 agents 同时写一张共享的合同条款表。结果是一份缺了关键事实的 wiki：按 wiki 生成的 brief，57 条事实里只纳入了 41 条（72%）。我们查看出错原因时发现，共享表对条款概括得很差，有些条款完全缺失，因为 agents 互相覆盖了对方的工作。"
+          },
+          {
+            "kind": "p",
+            "text": "合同条款是 wiki 最重要的部分，但说明里没这么说。为了找到更好的说明，我们跑了一个循环：Claude 反思失败、提出对说明的修改、重建 wiki。这个循环让 Claude 发现必须跟紧合同条款，并据此改写建 wiki 的说明。每份合同在 wiki 里有自己的页面，由单个 agent 撰写，逐字引用条款，而不是概括进共享表。改进后的 wiki 保留了 57 条事实中的全部 57 条；按它生成 brief 时，100% 的标准都能满足，从 72% 升上来。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以补上单次 session 留下的缺口"
+          },
+          {
+            "kind": "p",
+            "text": "Claude 写 memory notes 时，只看得到那一次 session 的 context。Dreaming 可以跨许多 sessions 搜索，找共同模式或纠正共同错误。建 LAB benchmark 的 wiki 时，Claude 有时会链到尚未创建的页面。第二次 dreaming pass 补上了其中许多缺口。在一项任务里，dreaming 发现 wiki 里有 9 条指向缺失页面的链接，把它们改指到同一文档的已有页面；它还加了 3 个新页面，包括一份 index，以改进 wiki。"
+          },
+          {
+            "kind": "h",
+            "text": "往后想，往前看"
+          },
+          {
+            "kind": "p",
+            "text": "关于如何设计 agent 的 memory 系统，仍有许多开放问题。其一是 Claude 该何时创建 memory：在任务中写入 memory store，可以在源头捕捉 salience、让重要细节立刻可供后续轮次或会话使用，但当场记 notes 不可避免地会把注意力从主任务上拉开；dreaming 可以把 memory 创建推到后台，但其输出未必立刻可用。其二是如何让 memory 可靠地保持更新：Claude 可能做出错误预测，或一开始就写下错误规则；memory 也会随环境变化而漂移、变得无关。Dreaming 是纠正这些错误的一种办法，但需要算力。让 Claude 持续检查全部 memories 可能不实际；或许应把 dreaming 集中在可能变化的信息上，或仔细调整 dreaming 的节奏（例如按 memories 被访问的频率）。把 transcript search 当作 Claude memory 的基础也说得通：把表征（例如 wiki）与 search 结合有时有效，但维护表征、确保它们不积累错误或幻觉，需要算力。即便 Claude 对 salience 的判断已经更好，没有模型能真正知道未来轮次会发生什么。Dreaming 给 Claude 一个往后看的机会，用算力整理 memory、纠正错误、维护表征，让未来的 session 更容易取用 memory。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hf-adapters",
+      "company": "Hugging Face",
+      "companyColor": "#FFD21E",
+      "column": "工程化实践",
+      "title": "Harness adapters：按 harness 训 LoRA，safeagents 挡 reward hacking",
+      "originalTitle": "Harness adapters: Safe RL for efficient agentic development",
+      "byline": "Hugging Face · 11-06",
+      "sourceUrl": "https://huggingface.co/blog/harness-hub/harness-adapters",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们发布了一批 harness adapters：每个模型和每个 harness 一个 LoRA adapter，在未改动的 agent harness（pi、opencode 和 hermes）里、用可验证任务做 RL 训练，由同一模型提供服务；模型发出的每一次 tool call，在运行前都经 safeagents 检查。同一模型在不同 agent harness 里行为不同——各有自己的 tools、prompt 和 control flow。此前关于 multi-harness RL 的指南展示了如何在 harness 内部、不改 harness 本身来训练模型。这里我们换一条路：在同一 base model 上，为每个 harness 训一个小 LoRA adapter。然后可以把本地 agent 背后的模型，换成在该 agent 里训出来的 adapter。"
+          },
+          {
+            "kind": "p",
+            "text": "Harness adapters 可以让本地的 agentic 开发更高效、更准确。在 holdout eval 任务上，我们的 smoke training 测试里，它们比 base model 更少调用 tools，同时保持或提高准确率。LoRA adapters 训练和评估都更省：一台 server 可以同时托管每个 harness 的 policy。推理时，任何人都可以按自己选的 harness 加载对应 adapter。"
+          },
+          {
+            "kind": "h",
+            "text": "用开源轨迹丰富 RL 任务"
+          },
+          {
+            "kind": "p",
+            "text": "新的 environments 来自 Hub 上分享的开源 coding sessions：Repo2RLEnvs 把它们变成可验证任务，训练时与 SmolDataEnvs 混合。我们用这些开源 agent trajectories（一次 agent session 的完整 logs：用户请求、模型回复，以及每次 tool call 与其输出）做种子，提高先前 RL 任务的多样性和难度，导出四类 RL environments：repair（修已有代码库里的 bug）；qa（回答事实问题）；build（从零构建新东西，按隐藏测试通过的比例打分，原实现作为验证任务的 oracle）；extend（对已有代码库做后续改动）。"
+          },
+          {
+            "kind": "p",
+            "text": "这一版远不平衡：270 个任务里有 253 个是 build（94%），对照 11 个 repair、6 个 extend、没有 qa。243 个来自 TeichAI/Ox-Alpha-Pi-Traces，其中 238 个是 build。偏斜来自分享轨迹里有什么、以及各类规则有多严：多数分享 session 是一次性的「build X」请求；repair 需要「检查先失败、编辑后通过，中间没有新安装，重建后能再现同样失败」这种少见模式；extend 需要第二次请求改已完成的 Python 项目并以检查通过结束；qa 需要从公开 Hub 数据算出、并在 tool 输出里原文出现的事实，本次没有通过。我们尤其缺「出问题再修好」、或「项目跨多次请求生长」的 session。"
+          },
+          {
+            "kind": "h",
+            "text": "Safe RL：用 safeagents 挡住 reward hacking"
+          },
+          {
+            "kind": "p",
+            "text": "RL 也会让模型 hack reward，在任务上走捷径。所以我们把 safeagents 接到 RL 训练阶段。它是放在另一个服务前面的 reverse proxy：harness 的 base URL 指向 safeagents 而不是 vLLM；请求原样通过，响应里的 tool calls 在 harness 看到之前被检查。每一次检查都是规则，不是模型：同样的 call 永远得到同样的裁决，大约 10 到 20 ms，policy 没法靠说话绕过去。"
+          },
+          {
+            "kind": "p",
+            "text": "被挡住的 call 在响应里换成一段文字说明，例如 `[safeagents] blocked call to bash: …`，「tool use」的 stop 变成普通 stop。什么都不会执行。reward 函数给任何含有这条 notice 的 rollout 打 0；token ids 和 logprobs 原样通过，trainer 仍会在被挡住的 tokens 上训练：GRPO 把这次尝试往下压。"
+          },
+          {
+            "kind": "p",
+            "text": "我们很快就见到它起作用。TwIL-8B 的 smoke run 在 step 0、任何更新之前，模型在做一个关于 Kaggle 数据集的 SmolDataEnvs 任务：它没有去算答案，而是去找任务数据所暂存的 Hugging Face bucket，指望那里有原始 notebook。命令点名了 `jupyter-agent-kaggle`，正是我们 SmolDataEnvs plugin 列出的来源之一。call 从未执行，pi 收到 notice，该 rollout 得 0。模型在 step 0 就去搜答案，这正是护栏要从第一步就打开、而不是出了问题再加的原因。在 50-step 的 ablation（pi，LFM2.5-24B-A2B）里，打开这层护栏，holdout 的 pass@1 变化是 +0.0 ± 4.1 分：它不花钱。它是为政策变得有创意的时候准备的，TwIL-8B 已经演示过。"
+          },
+          {
+            "kind": "h",
+            "text": "训练了哪些模型"
+          },
+          {
+            "kind": "p",
+            "text": "社区反馈之后，我们把训练的模型扩到 LFM2.5-24B-A2B 和 LFM3-1.7B，外加 TwIL-8B 作为实验——模型卡写明它没在 agentic 数据上训练过，我们想知道这样的模型会不会也给出正向信号、能否做出 harness adapters。我们用 GRPO 算法训练；harness adapters 是 rank 32 的 LoRA，挂在每一个 linear 层（`all-linear`）。模型每个任务做 8 个 rollouts。Reward 是任务自己的 verifier，外加一个用更少 tool calls 解题的小奖励：0.1 × (1 − calls / 15)，只加在正确的 rollouts 上。权重是我们在一次 ablation 里选定的。我们在 HF Jobs 上训练：LFM3-1.7B 用 2×H200，其他 run 用 4×H200。"
+          },
+          {
+            "kind": "h",
+            "text": "Openings：为你自己的 agent 训一个 adapter"
+          },
+          {
+            "kind": "p",
+            "text": "这套配方不绑定我们的 harness 或任务。你每天和 agent 跑的 session，就是下一枚 adapter 的原料："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "保存 trajectories：留下你日常使用的 agent session，不管 harness 是 pi、opencode、hermes、Claude Code 还是 Codex。",
+              "清洗并分享：`safeagents scrub` 去掉凭证、secrets、邮箱和 home 目录，`safeagents publish` 只把脱敏副本推到 Hub。每一次分享的 session 都是一个候选 environment，给你，也给所有人。",
+              "把它们变成 environments：Repo2RLEnv 把每次 session 重建成可验证任务，带 Docker image、隐藏测试，以及从 session 本身取出的 oracle。",
+              "在你的 harness 里训一个 LoRA adapter：用 TRL 跑同一套 RL 配方，用 safeagents 和你自己的一小段 plugin 守住每次 tool call，再把 adapter 接到本地 agent 后面。"
+            ]
+          },
+          {
+            "kind": "pull",
+            "text": "分享的 session 越多，environments 就越多样；我们尤其缺出问题再修好、或项目跨多次请求生长的 session。如果你为尚未覆盖的 harness 训出一枚 adapter，我们很想听到。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hf-coord",
+      "company": "社区",
+      "companyColor": "#059669",
+      "column": "社区热点",
+      "title": "Coordination Decay：协议全绿却被弃用——七机舰队 103 天",
+      "originalTitle": "Coordination Decay: 103 Days of a Seven-Machine LLM Agent Fleet",
+      "byline": "Tony Dzi · 11-06",
+      "sourceUrl": "https://huggingface.co/blog/TonyDzi/coordination-decay-103-days-of-a-seven-machine-llm",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "pull",
+            "text": "一套协调协议可以守住每一条安全不变量，却仍被弃用。\nA coordination protocol can keep every safety invariant and still be abandoned."
+          },
+          {
+            "kind": "p",
+            "text": "这是我们在七台机器上跑 LLM coding agents 共 103 天学到的主要事情，也是我们发布 claw-consensus（我们用过的、零 LLM 的共识引擎，MIT 开源）以及显示其使用如何崩塌的汇总 telemetry 的原因。我们的设置不同于「一个进程在 benchmark 上编排多个 agents」：七台分开的机器上跑交互式 coding agents（同一家族），为三个人做真实的知识和运维工作。机器通过 bus——一个同步的 markdown mailbox 文件夹——交谈，经共识 ledger（一份 append-only 日志，变更走 propose、counter、accept、commit、verify）做共享决策。高风险变更（Tier-2：涉及钱、不可逆、对外或处理秘密的动作）另外需要有记录的人工批准。2026 年 6 月 20 日到 9 月 30 日，舰队交换了超过 22,000 条 bus 消息；6 月 29 日到 10 月 1 日，ledger 记录了 151 个提案上的 1,131 个事件。"
+          },
+          {
+            "kind": "p",
+            "text": "写成代码的硬规则守住了，中间没有 LLM：27 个已提交的 Tier-2 提案，没有一个缺少事先的人工批准事件；没有一个提案收到来自两台不同机器的 commit 事件。依赖纪律的规则较差：独立 verification 在 66% 的 commits 上成立，text-rail acknowledgement 为 46%，多数人工批准请求过期了。共识协议的使用从 7 月的 121 个提案降到 9 月的 6 个，而 bus 流量继续增长。同期更轻的机制在增长：work claims（「我正在编辑这个区域」）达到每月 1,440 条；deployment packages（「这个修复必须到达每个节点并在那里被证明」）达到每月 155 条。人工批准门也饱和了：某一节点上 139 个批准请求里，18 个得到明确决定，120 个过期，1 个被后来的清理关掉。谈成一项决定的中位耗时 162 分钟，第 90 百分位是 9.5 天。以下六条是一次部署的教训，有待别处验证。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 衡量的是使用，不只是正确性"
+          },
+          {
+            "kind": "p",
+            "text": "我们的 ledger 在 9 月会报告「全绿」，尽管每月只有 6 个提案。按每个活跃 session 每周的提案数计数，连续两周降到第一个月的十分之一以下就告警。按我们的数据，这个告警会在 8 月第二周触发。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 把硬规则放进没法被谈出去的代码"
+          },
+          {
+            "kind": "p",
+            "text": "两条安全规则由几百行确定性的 Python 执行，中间没有 LLM：没有人工批准就不能做高风险变更；一个提案只能有一个 committer。Agents 可以起草提案；它们不该能批准提案。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 协调的是变更，不是决策"
+          },
+          {
+            "kind": "p",
+            "text": "协议协调的是决策。舰队多半需要协调的是变更：一台机器上做的修复必须到达每台其他机器，并在那里被证明。一份带每节点完成标记的 register，用比谈判更少的仪式处理这件事；它的使用随提案下降而增长，同期政策也有意从谈判转向。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 把人工门当成稀缺通道"
+          },
+          {
+            "kind": "p",
+            "text": "按天给请求做预算、打包处理，给每个请求在沉默时的默认结果，并对按定时器反复升级的提案告警。八个提案制造了全部 escalation 事件的 86%，每一个都在卡住时按定时器重新升级：一条警报大多不可操作的通道，正是技术上可靠的辅助反被弃用的典型布置。"
+          },
+          {
+            "kind": "h",
+            "text": "5. 时间戳写 UTC，并把你以后想计数的一切留一份 append-only 副本"
+          },
+          {
+            "kind": "p",
+            "text": "我们三分之一的任务 / acknowledgement 配对出现了负延迟，因为五个时区的机器写的是本地时间；mailbox 轮转之后，9 月的消息我们只能恢复三分之一。三周后我们还能完整读到的，只有那些 append-only 的 UTC ledger。"
+          },
+          {
+            "kind": "h",
+            "text": "6. 先审计便宜的分类器，再相信计数"
+          },
+          {
+            "kind": "p",
+            "text": "对每条消息第一行做正则，在 249 条已标注的双语消息上，相对四位评分者的多数标签准确率达到 88.4%（kappa 0.86）。这样一次审计花一个下午，就能把假设变成带区间的数字。如果你在多台机器上跑 agents 并保留类似 telemetry，我很想比较数字：你的协议使用是否也以同样的方式衰减？"
+          },
+          {
+            "kind": "aside",
+            "text": "这是我搭建并运营的一支舰队，数据里的批准也都由我做出。一次观察性案例不能证明因果；文中的假设应据此阅读。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gh-agentic",
+      "company": "GitHub",
+      "companyColor": "#24292F",
+      "column": "工程化实践",
+      "title": "提交多了 400%，评审更慢：用 Plan→Build→Verify→Observe 铺 agent 工作流",
+      "originalTitle": "Beyond code generation: A developer's guide to agentic engineering",
+      "byline": "Nick Liffen & Philip Holleran · GitHub · 11-06",
+      "sourceUrl": "https://github.blog/ai-and-ml/github-copilot/beyond-code-generation-a-developers-guide-to-agentic-engineering/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "今年 10 月，GitHub 单周提交超过 12 亿次——比一年前多 400% 以上，比 GitHub 在 2025 年全年收到的提交还多。你大概也比一年前写出更多代码。但你觉得自己比去年高产了 400% 吗？把软件做出来不只是一条好 prompt。AI 加快实现时，开发者在别处感到更大压力：Faros AI 的一项研究发现，团队从低 AI 采用走到高 AI 采用时，pull requests 花在 review 上的时间长了 441%。作为软件开发者，你收集需求并引导实现，review 变更并评估测试结果，再调查生产里发生了什么。Agents 可以在这些阶段帮你更高效：Plan、Build、Verify 和 Observe。"
+          },
+          {
+            "kind": "h",
+            "text": "Plan：让每个人和每个 agent 站在同一页"
+          },
+          {
+            "kind": "p",
+            "text": "规划一次 API 变更时，设计在一个工具里，兼容性要求埋在 Slack，旧的 pull request 解释了当前实现为何如此。在写出有用的计划之前，你得把这些细节连起来。你可以用 Copilot 把散落的 context 收到一处，过权衡，把决定变成实现计划。在团队已经工作的 Slack 或 Teams 里一起规划，并从已连接的工具带入 context，让团队核对假设、贡献想法、一起打磨需求。让 Copilot 按约定好的需求和验收标准创建 GitHub Issues，拆出可分开处理的任务。用 GitHub Agentic Workflows 给 issues 打标签、估计任务复杂度，把低复杂度任务直接交给 Copilot，把时间留给更难的决定。复杂工作用你常用 Copilot 界面里的 Plan Mode 比较方案、打磨实现计划；先 review 并批准计划，再交给 Copilot 开始实现。"
+          },
+          {
+            "kind": "h",
+            "text": "Build：同时往前推进不止一件任务"
+          },
+          {
+            "kind": "p",
+            "text": "Session continuity 让你在另一台设备上从同一 Copilot session 接着聊。Copilot 在 cloud sandboxes 里跑任务，执行不占用你的机器，合上笔记本也能继续。Copilot app 给各 session 隔离的仓库副本，实现任务和文档更新不会共享未完成的 working tree。Repository instructions 记下约定和验证命令，shared memory 存放 Copilot 可在仓库内复用的有用事实。Copilot Dreaming review 符合条件的 sessions 和 pull request 反馈，保持 memories 最新，并提议对 instruction 或 skill 的更新。需要时选 Copilot Fusion，按任务选择模型和推理深度，必要时再请额外模型 review 方案；你设定 effort level，平衡质量、成本和响应时间。Enterprise managed settings 把公司策略和配置好的 tools 带到各个 Copilot 界面。"
+          },
+          {
+            "kind": "h",
+            "text": "Verify：把注意力花在真正要紧的地方"
+          },
+          {
+            "kind": "p",
+            "text": "你打开一个标着 “small refactor” 的 pull request，它改了 47 个文件——review 队列就是那个 441% 在实践里的样子。可以从两头缩短等待：让变更对人更好 review，并让 Copilot 在有人打开 diff 之前清掉常规检查和修复。你和 agents 可以用 stacked pull requests 把有依赖的工作拆成更小的块，每个 PR 单独 review，依赖关系保持可见，也让别人在合并前就能基于你的工作继续往前。GitHub Code Quality 按编码实践和公司标准检查变更，在到达人工 reviewer 之前抓住问题。Copilot code review 给出自动反馈，简单变更分析更轻、复杂变更更深；深度可以自设，或交给 Copilot 按每个 pull request 选择。AI Scan 在 CodeQL 覆盖之外的语言和文件里找漏洞；AI secret detection 帮助发现模式匹配容易漏掉的非结构化 secrets，例如密码。License compliance 在合并前按公司规则检查依赖许可证；GitHub package firewall（目前对 npm 公开预览）可以挡住违反已配置安全策略的下载。Agentic Autofix 为安全问题提议修复；Agent Merge 自动处理失败的检查、review 评论和合并冲突。如果配置了，Copilot 甚至会在验证步骤通过后合并你的 pull requests。"
+          },
+          {
+            "kind": "h",
+            "text": "Observe：从上线之后发生的事情里学习"
+          },
+          {
+            "kind": "p",
+            "text": "用 connectors（例如 Fabric）接入可观测工具和业务数据，Copilot 可以帮助调查哪些请求或客户群体受影响。让 Copilot 起草带证据和验收标准的 issue，包括你发现的失败对应的回归测试。Review Dreaming 提出的改进——它用 sessions 和仓库活动帮助打磨 memories、skills 和 code review 指引。"
+          },
+          {
+            "kind": "h",
+            "text": "从哪里开始"
+          },
+          {
+            "kind": "p",
+            "text": "从手上已有的一件工作看开，别只盯写代码这件事：它需要什么 context？你将如何 review 和测试？上线后你怎么知道它有效？不必一次改掉整个流程。从这个星期最让你沮丧的地方开始，让一个 agent 接手，再逐渐扩到流程的其他部分。"
+          },
+          {
+            "kind": "pull",
+            "text": "等 agents 开始帮你走完整条工作流，你也许终于会觉得自己有提交数字说的那么高产。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ibm-cuga",
+      "company": "IBM",
+      "companyColor": "#054ADA",
+      "column": "工程化实践",
+      "title": "同一模型换 harness：AppWorld 完成率从 30% 到 81%",
+      "originalTitle": "Same Model, Different Harness: CUGA, Hermes, and Deep Agents — When to Pick CUGA?",
+      "byline": "IBM Research · 11-03",
+      "sourceUrl": "https://huggingface.co/blog/ibm-research/cuga-harness",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "benchmark",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "社区列表统计了将近 200 种 agent harness。我们给其中三个同样的开源权重模型和同样的 90 个 AppWorld 任务，只换 harness，任务完成率就从 30% 走到 81%。对企业场景，CUGA 还加上了这项 benchmark 没有测试的东西：由 harness 执行的规则，以及部署在你自己的边界之内。best-of-Agent-Harnesses 引用的一项分析里，同一 GLM-5.2 模型只换 harness，SWE-bench Pro 从 23% 走到 52%。该问的不是「哪个 harness 最好」，而是「哪个 harness 适配我的工作负载、配我的模型」。Hermes（Nous Research）面向常开的个人助手，Deep Agents（LangChain）面向研究一类的长、多步任务。企业工作是另一件事：agents 作用在 CRM、支付等业务系统上，必须遵守无论模型决定什么都成立的规则。CUGA（ConfigUrable Generalist Agent）是 IBM 的开源 harness，为这件事而建。"
+          },
+          {
+            "kind": "p",
+            "text": "我们在 AppWorld 上跑 CUGA、Hermes 和 Deep Agents。AppWorld 是跨 9 个应用、457 个 API 的多步任务 benchmark，例如邮件、支付和文件存储。每个 harness 用同一个开源权重模型 GLM-5.3-flash，同样 90 个任务、30 个 scenarios，每任务一次尝试。所有 run 使用 Harbor 评估框架。结果（TGC = 通过的任务；SGC = 三个变体全部通过的 scenarios）：CUGA 为 81.1（73/90）、SGC 66.7（20/30）；Hermes 为 46.7（42/90）、SGC 26.7（8/30）；Deep Agents 为 30.0（27/90）、SGC 6.7（2/30）。这不是对 Hermes 或 Deep Agents 的判决——两者都不是为 AppWorld 这类多应用 API 工作而建的，而这正是重点：harness 必须适配工作。最有用的数字是 SGC：一个 scenario 只有三个变体都通过才算过，所以它奖励的是一致性，而不是一次走运。差距在这里更大：CUGA 20 个 scenarios，Hermes 8 个，Deep Agents 2 个。"
+          },
+          {
+            "kind": "h",
+            "text": "分数从哪里来"
+          },
+          {
+            "kind": "p",
+            "text": "90 任务对比里模型相同，差别来自 harness。每个 CUGA agent 跑同一个紧凑循环：prepare、调用模型、execute，然后重复。AppWorld 配置里用到的 CUGA 功能包括：任务分解，一次拆一个应用；每步只看到该应用的 tools 和少量共享 tools，而不是全部 469 个；tool shortlister（`find_tools`）搜索步骤还需要的其他 tool；CodeAct，模型写调用应用 API 的 Python；代码在带时间限制的受限 sandbox 里运行；改变数据的代码块在执行前先核查；自动 reflection，审查结果并让 agent 修正计划；pagination audit，标记返回了满页却从未请求下一页的列表调用。有了这些功能，模型要做的决定更少，harness 在错误到达结果之前能抓住更多。"
+          },
+          {
+            "kind": "h",
+            "text": "harness 掌管的每一步都是执行点"
+          },
+          {
+            "kind": "p",
+            "text": "多数团队把付款审批、客户 PII 不出组织这类业务规则写进 system prompt。Prompt 是指令，不是执行：模型可能读错，用户可以说服 agent 放弃，注入的消息可以在任务中途改掉它。CUGA policies 把这些规则从 prompt 挪到 harness，在每次 run 的四个点起作用：Intent Guard 在用户意图处拦截或回答匹配的请求，例如挡住删除全部客户记录的请求；Playbook 给 agent 标准程序，例如按步骤走退款流程；Tool Approval 在 tool 执行前硬停，run 暂停等人批准并展示拟运行的代码，例如支付 tool 运行前先问人；Tool Guide with ToolGuard 在调用前跑 guard 代码，被挡的调用返回 policy violation，tool 从不被调用，例如挡住超过 1,000 美元的支付；Output Formatter 把最终回答塑成批准的模板。指导会引导模型，但 approvals 和 ToolGuards 由 runtime 执行。"
+          },
+          {
+            "kind": "p",
+            "text": "你可以在 Policy Playground 里自己看到差别：它把同一条消息发给两个现场 agents，一个没有 policies，一个有。对「Pay everything I owe.」，没有 policies 的 agent 付了 90 美元，包括一笔已拒绝、进入催收的索赔；有 policies 的 agent 把支付留待批准，然后只付了到期的 10 美元。"
+          },
+          {
+            "kind": "h",
+            "text": "什么时候不选 CUGA"
+          },
+          {
+            "kind": "p",
+            "text": "终端 coding agent，用 opencode、Codex 或 Claude Code。住在聊天应用里的常开个人助手，用 OpenClaw 或 Hermes。空白画布的 graph 框架，直接用 LangGraph——CUGA 建在它上面。CUGA 适合在你能执行的规则下，跨 API、应用和 web UI 自动化业务工作。"
+          },
+          {
+            "kind": "pull",
+            "text": "选 harness 要和选模型一样仔细。我们的对比里，同一模型按 harness 不同，完成了 30% 到 81% 的 AppWorld 任务。\nChoose a harness as carefully as the model. In our comparison, the same model completed between 30% and 81% of AppWorld tasks, depending on the harness."
+          },
+          {
+            "kind": "aside",
+            "text": "三项限制：这是一个 benchmark 上的 90 任务样本，结果未必能推广到其他任务；各家 setup 并不完全相同；这些 run 没有使用 policies，因此不衡量政策执行。CUGA 用了其他 harness 没有的 AppWorld 配置。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cognition-swe2f",
+      "company": "Cognition",
+      "companyColor": "#7C3AED",
+      "column": "行业动向",
+      "title": "SWE-2 Flash：先 mid-training 再 RL，五分之一价、约 3 倍速",
+      "originalTitle": "Introducing SWE-2 Flash",
+      "byline": "The Cognition Team · 11-04",
+      "sourceUrl": "https://cognition.com/blog/swe-2-flash",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们发布 SWE-2 Flash，一个完全美国的编码模型，想在低成本、高速度上把智能推上新台阶。第一次，我们在配方里、在 reinforcement learning 之前加了 mid-training 阶段。这相对 base model——Thinking Machines 的 Inkling-Small——带来显著提升。"
+          },
+          {
+            "kind": "pull",
+            "text": "Terminal-Bench 4.0 从 0.9% 提升到 20.0%，FrontierCode 2.0 从 3.2% 提升到 24.0%。\nThis results in significant gains over the base model, Inkling-Small from Thinking Machines, improving Terminal-Bench 4.0 from 0.9% to 20.0% and FrontierCode 2.0 from 3.2% to 24.0%."
+          },
+          {
+            "kind": "p",
+            "text": "在主要 evals 上，SWE-2 Flash 超过所有美国开源权重模型，包括大三倍的模型。随着模型能力继续提升，我们仍然关注降低日常工程工作的成本，而不只是推进能力前沿。今天，更小的模型越来越能承担软件 agents 所做工作的很大一部分，例如自动化、code review、功能开发和更新文档。我们开发 SWE-2 Flash 就是为了满足这一增长的需求。它今天可在 Devin Desktop 和 CLI 使用，价格是更大的兄弟 SWE-2 的五分之一，速度是其三倍。生成速度上，SWE-2 Flash 为 200 tok/s，SWE-2 为 60 tok/s。"
+          },
+          {
+            "kind": "h",
+            "text": "Training"
+          },
+          {
+            "kind": "p",
+            "text": "我们从 Inkling-Small 之上的大规模 mid-training 开始，该模型总参数 276B、激活 12B。关键挑战是确定正确的 data mix：纳入哪些来源、各占多少。为了指导这些决定，我们整理了一份高质量的 holdout 编码数据集，反映真实软件工程场景里的模型智能。然后我们用 token efficiency plots 评估不同数据源、找出最有效的混合：从一次 baseline 训练 run 出发，测量每种候选 data mix 要多少 tokens 才能达到与 baseline 相同的 validation loss。把这些 token 计数的比值画在 y 轴、baseline tokens 画在 x 轴，就可以直接比较不同混合的训练效率。"
+          },
+          {
+            "kind": "p",
+            "text": "我们迭代 mid-training 数据的构成，收敛到由高质量科学文章、博客、代码和其他来源组成、规模为数万亿 tokens 的数据集。训练分三个阶段进行，让模型在训练更靠后时看到最稀缺、质量最高的数据。每个阶段里，holdout validation loss 都以稳定的 log-linear 速率改善。"
+          },
+          {
+            "kind": "p",
+            "text": "mid-training 之后是大规模 reinforcement learning。我们对 SWE-2 的 RL 配方做了一些调整，但大部分提升来自 RL 任务高得多的质量和多样性。质量上，我们仔细审计了任务的说明、环境设置和 verifiers；多样性上，我们整理了若干覆盖面远宽于以往的新任务类型，以建立 Devin 里真实工作所需的一般推理和问题解决能力。在这些数据上训练，我们测量的几乎每项 benchmark 都有显著提升。"
+          },
+          {
+            "kind": "aside",
+            "text": "为帮助防御者，我们在训练中针对网络安全工作，把模型的 ExploitBench 分数从 11.3% 提升到 34.8%。同样的能力也可能被恶意攻击者使用，所以我们还不公开分享 weights。作为一个在透明和安全之间取得平衡的可能方案，我们正在建立一个项目，把 weights 安全地分享给受信任的行业伙伴和研究实验室。几周后会有更多消息。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cursor-live",
+      "company": "Cursor",
+      "companyColor": "#F54E00",
+      "column": "行业动向",
+      "title": "Build Live Apps：云端 agent 建库上线，发布前过安全检查",
+      "originalTitle": "Build Live Apps in Cursor",
+      "byline": "Cursor · 11-05",
+      "sourceUrl": "https://cursor.com/changelog/build-live-apps",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Agents 降低了写代码的成本，但用户建的大多数应用和工具从未离开 localhost。现在可以直接在 Cursor 里构建 live apps，并用链接分享。描述你想做的东西，Cursor 会处理其余：构建应用、建立数据库、配置 auth、部署。有了这次发布，组织里的任何人都可以为工作构建有用的工具，并与同事分享。"
+          },
+          {
+            "kind": "h",
+            "text": "如何运作"
+          },
+          {
+            "kind": "p",
+            "text": "先拉起一个 cloud agent，并明确告诉它你想构建一个应用。Cursor 会 scaffold web 应用，需要时拉起 Postgres 数据库，在 Cursor SSO 后面配置 authentication，并准备好 hosting。如果应用需要连接到你的系统，例如 data warehouse，Cursor 会向你要所需的 secrets。发布应用时，你选一个 unique domain，Cursor 给你回一个线上链接。Cursor 可以从 Cursor Origin 和 GitHub 上的新仓库或已有仓库部署应用。"
+          },
+          {
+            "kind": "h",
+            "text": "控制与护栏"
+          },
+          {
+            "kind": "p",
+            "text": "发布应用时，Cursor 会跑 deterministic 和 agentic 的安全检查，捕捉常见问题，例如写在应用文件里的 secrets 或暴露的凭证。如果检查失败，agent 会告诉你它需要修什么。检查通过并且你明确执行 publish 之前，什么都不会上线。团队 admins 可以看到团队上的每一个应用和 secret。他们也可以给安全审查加上自己的规则、批准被审查挡住的发布，以及下线任何应用。"
+          },
+          {
+            "kind": "h",
+            "text": "与团队分享"
+          },
+          {
+            "kind": "p",
+            "text": "检查通过后，Cursor 把应用部署到你选的 URL。然后你可以把应用分享给特定的人、群组或整个团队，全部在 Cursor 登录之后。个人版计划也可以公开分享应用。如果你希望脚本或 Grok Bot 使用你的应用，还可以开通一个 Cursor API key。"
+          },
+          {
+            "kind": "pull",
+            "text": "检查通过并且你明确发布之前，什么都不会上线。\nNothing goes live until the checks pass and you explicitly publish the app."
+          },
+          {
+            "kind": "aside",
+            "text": "这项能力现在对所有已开启 cloud agents 的付费计划可用。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "amp-spaces",
+      "company": "Amp",
+      "companyColor": "#A855F7",
+      "column": "选读",
+      "title": "Spaces：一个协调 agent 替你开线程",
+      "originalTitle": "Spaces",
+      "byline": "Amp · 11-06",
+      "sourceUrl": "https://ampcode.com/news/spaces",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们今天发布 spaces：一种在 Amp 里与 agents 和团队交互的新方式。一个 space 是与单个 agent 的对话，这个 agent 的工作是为你派生并协调 agents。你不必再自己创建和整理 threads；space 里的 agent 会替你做。这是一种更高层的、与许多 agents 共事的方式。用了几个星期之后，我们觉得这可能是与 agents 交互的未来。你保持鸟瞰，必要时仍能钻进细节——更像坐在船长椅上，而不是待在战壕里。我们还发现自己自然地走进 space 彼此交流：不再用 Slack，而是把视频通话和讨论带进 space。"
+          },
+          {
+            "kind": "h",
+            "text": "协作做一个新功能"
+          },
+          {
+            "kind": "p",
+            "text": "Spaces 本身就是在一个 space 里做出来的。Tim、Lewis、Nicolay 和其余团队共享一个叫 “Spaces v1” 的 space，把反馈、bug 和新想法丢进聊天，agent 把它们委派到 threads。需要交谈时，他们用 comments 聊天，准备好了再把 Amp 标进来。"
+          },
+          {
+            "kind": "h",
+            "text": "发布并支持一个功能"
+          },
+          {
+            "kind": "p",
+            "text": "Lewis 从同一个 space 跑 service accounts 的发布。从 space 里，他可以推出功能，监测 X、Slack 和 bug 报告里的问题，修复进来的 bug，给受影响用户发邮件和退款。这个 space 在那一周余下的时间里监测用户问题和系统健康。"
+          },
+          {
+            "kind": "h",
+            "text": "定期安全审查"
+          },
+          {
+            "kind": "p",
+            "text": "Will 给一个 space 一个目标：审查近期变更加安全问题。它第一次 run 把代码库分成 16 个区域，每个区域在自己的 thread 里审查，每条发现再放到另一个 thread 里核对，并在 space 里保留一份 summary artifact，供 Will 审查和跟踪。"
+          },
+          {
+            "kind": "pull",
+            "text": "要开始一个 space，用侧边栏 Spaces 一节里的 +，设好标题和项目，然后告诉你的 agent 要做什么。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "openai-pierre",
+      "company": "OpenAI",
+      "companyColor": "#10A37F",
+      "column": "选读",
+      "title": "收购 Pierre：Codex 要补齐浏览与 Diff 工作流",
+      "originalTitle": "OpenAI to acquire Pierre Computer Company, Inc.",
+      "byline": "OpenAI · 11-04",
+      "sourceUrl": "https://openai.com/index/openai-to-acquire-pierre",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "essay",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们今天宣布，OpenAI 将收购 Pierre Computer Company, Inc.（“Pierre”），也就是 Code Storage 以及一系列出色的开源开发者工具背后的公司。如果你在 Codex 应用里浏览过文件或审查过一次变更，你已经用过 Pierre 的 Trees 和 Diffs 库。我们期待与 Pierre 团队合作，建立在开发者已经依赖的 Git 工作流上，并让它们适应团队与 coding agents 共事的方式。"
+          },
+          {
+            "kind": "p",
+            "text": "我们自己的工程工作已经看到：随着更多工作并行发生，Git 周围的系统需要演进。本周早些时候，我们分享了如何用 Pando——我们为工程师和 agents 自建的源码控制后端——在 OpenAI 扩展 Git。与 Pierre 团队一起，我们希望从 agent 创建的第一个分支，到代码部署到世界的那个时刻，为现代软件开发定下标准。我们希望让 Codex 成为开发者和 agents 承担最有雄心的项目的地方。Trees 让开发者快速导航项目文件，Diffs 让人容易看到改了什么；两者都能以不妥协的性能审查和浏览大量代码。"
+          },
+          {
+            "kind": "pull",
+            "text": "Pierre 的开源项目将保持开源，我们也会继续贡献。收购完成后，客户可以继续使用 Code Storage，同时我们着手把它的功能和特性带进 Codex。"
+          },
+          {
+            "kind": "aside",
+            "text": "收购完成仍须满足惯常交割条件，包括获得监管批准。交割前，OpenAI 与 Pierre 仍是独立公司。"
+          }
+        ]
+      }
+    }
+  ]
+}
