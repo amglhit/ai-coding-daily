@@ -1,0 +1,866 @@
+{
+  "title": "AI Coding 日报 · 2026-11-11（周三）",
+  "date": "2026-11-11",
+  "type": "daily",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [
+    "sourcegraph-pr-bot",
+    "claude-which-model"
+  ],
+  "masthead": "11 月 11 日 · AI Coding 日报",
+  "stories": [
+    {
+      "id": "sourcegraph-pr-bot",
+      "company": "Sourcegraph",
+      "companyColor": "#FF5543",
+      "column": "工程化实践",
+      "title": "PR 审批 bot：按 Ship / Show / Ask 分流，stamp 请求变少但还看不出质量",
+      "originalTitle": "Keeping code moving with clearer review expectations",
+      "byline": "Constantin Nicolae · 11-10",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "随着 coding agents 帮我们写出更多代码，瓶颈转向了评审。写出一处改动变快了，但理解它的影响、并决定该不该发，仍然要花时间。在 Sourcegraph，我们有一个给小 PR 用的 stamp group。有人会发一句 “Can someone stamp this?”，手头有空的同事可以接下。这有助于让小改动往前走，但每一次请求仍然意味着找到一个人，并请对方切换上下文。"
+          },
+          {
+            "kind": "p",
+            "text": "我们的 GitHub 设置要求合并前必须有一次 approval。常规改动和需要仔细讨论的改动，都得过同一道步骤。我们对评审本来有不同的期望，却把它们塞进同一道审批要求里。我们想把这些期望说清楚，并少花时间去追那些例行 approval。这成了我们的 PR routing 实验。"
+          },
+          {
+            "kind": "h",
+            "text": "Ship / Show / Ask"
+          },
+          {
+            "kind": "p",
+            "text": "我们觉得 AI 可以帮助判断一处改动需不需要另一个人来看，以及什么时候需要。一个 agent 可以检查 diff 和周围的代码，对照我们的规则评估这次改动，并给出选择评审路径的证据。2021 年一篇关于 Ship/Show/Ask 的文章描述了三种处理评审的方式。我们用的是同一套区分：Ship，按我们的政策，不再需要额外评审；Show，应该有人看到这次改动，但评审可以在合并之后进行；Ask，必须有人在合并前评审。我们一开始只给推荐，人的评审照常进行。我们用反馈来打磨规则、以及用来证明熟悉度所需的证据，再回头核对受影响的推荐。这样我们就能在为符合条件的改动开启审批之前，检查并质疑 bot 的决定。"
+          },
+          {
+            "kind": "h",
+            "text": "这个 agent 怎么工作"
+          },
+          {
+            "kind": "p",
+            "text": "agent 会查看 PR 的 diff、相关代码，以及作者以往的贡献。它返回带证据的 findings，再由应用代码套用我们的规则，选出一条评审路径，并把结果发到 PR 上。要评估对每个组件的熟悉度，我们现行的政策是：两次由另一人评审过的已合并 PR，再加上过去 30 天内一份相关的代码、测试或技术文档贡献。工作流跑在 GitHub Actions 里。规则同时考虑这次改动，以及作者对受影响组件的熟悉程度。对身份验证检查、或对敏感数据如何暴露的改动，无论经验如何，都需要评审。当 PR 需要人审时，我们用 Sourcegraph 的 Compare page 查看 diff、并在周围代码里导航。bot 帮助决定何时该有另一个人来看；compare 视图帮助我们理解这次改动。"
+          },
+          {
+            "kind": "h",
+            "text": "我们从反馈里学到的"
+          },
+          {
+            "kind": "p",
+            "text": "我们学到，评审承担好几件事。它可以抓住问题、分享上下文，或核对我们告诉客户的内容。把这些目的说清楚，有助于判断何时值得再要一个人来看。熟悉度也需要仔细划界。我们可以把贡献历史当作证据，但必须核对那段经验与正在改的代码有多相关。在一个系统的某一部分工作，并不意味着熟悉它的全部。把推理过程展示出来，给了我们可以质疑的东西。我们可以挑战一条推荐背后的假设，并弄清该改的是规则还是这次评估。这些反馈成了我们形成政策的一部分。我们还得考虑 bot 对人注意力的占用。评论和反复评估本身也可能变成打断。决定 bot 该开口、该更新、还是该保持安静，是设计这条工作流的一部分。"
+          },
+          {
+            "kind": "h",
+            "text": "我们还在弄清楚的"
+          },
+          {
+            "kind": "p",
+            "text": "我们看到对 quick stamp 的请求变少了，这令人鼓舞。我们仍把它当作一次内部实验。接下来想弄清的是，它如何改变我们一起工作的方式。在 Show 这条路上，去掉等待意味着要靠有人在合并之后再回来看。我们想知道这些改动是否得到有用的关注，以及在作者和审稿人已经转向别的事情之后，同事是否仍然知情。我们还需要考虑 bot 自己造成的打断，并在人员和代码库变化时，让它对熟悉度的判断保持更新。我们会在后续文章里回到这些问题，包括合并之后的评审发生了什么，以及 bot 如何影响打断。"
+          },
+          {
+            "kind": "pull",
+            "text": "更少的 stamp 请求几乎说明不了评审质量。\nFewer stamp requests tell us little about review quality."
+          }
+        ]
+      },
+      "sourceUrl": "https://sourcegraph.com/blog/what-we-learned-building-a-pr-approval-bot",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "claude-which-model",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "工程化实践",
+      "title": "选 Claude 模型：多数工作从 Opus 5.5 的 medium 开始，换模型前先调 effort",
+      "originalTitle": "Which Claude model should you build with? Fable, Opus, Sonnet, or Haiku",
+      "byline": "Addy Osmani · 11-09",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "目前一般可用的 Claude 模型有四个：Claude Haiku 5.5、Claude Sonnet 5.5、Claude Opus 5.5 和 Claude Fable 5.2。Claude Mythos 5.2 是我们在网络安全和生命科学研究上最强的模型，通过验证计划提供。价格是 Claude API 标价。四个模型都是 1M-token 的 context window，最大输出 128K tokens。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 多数工作从 Opus 5.5、medium 开始"
+          },
+          {
+            "kind": "p",
+            "text": "大多数工作从 Opus 5.5 的默认 effort 级别 medium 开始。它是 Claude Code 的默认模型，也是我们建议大多数编程和知识工作的起点。按 input 和 output token 计，它的价格是 Fable 5.2 的一半（每百万 tokens，$4 / $20 对 $8 / $40）。还不确定的话，起点相同：Claude Code 在 Pro、Max、Ultra、Team、Enterprise 和 Anthropic API 上都默认用它。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 只在范围清楚或高流量的工作上往下调"
+          },
+          {
+            "kind": "p",
+            "text": "范围清楚的日常工作（修 bug、按 spec 做功能、功能迭代）用 Sonnet 5.5，token 价是 Opus 5.5 的一半（$2 / $10）。有一份清楚的 spec 并不是下调的充分理由：迁移或性能优化即使 spec 清楚，也可能难到该用 Opus 5.5；重大的则用 Fable 5.2。Haiku 5.5 用于分类、路由、打标签、抽取，以及给主模型打下手的 subagent（搜文件、读日志、做摘要）——错了容易被发现，判断仍由主模型来做。反复跑的 agent 任务（调查、review、起草）用 Sonnet 5.5、medium；有人在等回复的交互会话，从 Sonnet 5.5 的 low 或 medium 开始。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 最难的技术项目再上到 Fable 5.2"
+          },
+          {
+            "kind": "p",
+            "text": "最难的编程、金融和科学技术项目，用 Claude Fable 5.2；当 Opus 5.5 在 high 上仍然不够时，或需要长时间无人值守运行时，也上到它。重大重构和迁移、架构规划、带领许多 subagent、深度研究，以及科学或定量分析，也从 Fable 5.2 开始，effort 先 medium 再 high（API 默认是 high）。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 换模型之前，先调 effort"
+          },
+          {
+            "kind": "p",
+            "text": "换模型之前，先试着调 effort。过了 high，再升一档 effort 的成本可能和一个更大的模型相当，所以在你自己的工作上把两者比一比。如果已经过了 high，用更低的 effort 去试上一个模型。反过来，降一档也可能用更低的单价得到你要的结果。更高的 effort 在模型需要想更久、调用更多 tools、或更多地检查自己的工作时有帮助，也会增加延迟；它并不会给模型本来没有的知识或技能。API 上的默认 effort 可以和 Claude Code 不同：Sonnet 5.5 与 Fable 5.2 在 API 上默认 high，在 Claude Code 里是 medium；用 `/effort status` 查看当前设置。"
+          },
+          {
+            "kind": "h",
+            "text": "5. 按完成任务计的能力与成本，并不是普适的"
+          },
+          {
+            "kind": "p",
+            "text": "更高的每 token 单价，并不总意味着更高的任务成本，或更好的结果。在 Anthropic 跑的 Terminal-Bench 3.0 上，上一代 Fable 5.1 在 max 上得了 58.0%，而 Opus 5.5 在 high 上得了 58.9%，tokens 只用了一半。在 FrontierCode 2.0 上，Fable 5.2 在 high 上与 Opus 5.5 在 max 上大致持平（45.3% 对 45.5%），每项任务成本大约是一半。所以在难题上把 Opus 5.5 升过 high 之前，先试试 Fable 5.2。日常工作仍然从 Opus 5.5、medium 开始。在 SWE-bench Pro 上，Opus 5.5 在 medium 上大约低 2.5 分，成本大约是 high 的 70%；在 low 上大约低 8 分，成本大约是三分之一。往往给模型一种自检手段（测试、构建、或调用 endpoint 的脚本）比改 effort 更划算。如果能自动核对结果，就全部先在低档跑，只把失败的在高档重跑：在同一个 SWE-bench Pro 子集上，Opus 5.5 在 low 上跑、失败的再在 high 上重跑，大约通过了 97% 的任务，每个约 $0.17；全部在 high 上跑则是 95.3%、每个 $0.29。Opus 5.5 和 Fable 5.2 都在 Claude API 上提供 fast mode，以溢价换更高的输出速度（页面没有给出溢价倍数）。"
+          },
+          {
+            "kind": "h",
+            "text": "6. Context 对成本"
+          },
+          {
+            "kind": "p",
+            "text": "大 context 可能有帮助，但每一轮都要为此付钱，因为每一轮都会重发它。长运行里，大部分 input 会按 cache reads 计费：Opus 5.5 和 Fable 5.2 是每百万 tokens $0.20，Sonnet 5.5 是 $0.10，Haiku 5.5 不超过 100K 为 $0.01、超过 100K 为 $0.05。所以在长、且大量走 cache 的运行里，Fable 和 Opus 的差距落到未缓存的 input 和 output 上，而那里 Fable 的每 token 价格是两倍。页面引用「What a task costs on Opus 5.5」：一轮 cache read 在 150K tokens 的 context 下大约 $0.03，在 20K 下大约 $0.004。把贵的模型的 context 留给决策，冗长的阅读交给更便宜的 subagent。Haiku 5.5 是唯一按 prompt 长度分档计价的模型：不超过 100K 为 $0.10 / $0.50，超过 100K 按五倍计价（$0.50 / $2.50），长档仍只是 Sonnet 5.5 每 token 价的四分之一。每次调用都需要长 prompt 时，按完成任务的成本比较，不要只看标价。"
+          },
+          {
+            "kind": "h",
+            "text": "7. 在自然断点切换模型"
+          },
+          {
+            "kind": "p",
+            "text": "prompt cache 属于写下它的那个模型。在新模型上的第一轮，要对整段对话付 cache-write 的价格。为了让这一轮更小，在 Claude Code 里先跑 `/compact`，或带着一份简短的书面计划开一个新 session；在 API 上，用一份到目前为止的工作摘要打开新对话，不要带上全部历史。thinking block 的兼容是单向的：Fable 5.2 能读 Opus 5.5、Sonnet 5.5 和 Haiku 5.5 的 blocks；往下一档会丢掉更早的推理，因为模型从不读取比自己更高一档模型的 blocks。当新模型读不了先前模型的 thinking blocks 时，API 会丢掉它们，请求仍然成功。从 Fable 5.2 换到任何其他一般可用模型，都会丢掉它的推理。"
+          },
+          {
+            "kind": "h",
+            "text": "8. 把 subagent 放到更小的模型上"
+          },
+          {
+            "kind": "p",
+            "text": "subagent 跑在自己的 context window 里，交回一份摘要，tokens 按它所跑模型的价格计费。在 Claude Code 里，在定义中设置 `model: haiku` 或 `model: sonnet`。把小模型放在出错容易被发现的工作上（找文件、跑测试、读日志），代码修改和判断留给主模型。当前版本里，内置的 Explore subagent 跑在你这个 session 的模型上，而不是永远跑在 Haiku 上；要让探索保持便宜，自己定义一个名为 `Explore`、并带 `model: haiku` 的 subagent。在 Anthropic API 上，`haiku` 别名现在解析到 Haiku 5.5，需要 Claude Code v2.1.293 或更新版本；在 Amazon Bedrock、Google Cloud、Microsoft Foundry 和 Claude Platform on AWS 上，它仍然解析到 Haiku 4.5。Claude Code 还有 `opusplan` 别名：在 plan mode 里用 Opus 做计划，再用 Sonnet 执行——这会把代码修改放到 Sonnet 上，与上面的建议正好相反。先在你自己的任务上测一测，再决定要不要把它设为默认。"
+          },
+          {
+            "kind": "h",
+            "text": "9. 难决策交给 advisor，大宗工作交给更便宜的 worker"
+          },
+          {
+            "kind": "p",
+            "text": "advisor tool（beta）把一个更快、更便宜的 executor 和一个更强的 advisor 配对：executor 跑任务，可以在中途求助，大部分 tokens 按 executor 计价。平台的成本指南比较谨慎：advisor 表里的四组配对，没有一组明显优于单独的 executor。其中一组是 Opus 5.5 在 high 上做 executor、Fable 5.1 做 advisor，在内部的编程 benchmark 上得了 90.1%，每次尝试 $2.92——比单独的 Opus 5.5 在 high 上高 1.7 分，花钱大约是 2.1 倍，处在多次运行噪声的边缘。超出一个 context window 的工作，则可以由一个顶级模型带队，并行交给许多更便宜的 worker。在一个覆盖大约 2200 万 tokens 源代码的内部缺陷搜索 benchmark 上，由 Opus 5.5 带队、最多同时 25 个 Sonnet 5.5 worker，成本大约比单独用默认 effort 的 Opus 5.5 少三分之一，分数大致相当。不要用在一条相互依赖的步骤链上，或已经装得进一个 context window 的工作。"
+          },
+          {
+            "kind": "h",
+            "text": "10. 在你自己的工作上测量"
+          },
+          {
+            "kind": "p",
+            "text": "公开的结果，比如上面的 SWE-bench Pro 和 Terminal-Bench 数字，能给你一个起始模型。然后在提交之前，在你自己的任务上测试这些候选。在 Claude Code 里可以先做一次快速核对：用 `/model` 从待办里拿一项任务在两个模型上跑，比较 `/usage` 报告的内容。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "抽一组真实任务。为每一项写一个结果检查，例如通过的测试、关闭的工单，或正确的行数。",
+              "让每个候选模型在两到三个 effort 级别上跑，每个级别单独一个 session，这样各次运行不共享 cache。从每次响应的 `usage` 字段记录完成该项任务的成本。",
+              "把分数对花费画出来。只有当一套多模型方案在这张图上胜过每一个单模型点时，才保留它。",
+              "在切流之前，先把胜出方案在一部分真实流量上做 shadow 运行。"
+            ]
+          },
+          {
+            "kind": "pull",
+            "text": "公开的结果能给你一个起始模型。然后在你自己的任务上测试这些候选，再做决定。\nPublished results, like the SWE-bench Pro and Terminal-Bench numbers above, get you a starting model. Then test the candidates on your own tasks before you commit."
+          },
+          {
+            "kind": "aside",
+            "text": "换模型时不能总是只改模型名。Fable 5.2 把 preserved thinking 扩展到每一个 API 账户：如果它的 thinking block 之前有任何改动——包括 system prompt、tools 或更早的一条消息——API 会以 400 拒绝，除非你选择丢掉受影响的 thinking；经 Claude Code、Claude Agent SDK 或 Claude Managed Agents 构建的请求不必改。Opus 5.5 和 Fable 5.2 始终会 think，关掉 thinking 的请求会返回错误。`tool_choice` 为 `any` 或 `tool` 时，Sonnet 5.5、Opus 5.5 和 Fable 5.2 会返回 400，应改送 `auto`。从 Haiku 4.5 迁到 Haiku 5.5，要用 effort 级别替换 `budget_tokens`，并去掉非默认的 `temperature`、`top_p` 和 `top_k`。"
+          }
+        ]
+      },
+      "sourceUrl": "https://claude.dev/blog/which-claude-model-should-you-build-with/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ms-thinkingbox",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "工程化实践",
+      "title": "ThinkingBox：终态检查既能抓失败也能训练，Qwen3.8-27B 全部 20 次通过从 38 项到 107 项",
+      "originalTitle": "The check that catches agent failures can also train them",
+      "byline": "Tuhin Kundu and Mirco Milletari · 11-06",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "一位旅客请客服 agent 把一笔 $1,450 的酒店预订从套房改成豪华间。公司政策规定，这次更改必须先得到经理批准。在 20 次尝试里，开源权重模型 Qwen3.8-27B 有 15 次还是改了：它更新了房间、退了款、把支持工单标成已解决，并告诉旅客已经办好。这违反了公司政策。我们第一篇文章里，失败是反过来的：agent 告诉旅客已经加上了安静房间的请求，但预订的特殊请求字段仍是空的。我们做了 ThinkingBox 来抓住这两种失败。它在一个隔离的、有状态的环境里跑 agent，让模拟用户回答它的问题，然后检查 agent 留下的记录，而不是只信它说了什么。从那以后，我们把评测扩到 18 个模型，并把方法和结果写进了一篇论文。这篇文章写我们学到的三件事：平均成功和可重复成功给模型的排序不同；最便宜的一次成功尝试，并不是最便宜的一项可重复成功的任务；给 agent 打分的同一项检查，也可以拿来训练它。在 benchmark 之外的任务上做了 50 步 reinforcement learning 之后，同一个 27B 模型在全部 20 次尝试里都没有动那笔预订和支付。在 507 项任务的 benchmark 上，它在全部 20 次尝试都通过的任务数，从 38 项升到 107 项。"
+          },
+          {
+            "kind": "h",
+            "text": "多数失败的运行看起来已经做完"
+          },
+          {
+            "kind": "p",
+            "text": "论文把对最终记录的可执行判定，和三种更弱的信号，在一组共同任务上、跨 12 个模型做了比较。121,680 次有效试验里，79,853 次没有通过这项可执行检查。在这些失败里，有 67.24% 的情况下，agent 仍然以一个表示完成、且没有提问的最终回复结束，调用过至少一个会改变状态的 tool，并且最后一次 tool 回复里没有显式错误。按这些信号——一份 transcript 或 tool-call 日志就能看到的那些——大约三分之二失败的运行看起来已经做完。但记录说的是另一回事：失败里有 98.95% 的最终数据库与预期不同；77.61% 有字段值不对；43.30% 做了没人要求的改动；25.36% 该做的改动没有发生。按被评测模型平均，79.9% 的失败是 tool-usage 失败：agent 碰到了 tool 错误、失败的前置条件、或空查询，并且没有恢复，有时还继续表现得好像动作已经成功。这些标签描述的是 trace 里能看到的东西，不是已证明的根因。我们全程使用任务的可执行判定，主要看记录是否匹配，并在需要时加上窄范围的 response-rubric 检查。"
+          },
+          {
+            "kind": "h",
+            "text": "平均成功和反复成功，给模型的排序不同"
+          },
+          {
+            "kind": "p",
+            "text": "每项任务跑 20 次，得到三种看法。pass@1：全部 10,140 次尝试（507 项任务 × 20）里通过的比例，也就是平均通过率。At least once：在 k=20 次尝试里至少通过一次的任务数。pass^20：在全部 20 次已记录的尝试里都通过的任务比例；表里也给出对应的任务数。它仍然是对 20 次尝试的观察——不是对第 21 次的保证——尽管增加尝试次数会给出越来越好的估计。排名会翻转。Kimi-K3 在 507 项里有 476 项至少通过一次，比 Figure 2 里展示的任何其他模型都多，但全部 20 次都通过的只有 68 项。Claude Opus 5 至少通过一次的任务更少（401），但有 241 项全部 20 次都通过。一个模型找到更多解。另一个更可靠地重复自己的解。GPT-6 Astra 的 pass@1 是 58.31%，大约比 GPT-5.4 的 65.36% 低七分，但它有 231 项全部 20 次通过，GPT-5.4 则是 128 项。我们按同一套协议跑了 Claude Opus 5.5，它没有出现在论文里：pass@1 比 Claude Opus 5 高 0.66 分，全部 20 次都通过的任务数完全相同，也是 241 项。哪一列更要紧，取决于工作：如果每次结果都有人审，一个最终能找到答案的模型可能就够了；如果 agent 在没有评审的情况下改生产记录，pass^20 这一列更接近你需要的东西。"
+          },
+          {
+            "kind": "h",
+            "text": "一项可重复成功的任务要花多少"
+          },
+          {
+            "kind": "p",
+            "text": "每次成功尝试的成本：整场 507 × 20 运行的估计成本，除以通过的尝试次数。全部 20 次都通过的任务成本：同一场活动的成本，除以全部 20 次都通过的任务数。两者都计入失败尝试的成本。定价按截至 2026-09-20 最便宜的合格 OpenRouter 价格，用实测 token 用量，排除声明了量化或优化的 endpoint。只计 agent 推理：不包括模拟用户、judge、基础设施、协商价格，以及下游失败的成本。这是估计，不是云账单。在论文的 18 个模型里，GPT-5.6 Sol 的每次成功尝试最便宜（$0.127），但按全部 20 次都通过的任务计是第三（$9.76）。GPT-6 Astra 每次成功尝试的成本是其两倍以上（$0.291），但按全部 20 次都通过的任务计是第二（$7.45），因为它更多地重复自己的成功。Table 2 里没有一个模型既最便宜又最准。一个模型落在 Pareto frontier 上，意味着没有其他模型既更便宜、又至少一样好。按每次成功尝试的成本，Figure 3 上的 frontier 是 GPT-5.6 Sol、GPT-5.4（$0.131 / $6.80）和 Claude Opus 5.5（$0.276 / $7.80）；图上其余模型在两个轴上都被这三者之一压过。如果用全部 20 次都通过的任务来衡量质量，并按这类任务定价，frontier 会变：GPT-5.6 Sol 掉下去，GPT-6 Astra 加入 GPT-5.4 和 Claude Opus 5.5。Qwen3.8-27B 把这个缺口显示得最清楚：一次成功尝试只要 $0.177，但全部 20 次都通过的任务只有 38 项，于是每一项可重复成功的任务要花 $24.36。"
+          },
+          {
+            "kind": "h",
+            "text": "把这项检查变成 reward"
+          },
+          {
+            "kind": "p",
+            "text": "这项可执行检查根据最终记录返回 1 或 0——已经是 RL reward 的形状。对大多数任务，判定完全来自对终态的确定性检查；少数任务还会加一个给 judge 模型的窄范围是否题，用于数据库字段覆盖不了的要求。我们在用来评测的同一套环境里训练 Qwen3.8-27B，reward 是二元的 GRPO：对同一任务采样一组尝试，并相对该组的平均值计分。训练用的是与 507 项 benchmark 任务不相交的 ThinkingBox 格式任务；训练前先探测基座模型，只留下中等难度带（后验质量落在 0.08 到 0.90 之间）的任务，两端去掉。一组全失败或全通过不会产生 reward 信号，却仍要花掉整组 rollouts。"
+          },
+          {
+            "kind": "h",
+            "text": "训练之后什么变了"
+          },
+          {
+            "kind": "p",
+            "text": "pass@1 从 51.70% 到 60.78%（+9.08 个百分点）；pass^20 从 38 项（7.50%）到 107 项（21.10%），多了 69 项；至少通过一次的从 453 项（89.35%）到 446 项（87.97%），少了 7 项；每次成功 $0.177 到 $0.139（−21.4%）；每一项全部 20 次都通过的任务从 $24.36 到 $8.00（−67.2%）。模型变得更可重复，而不是更宽：多了 69 项全部 20 次都通过的任务，少了 7 项至少通过一次的任务。以 60.78%，训练后的模型在 pass@1 上超过 GPT-6 Astra 和 Kimi-K3，论文把它记为所有被评测的 100B 参数以下模型中最高的。每一项可重复成功的任务从 $24.36 降到 $8.00，和 GPT-5.4（$6.80）、GPT-6 Astra（$7.45）、Claude Opus 5.5（$7.80）同一档。单次成功的价格动得更少。Figure 5 上它靠近 frontier，但在两个轴上仍落后于 GPT-5.6 Sol。更大的变化是按可重复成功的任务计，因为训练把每次都通过的任务数几乎增到原来的三倍。这些比较只给推理定价，并不说明训练这次运行花了多少。Figure 1 里的酒店任务：训练之后，模型在全部 20 次尝试里都没有动预订和支付。20 次里有 19 次全部预期记录都匹配；有一次漏了一个预期的 tag。不去动预订是完成这项任务的必要条件，但并不等于通过它。较小的 LoRA 运行用同一份 reward 也有提升：Qwen3.6-27B 的 pass@1 从 32.94% 升到 53.17%，Qwen3.5-9B 从 5.65% 升到 13.33%，更多细节在论文里。在获得可重复成功的同时失去一点点覆盖，与 sharpening 一致：概率移向能够反复奏效的做法，一些很少走的路径消失了。"
+          },
+          {
+            "kind": "p",
+            "text": "如果你构建会改真实记录的 agents，有四条做法可以直接带过去。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "检查状态，而不是 transcripts。针对 agent 留下的记录写断言，我们在第一篇文章里详细写过。",
+              "报告反复成功。每项任务多跑几次，同时报告 pass@1 和全部尝试都通过的任务数。说明你用的是哪种估计器。",
+              "训练之前先探测。让基座模型在候选任务上多跑几次，看分布。它总是失败或总是通过的任务，会花掉完整的 rollouts，而且不太可能教会它多少。",
+              "让训练和评测保持同步。把同一份已记录的模型输出，分别送进训练和评测的解析器，确认两边抽出的 tool 名和参数相同。否则，训练可能奖励评测会做出不同解释的行为。"
+            ]
+          },
+          {
+            "kind": "pull",
+            "text": "我们第一篇文章问的是，如何判断一个 agent 是否把工作做完了。答案——检查它留下的记录——后来有了三重用处：用来比较模型，用来给一致性定价，以及用来为此训练。\nOur first post asked how to tell whether an agent had finished the job. The answer, a check on the records it leaves behind, turned out to be useful three times: to compare models, to price consistency, and to train for it."
+          },
+          {
+            "kind": "aside",
+            "text": "Table 3 里训练后的 $8.00 和 −67.2%，是用基座模型的所列价格套在实测 tokens 上算的，因为没有供应商提供这个 checkpoint；它们不包括 24-GPU 的训练运行和选择阶段的探测。成本估计用的是固定日期的标价，也不包括训练、模拟器、judge、基础设施，以及失败的下游成本。Benchmark 和训练任务是对企业工作流的合成重建，配有模拟用户，不是生产流量。没有 benchmark 任务被用于训练，但训练和 benchmark 任务仍共享 ThinkingBox 框架、模拟用户设计、打分方式和任务风格；我们尚未测量向无关 agent 场景的迁移。由可执行检查构成的 reward，奖励的恰好是这些检查所要求的——检查没写到的，它也不会奖励。pass^20 是对 20 次尝试的观察，不是对第 21 次的保证。"
+          }
+        ]
+      },
+      "sourceUrl": "https://commandline.microsoft.com/thinkingbox-part-two-expanded-model-evals-reinforcement-learning-rewards/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ms-ax-trajectories",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "工程化实践",
+      "title": "最好的 AX 修复藏在 trajectories 里：五个脚本都过了，却有 15 个问题",
+      "originalTitle": "Your best AX fixes are hiding in agent trajectories",
+      "byline": "Waldek Mastykarz · 11-05",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "一份 eval 分数告诉你，agent 是否把任务做完了。要改进 agents 使用你的产品的方式，你需要看到它们在哪里卡住，而这在 trajectory 里——agent 走的每一步、以及为什么走这一步的记录。Agents 很执着。它们在 404 之后会再猜一个 URL，也会不断试值直到错误消失，所以这种挣扎很少出现在分数里。我们在评测 Dev Proxy 时看到了这一点。Dev Proxy 是一个拦截应用 HTTP 请求的本地代理。我们让没有装扩展的 GitHub Copilot Chat，配 Claude Sonnet 5.5，跑五次：写一个 CI 脚本，用 Dev Proxy API 记录一个 Node.js 工具调用了哪些 GitHub API。五个脚本都可用。但 trajectories 里出现了 15 个问题，每次运行花了 29 到 39 次请求，tokens 最多到 1.2 million。Agents 会以许多方式被你的技术绊住。我们挑了自己认为你最可能在自己的 trajectories 里见到的那些模式，从最明显的到意外的——它们并不是那 15 个问题的逐条清单。"
+          },
+          {
+            "kind": "h",
+            "text": "1. Agents 还没搜索就会猜你的 URL"
+          },
+          {
+            "kind": "p",
+            "text": "Agents 常常跳过搜索，直接去取它们以为你的页面会在的 URL。每一次猜错都要花一步和 tokens；错过一两次之后，有的 agents 会彻底放弃你的文档，改靠记忆和试错。在读任何文档之前，五次 Dev Proxy 运行里有四次试图抓取 `https://learn.microsoft.com/en-us/microsoft-cloud/dev/dev-proxy/technical-reference/api`，得到 404。模型记得 Dev Proxy 参考文档的位置，只把页面名记错了；真正的页面是 `technical-reference/proxy-api`。两次运行多花了五到七步才找到，另外两次彻底放弃了文档。读完文档之后猜测仍在继续：一次运行找到真正的 API 页面后，又去抓 `technical-reference/plugins/executionsummaryplugin`（文档导航把 plugins 放在单独一节）；那个页面实际在 `technical-reference/executionsummaryplugin`。合计四次运行里有八次抓取返回了 404。检查你的产品：对团队来说显得合逻辑的 URL 结构，仍可能把 agents 带到错误的地方，因为 agents 是按模式预测路径的。在 404 日志里找那些几乎存在的文档路径。日志未必告诉你是 agent 发来的，但每一条都值得加一条重定向。也把文档 URL 打在 CLI 输出里，这样 agents 就不必去猜。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 接口只说到差一步时，agents 会试探"
+          },
+          {
+            "kind": "p",
+            "text": "团队常常把帮助输出和错误信息写给人看，而人可以去打开文档。Agent 会把它们当成规范。当它们只说错了什么、却不说对的是什么时，agent 就会猜一个值，读下一条错误，再猜一次。Dev Proxy 列出 API endpoints，例如 `POST /proxy`（更新代理状态，如开始/停止录制）和 `GET /proxy/rootCertificate`（获取根证书），但不给出请求体或必填参数。一次运行按列出的方式调用了 `/proxy/rootCertificate`，得到 400：`{ \"errors\": { \"format\": [\"The format field is required.\"] } }`。这条错误没有列出合法值，于是 agent 试了 `pem`、`crt`、`cer` 和 `der`。只有 `crt` 可用。检查你的产品：跑一遍 CLI help，并触发最常见的错误。确保每一条都告诉 agent 合法输入长什么样，带一个例子或允许值列表。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 每次运行都在发明同一套变通办法"
+          },
+          {
+            "kind": "p",
+            "text": "产品缺少任务所需的东西时，agents 会自己造。单次运行里这是噪声；每次运行都写出同一套变通办法时，说明你的产品缺了一项功能，而每个碰到这个缺口的开发者的 agent，都要为此付出 tokens，并得到更脆弱的代码。Dev Proxy 在录制停止后不久才写出报告，完成时没有信号。四次运行对输出目录轮询了最多 30 秒。第五次只等了两秒（`await sleep(2000); // let the reporters flush their files`）。在繁忙的 CI runner 上，这最终会失败。轮询更安全，但每次轮询的运行都得猜该等哪一个文件。最奇怪的变通是：Dev Proxy 没有列出 plugins 的命令，于是五次运行都把 plugin DLL 当原始字节读出来，并从中搜索类名（页面上的 PowerShell：对 `DevProxy.Plugins.dll` 做 `ReadAllBytes`，按 Unicode 解码，再用正则 `\\b[A-Z]\\w*(Plugin|Reporter)\\b`）。这能用，所以分数永远不会把它显示出来，但它远谈不上稳健或高效。检查你的产品：每一个在调用返回之后才完成的操作，都需要一种方式告诉 agent 它已经做完。凡是 agent 必须从中选择的东西，例如 plugins 或模板，都需要一条列出它们的命令。"
+          },
+          {
+            "kind": "h",
+            "text": "4. Agents 会用记忆填补缺口"
+          },
+          {
+            "kind": "p",
+            "text": "文档常常写到你的工具边界就停了。当它们没有说明这些部分如何拼在一起时，agents 会用训练数据填上缺口。如果模型碰巧知道，运行会成功，你也不会听到；如果它不知道，或它学到的是旧版本，agent 会写出看起来对、却静默什么也不做的代码。要把一个 Node.js 应用的流量导入 Dev Proxy，应用的 `fetch` 需要一个只有较新 Node 版本才支持的 opt-in 设置。每次运行都靠记忆知道这一点：“since undici doesn’t respect HTTPS_PROXY by default, I need NODE_USE_ENV_PROXY enabled, which requires Node 22.21.0+ or 24.0+。”五个都做对了，但没有一个是在 Dev Proxy 文档里找到的。知道得更少的模型会什么也录不到，而且不会报错，你无法预测一个模型对你的产品知道些什么。在 trajectory 里，这些缺口表现为陈述了一个事实、却没有引用来源的推理。检查你的产品：列出开发者会和你的工具搭配的运行时和框架，并确保文档给出每一种的设置方法。对他们跳过的那些，跑一项任务，看看 agent 会填上什么。"
+          },
+          {
+            "kind": "h",
+            "text": "5. Agents 会拒绝为第一次运行准备的默认配置"
+          },
+          {
+            "kind": "p",
+            "text": "默认配置和起始模板服务于第一次运行。对一项具体任务，它们常常碍事。当 agent 拒绝你的默认时，它会从零搭一套自己的设置，而且每次运行搭的都不一样。Dev Proxy 的默认配置会在一个示例 API 上模拟随机错误——适合用来展示请求正在通过，但会妨碍录制真实流量。Agents 立刻避开了它：“I should avoid the default config since it’ll inject random errors, so I need to set up my own configuration instead.”它们新建配置时，得到的是空的。于是每次运行都自己搭一套，并且为同一个目标挑了三种不同的 plugins。检查你的产品：保留那个让第一次运行能工作的默认，并在旁边为开发者常交给 agents 的每一类常见任务提供一份 preset，好让每次运行从同一个正确的起点出发。把这些 presets 列在 CLI help 里，agents 会很早读到它。"
+          },
+          {
+            "kind": "h",
+            "text": "6. Agents 会相信搜索展示给它们的任何内容"
+          },
+          {
+            "kind": "p",
+            "text": "搜索索引提供的是快照。你上个月更新过的页面，仍可能带着旧内容出现，包括译文，以及你为 agents 发布的 skills。Agents 分辨不出旧快照和当前页面。从 v3.3.1 起，Dev Proxy API 需要 token。一次运行的搜索返回了两条在这次变更之前被索引的结果：一份 6 月抓取的 API 参考乌克兰语译文，以及 Dev Proxy 自己的 agent skill 里的一个文件——这个文件在运行的六周前已更新过认证。两处都展示了不带 token 的调用，而现在这些调用会返回 401（页面上是一次不带 token、POST 到 `http://localhost:8897/proxy`、正文为 `{\"recording\": true}` 的 `curl`）。这次运行把认证做对，只因为它已经读过 CLI help。CLI help 随安装的版本一起发布，所以不会过期。检查你的产品：拿几项开发者会交给 agents 的任务，跑 agents 会为它们做的那些网页搜索。检查结果——包括译文和你自己的 skills——是否描述的是当前版本。你无法刷新别人的索引，但可以在每页顶部写明版本要求，让它们出现在搜索摘要里，并告诉 agent 这份快照描述的是哪个版本。"
+          },
+          {
+            "kind": "h",
+            "text": "7. Agents 会假定帮助文本没写明的默认值"
+          },
+          {
+            "kind": "p",
+            "text": "Agents 从帮助文本学习你的 CLI，并按字面理解。当一个选项读起来像一个要打开的开关时，agents 会假定除非它们传入这个选项，否则它是关的。如果它实际上默认是开的，它们就永远不会传入把它关掉的值。若一个默认值会改变你的工具之外的东西，agent 可能发出带有它并不知道的副作用的脚本；而因为任务仍然成功，你的 eval 抓不到它。Dev Proxy 默认把自己设为 system proxy，于是会把整台机器的流量都导入它。帮助文本读起来像是一项 opt-in，并且没有提到关掉这个选项需要显式加上 `--as-system-proxy false`：`--as-system-proxy                      Set Dev Proxy as the system proxy`。一次运行是碰巧发现的：一条 status 命令显示了 `System proxy: Yes`，于是把它关了。另一次在配置里把它关了，其余三次从未注意到。在 Windows CI runner 上，它们的脚本会改道 runner 的全部流量，而且它们的 kill 回退会跳过撤销这一步的清理。但这三次仍然通过了，因为 system proxy 不是这个场景的评测标准。与此同时，judge 错误地判失败了那个把它关掉的运行。分数在两个方向上都错了，只有 trajectories 显示了这一点。检查你的产品：像 agent 那样读你的帮助文本。每个选项都应该写明默认值，每个默认打开的选项都应该说明怎么关掉。对那些会改变工具之外事物的默认（例如系统设置或已安装的证书）要格外注意，并考虑在工具无人值守运行时把它们关掉。"
+          },
+          {
+            "kind": "h",
+            "text": "8. 先修产品和文档，再去考虑 skill"
+          },
+          {
+            "kind": "p",
+            "text": "有些问题需要改产品（一条列出 plugins 的命令，或写明默认值的帮助文本）。另一些只需要更好的文档（给被猜到的 URL 加一条重定向，或给开发者使用的运行时一份设置指南）。trajectory 里的模式通常会告诉你是哪一种，两者都是你能控制的 AX 栈的一部分。发布一份 skill 很诱人，因为它感觉工作量更小，但 skill 把问题推给了开发者：只有找到并安装了这份 skill 的开发者，agents 才能做对；而这些开发者还得让它保持更新，因为一份已安装的 skill 是你的文档的又一份副本，会落后于产品。改产品和文档的修复，能到达每一个使用它们的 agent，开发者什么都不用装。在 SPFx 上——这是另一则先前的例子，不是这五次 Dev Proxy 运行——一份 trajectory 显示 agent 在工作中阅读发行说明。于是我们没有发布 skill，而是修了发行说明，之后每次运行都用对了工具，而不需要额外安装任何东西。从产品和文档开始，只有当它们承载不了 agent 需要的东西时，再考虑 skill。"
+          },
+          {
+            "kind": "h",
+            "text": "9. 连通过的运行也要自己读 trajectories"
+          },
+          {
+            "kind": "p",
+            "text": "你对自己的产品了如指掌，所以会看出那些 agent reviewer 会当成正常步骤的变通办法。ATIF Preview 能把一份 trajectory 文件变成 VS Code 里的逐步时间线；agent 也可以帮你比较各次运行，只要它为每条发现引用背后的那一步。即便如此，每条发现在你用带修复和不带修复的方式跑同一批任务、并比较质量和成本之前，都只是一条假设，详见 “how to measure AI agent extension effectiveness”。你做的每一处改动，都应该让 agents 使用你的产品时比以前更好，而测量就是你证明它做到了的方式。"
+          },
+          {
+            "kind": "pull",
+            "text": "从产品和文档开始，只有当它们承载不了 agent 需要的东西时，再考虑 skill。\nStart with your product and docs, and reach for a skill when they can't carry what the agent needs."
+          }
+        ]
+      },
+      "sourceUrl": "https://developer.microsoft.com/blog/your-best-ax-fixes-are-hiding-in-agent-trajectories/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "warp-review",
+      "company": "Warp",
+      "companyColor": "#00B8A9",
+      "column": "工程化实践",
+      "title": "缩短每次 agent PR review：自建 adversarial review、computer use 与 /merge-risk",
+      "originalTitle": "Addressing the code review bottleneck",
+      "byline": "Ben Holmes · 11-05",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "现在有多少 agent PR 在等你 review？10？100？1000？「太多了」或「我累了」也是正经答案。但我不会建议让 bots 赢、不经人审就合并——那是 post-AGI 世界的事。今天的目标是缩短每一次 code review 花的时间，并降低把 agent PR 送到生产的门槛。今天就能拉动的三根杠杆："
+          },
+          {
+            "kind": "h",
+            "text": "1. 人看之前，先用你自己的 review agent 做多轮 adversarial review"
+          },
+          {
+            "kind": "p",
+            "text": "Agent 应在 PR 到达同事之前，先走完自己的内部 review。可以想成先做一遍「让它能用」（代码完成任务），再做一遍「让它做好」（架构对下一个人也合理）。现成的 review agent 很诱人，但自己做并不难，而且有价值：你能按自己团队在意的事定义评分标准，也能用自己的数据微调准确度。Addy Osmani 在讲 Anthropic 的 code review 流程时提到，生产事故和 revert 是高信号反馈——有东西从 review 里漏过去了；它们可以做成 eval cases，随时间改进 review 质量。让 review agent 在 GitHub PR 上留言给人看，这能用，但多数情况下会制造并不需要人处理的噪音。更好的做法是让 implementation agent 和 review agent 在 GitHub 线程之外一起工作，只把需要人介入的评论浮到 PR 上。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "Implementation agent 把工作交给 code review agent。",
+              "Code review agent 审查代码，把发现列成清单，注明严重程度、影响，以及适用时的修改建议。若改动背后有歧义（超出 context 或代码里已记录的产品决策），就交回给人。在 Warp Factories 里，这会发生在实现开始的那张 taskboard ticket 的 Slack 线程上。",
+              "Implementation agent 审视这些发现，能修的都修掉。",
+              "Code review agent 再标出新的发现，循环直到全部解决，或达到 N max turns。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "多轮 adversarial review可能很贵，我们也在 reviewer 前面加一道门禁，用来决定是否需要 review。在我们对照自己全栈系统做的早期 cost-to-quality 基准中，我们发现把多轮 review 限制在更大的功能上是一个可行选项。更多发现稍后会分享。建好 review agent 之后，还要随时间 eval 这些 review 的质量：既看 review 本身，也看下游指标，比如 cost-per-PR、cycle time、因事故而做的 rollback。在 Warp Factories 里，我们用仪表盘跟踪这些指标，并对代码质量、效率、测试质量和其他失败模式做定性打分。这些分数由带评分细则的 LLM-as-a-judge 给出；你可以让它 eval 整段 agent 对话，也可以只 eval code review subagent。随后一个 self-improvement agent 会审这些分数，自动提出改进。`/skill-doctor` 是试这个模式的简单办法。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 用模拟环境、computer use 和自动检查，端到端验证用户流程"
+          },
+          {
+            "kind": "p",
+            "text": "同事写的 PR 如果没在本地构建上验证过，你不会信任——agent 也应一样。要给 agent 工具，让它像用户一样测应用。对后端，这意味着把环境模拟得足够真实：拉起 staging 数据库，注入测试凭证，并抓 access logs，看 agent 在做什么。对客户端改动，需要能让 agent 像用户一样在应用里导航的命令。Chrome DevTools MCP 和 WebMCP 是面向 web 应用、不绑特定模型的选项；而 computer use 在各类 harness 里越来越常见，可用来测任何客户端应用。"
+          },
+          {
+            "kind": "p",
+            "text": "具备 computer use 的模型有自己的虚拟桌面，能打开并点击它建好的应用。在 Warp Factories 里，computer use 作为 tool call，委托给一个 computer-use subagent，由它驱动电脑，并把截图和屏幕录像作为 artifacts 回报。这些 artifacts 应提供给人类 reviewer，而且验证要包含改前和改后两种状态，以确认改了什么。我们建议把 test artifacts 做成 PR 描述里的必填字段，让 agent 默认就做这件事。Matt Pocock 的 `/pr` skill 是个好模板。还要防止过度验证：多张截图应对应不同的用户流程，而不是互相重叠的；录像应剪掉死区，跳到值得人看的部分。我们给 Warp Factory agents 加了 FFmpeg 后处理，自动切掉 agent 动作之间的死区。按我们的经验，这能把片长从几分钟压到 10–15 秒。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 给每份 PR 打分并缓解 merge risk，让 reviewer 知道该盯什么——可用 `/merge-risk` skill"
+          },
+          {
+            "kind": "p",
+            "text": "Agent 审完并验证完自己的工作后，人类 reviewer 需要理解变更范围，以及哪些部分最值得细看。值得评估的五条标准："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "Verification（验证）：代码是否验证充分，既有测试覆盖，也有端到端的 computer use artifacts？",
+              "Alignment（对齐）：代码是否遵循 issue 和 PR 描述，还是夹带了 drive-by fixes（顺手改、范围外修补）和意外副作用？",
+              "Impact（影响）：变更的 blast radius（影响面）有多大？有没有碰到 auth、权限或计费这类敏感路径？对敏感系统，应按 code owner 分发 review，让对的人被标进 PR。",
+              "Rollback cost（回滚成本）：出事故时回滚有多容易，回滚程序是什么？Matt Pocock 把它说成 one-way door 与 two-way door：one-way door（比如破坏性的 schema migration）更难反转。",
+              "Error detection（错误可观测）：生产出问题后我们能看到多少？错误是被吞掉、记日志，还是报到错误监控服务？最后一种最理想，好让 agent 看见并修自己的错。例如，我们加了一个 webhook 监控 Sentry 告警，并把报告转给 software factory agents 去排查。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "这五类能帮你决定一份 PR 实际需要多少人的盯守。若想按这些标准抽查自己的 PR，我们做了 `/merge-risk` skill，用来打风险分并标出最需要关注的地方。也值得把其中一些标准写进 PR 描述，尤其是测试程序、rollback cost 和 impact。Matt Pocock 的 PR 模板和 Anthropic 的内部 code review 模板都走相近的路。你也可以让 agent 把 merge-risk skill 当作最后一公里的步骤来跑，尽早抓住有风险的变更：去掉不对齐的改动，以避免 drive-by fixes；给新路径加上错误监控，以便跟踪；把高影响变更拆成 stacked PRs，让 review 更简单；如果能达到同样结果，就避开敏感代码路径；当然，再用截图和录像做端到端验证。要开始，先试着在 PR 描述里加上「impact」和「rollback cost」这类字段，先摘低处的果子。然后叠上一道 code review 步骤，再加 computer use，做比 e2e 测试更深的验证。把工程精力放在驱动 agents 的系统上，而不是逐行 review 每一份 PR。"
+          },
+          {
+            "kind": "pull",
+            "text": "这些都不会消除 code review 上的人这个瓶颈；工程师仍应参与代码库如何演化。它们的目的是提高对 agent 交付成果的信任，并减少把工作送到终点所需的人的注意力。"
+          }
+        ]
+      },
+      "sourceUrl": "https://www.warp.dev/blog/agent-code-review-bottleneck",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ms-pdd-kit",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "工程化实践",
+      "title": "PDD Kit 验证 Pet Store 登录：对每个输入做证明，六个 TCB 部件靠测试",
+      "originalTitle": "Formally verifying agent-written full-stack web apps with PDD Kit",
+      "byline": "Alex Lavaee and Matthai Philipose · 11-05",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "计划本应是你和 coding agent 之间的合同，但没有任何东西真正迫使 agent 去遵守它。它写的测试，通常检查的是它建成了什么，而不是你要求的是什么。Agents 现在能一次性交付整块功能，常常跨越数万甚至数十万行；逐行 PR review 已经跟不上。Agent 会漂离计划，再写出对它自己的实现会通过的测试。CI 被大量低质量测试撑大，覆盖看起来很健康，你要的和实际送出的之间的缺口，要等到 bug 报告或棘手的边界情况才露出来。"
+          },
+          {
+            "kind": "p",
+            "text": "Review 问「这看起来对吗？」证明问「这对吗？」——对每一个输入。证明曾经对日常软件太贵；coding agents 现在能帮着从定义清楚的 spec 生成形式化证明，也能帮写形式化 spec。我们把这套范式叫做 Proof-Driven Development（PDD），PDD Kit 是配套工具。它之于形式化方法，大致相当于 Spec Kit 之于 Spec-Driven Development，并作为伙伴跑在 GitHub Next 的实时、多人规划环境 Chopin 里。"
+          },
+          {
+            "kind": "p",
+            "text": "工作流有两半。团队用白话审 intent；PDD Kit 提出细心 reviewer 会问的问题，边走边解释相关代码，并把答案记进一份 intent artifact，把 intent 接到形式化规格或测试上。能形式化的变成 formal specs；其余只能信任的部分，变成给测试用的 informal specs。PDD Kit 为前者生成证明，为后者生成高质量测试，不要求形式化方法背景。每项结果都标明种类：Formal verification 是由 Verus（面向 Rust 的证明语言）检查的、针对每个可能输入的数学证明；Empirical verification 是跑代码：单元和端到端测试、终端自动化、browser agents，以及 browser 驱动不了时的 computer-use agents。通过的测试被标成证据，而不是证明。两者之间的那条线是 Trusted Computing Base（TCB，可信计算基）：证明假定其行为如所描述的代码。PDD Kit 把这条线说清楚，并请你对每一块签字。"
+          },
+          {
+            "kind": "h",
+            "text": "压轴：一个全栈 web 应用"
+          },
+          {
+            "kind": "p",
+            "text": "我们在一个全栈 web 应用上试过。在 Chopin 里，我们用 PDD Kit 形式化验证了 Pet Store 的登录逻辑。Pet Store 完全用 Rust 写成：后端是 Axum + SQLite，负责库存、促销、订单和结账；店面是编译到 WebAssembly 的 Leptos。两者加起来大约 5,000 行 Rust。为了把这篇写短，我们聚焦于验证登录逻辑，但同一套过程可以用来验证整个应用的功能正确性。建议从最敏感的部分开始。开发者在 Chopin 里的全部请求只有两句，而且是故意写粗的：「Verify the login logic in backend/src/handlers/auth.rs. Here are my requirements: You only get a token with the right password. Only admin accounts get admin tokens。」Verus 硬化了代码，并发现了已有的 bug，相对于这份规格，证明登录没有这类 bug。开发者审的是 intent，从未逐行去读生成的代码。"
+          },
+          {
+            "kind": "h",
+            "text": "Step 1：写代码之前先问"
+          },
+          {
+            "kind": "p",
+            "text": "`pdd-plan` 先读代码，在写任何东西之前，把问题送到 Decisions 页。「只有用对的密码才能拿到 token」单独看，一个拒绝所有人的登录也满足。缺的那一半是「对的密码一定能用」。合在一起才是「当且仅当」。独自干活的 agent 会选一边却不告诉你；这里开发者两边都选了。intent map 把每条要求重新接到开发者自己的话上，链到 formal-spec 段落和覆盖测试，并展示带注释的 Verus 合同片段。同一句话的两种读法只在一个格子里意见不合：对的密码却拿不到 token。"
+          },
+          {
+            "kind": "p",
+            "text": "团队先对整份计划签字。初稿证明的是登录中心的那个决策——选表，并以密码为关口——把周围的 handler 留给信任和测试，这是建议的默认。开发者想要更多：handler 里会发生等待查找和签发 token，「而那层胶水恰好是重构时可能悄悄换掉两行的地方」。在 intent review 时，开发者选择给登录 handler 一份自己的 async spec，让证明覆盖这层胶水，而不是信任它。新的异步函数 `login_flow` 把合同从请求字段一直带到 token 或 HTTP 错误。修订后的计划再次拿回来签字：符合你的 intent 并不是证明，也不等于批准新的信任或更大的范围。"
+          },
+          {
+            "kind": "h",
+            "text": "Step 4：证明停在哪里"
+          },
+          {
+            "kind": "p",
+            "text": "有些事你证明不了：验证器看不见的代码（bcrypt、sqlx、jsonwebtoken）；外部世界的事实（SQLite 里现在有什么、时钟指向何时）；某件事会不会完成、会多快完成；必须由人来判断的事；以及根本没写下来的东西。每个可信部件被包进带假定合同的小函数（`#[verifier::external_body]` 或 `external_fn_specification`），开发者逐个接受，计划里为每条假定条款写测试。登录这件事，开发者签字认可了六个部件："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "两次查找，`Customer::find_by_email` 和 `Admin::find_by_username`。每次等待、成功的查找，恰好返回它自己那张表里该 email 或 username 的那一行，或者没有。",
+              "`check_password`，包在 `bcrypt::verify` 外的薄包装。它只在 bcrypt 读不了已存 hash 时报错，而 `Ok(true)` 恰好表示密码正确。",
+              "`generate_token`：在配置的 secret 下恰好签发交给它的 claims，签发失败报 500。",
+              "`expiry_from_now`：读时钟，写出恰好 24 小时之后的过期时间。",
+              "`database_error`：把失败的查找变成今天的 500，并带上 sqlx 的消息。",
+              "登录 handler 外壳：拆开请求，把字段原样交给 `login_flow`。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "计划同样写明了谁也没承诺的事：登录这个 future 总会完成；越界的时钟不会 panic；任何关于尝试时机或频率的事；以及其他端点如何读取角色。团队审的是 intent artifact，也就是 Verus 合同的白话版。没人必须去读证明：coding agent 来写，Verus 逐步检查；Verus 接受了，无论有没有人读过，它都成立。人审的是 spec。`ensures` 条款必须对每个可能的输入成立；哪怕只有一个输入能让某条失败，构建就会失败。比如检查了 Bob 的密码、却给 Alice 签发 token，正是测试套件很少会想到去找的接线错误。两句请求加上「两边都要」的决定，最后变成 `login_flow` 上的八条 `ensures`；其中四条保留今天的拒绝方式，好让店面和现有 API 测试继续工作。`login_flow` 是 async 的：`requires` 在调用创建 future 时检查，`ensures` 描述 await 到的值；并不承诺这个 future 会结束，所以挂住的查询不会打破任何条款。计划回到你面前之前，两个 reviewer agents 会从 intent artifact 出发，给导出的 formal spec 挑洞，使 spec 符合你的要求，且不承诺证明无法表明的东西。"
+          },
+          {
+            "kind": "h",
+            "text": "Step 6：证明、检查、补上缺口"
+          },
+          {
+            "kind": "p",
+            "text": "在 spec 上签字，就是开发者 review 的终点；实现和证明由机器检查。`pdd-prove` 把批准的计划变成任务图；登录是七项任务：让 `login.rs` 在后端 crate 里于 Verus 下通过构建，证明决策、token 和整条 flow，再为可信包装和端到端登录写测试。每个任务里，coding agent 写实现和证明，Verus 对照导出的 formal spec 检查；按计划跑可信边界测试；一个 LLM verifier 查找缺口（既无证明、也无通过检查的要求），并把它们送回，直到一个不剩。互相矛盾的 spec 会作为决策回到开发者。当模型自己写 spec，或被调到会产出证明时，它往往落到弱不变量上——条款能通过验证，却几乎什么也不排除。我们称之为 vibe verification。循环不允许改标准来让证明通过：如果某段 async 构造无法在钉死的 Verus 里表达，任务会停下来问团队，而不是改成非 async 的助手，或削弱合同。Mutation check 用来挡住 vibe verification：`pdd-prove` 在代码的一份草稿副本里，为每条 `ensures` 条款植入一个 bug（例如拒绝所有人，或先检查 username 再检查 email），而 Verus 必须在它所针对的那条条款上拒绝每一个突变体。一个漏过去的突变体意味着那条条款什么也没约束，会作为缺口返回。"
+          },
+          {
+            "kind": "p",
+            "text": "`pdd-prove` 会开 PR：加上带 `login_flow`、其部件、证明，以及带测试的可信包装的 `verified/` crate，并把真正的登录 handler 接到 `login_flow`，保留现有 HTTP 状态码——走的是生产路径，不是一份副本。开发者能够合并，而不必依赖对生成代码的穷尽逐行 review；review 早已发生在 intent artifact 上。PR 相当于一张收据，把每条登录要求标成要么已形式化验证，要么已经经验检查。`pdd-ship` 把 Verus 检查加进 CI，与经验测试并列，这样之后无论是人还是 agent 的改动，都必须继续对同一份 spec 给出证明；证明坏了会像测试失败一样让构建失败。因为证明覆盖每个输入，PDD Kit 会剪掉只是重复检查已证明性质的测试（例如对密码门的举例测试），留下守住可信边界的那些。"
+          },
+          {
+            "kind": "h",
+            "text": "证明说了什么，没说什么"
+          },
+          {
+            "kind": "p",
+            "text": "「完全验证」很容易说满。已证明的是：`login_flow`、`login_core`、`lookup_target`、`decide_login` 和 `issue_token` 的函数体对每个输入满足它们的合同。登录会选对表，用所点名账户的已存 hash 核对密码，签发带该账户 id 和该表角色的 token，否则按今天的 400、401 或 500 拒绝且不发 token。信任并已测试的是：两次数据库查找、包着 bcrypt 的 `check_password`、时钟、token 签发、数据库错误消息，以及 handler 的请求拆包——各自待在开发者接受过的假定合同后面；测试对着真实的 bcrypt、真实的 SQLite schema 和真实的 router。假定的是 Verus、Rust 编译器和 Z3 工具链，以及 Verus 的标准库 `vstd`。保证只和这六个可信部件一样强；其中两块承担了大部分重量：`check_password` 支撑每一条密码承诺，两次查找支撑每一条关于 token 点名哪个账户的承诺。测试支撑它们，但没有什么证明它们。"
+          },
+          {
+            "kind": "pull",
+            "text": "我们真正在改的是人审什么。团队不再主要靠逐行审 agent 生成的代码，而是用白话审自己的意思，再由证明把代码按住。计划一直本应是那份合同，现在 agent 必须真的守住它。"
+          },
+          {
+            "kind": "aside",
+            "text": "PDD Kit 是研究原型，今天只验证 Rust，因为这是 Verus 所面向的语言。其他语言的代码可以迁到 Rust，再对同一份 spec 检查；非 Rust 项目也可以通过绑定调用已验证的 Rust。证明仍然费功夫，主要花在写出证明上；清楚的 spec 能把这份功夫压下来。证明表明代码满足 spec，并不表明 spec 就是你的本意。"
+          }
+        ]
+      },
+      "sourceUrl": "https://www.microsoft.com/en-us/research/blog/formally-verifying-agent-written-full-stack-web-apps-with-pdd-kit/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "prieri-spec-pr",
+      "company": "社区",
+      "companyColor": "#6366F1",
+      "column": "社区热点",
+      "title": "从 spec 到 PR：agents 决定什么，三件我不能跳过的事",
+      "originalTitle": "Spec to PR with Claude Code: what the agents decide, and what I still decide.",
+      "byline": "Diego Prieri · 11-09",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我负责一个约 12 万行的 Next.js/TypeScript SaaS 的前端，agents 写了其中大部分代码。我学到的第一件事是：一个又写 spec、又做设计、又写代码的长 agent 会话会漂。早先的决定被忘掉，context 里堆满了倒进来的文件内容，小错累积成一份没人想 review 的 PR。于是我不再让一个 agent 包办一切。我在 Claude Code 里建了一条 pipeline：每个阶段是一个只做一件事的独立 subagent，阶段之间通过磁盘上的文件交谈。通用版开源为 `agentic-feature-pipeline`。这篇要讲的是让它成立的那条分界：agents 决定什么，以及什么仍留给人。"
+          },
+          {
+            "kind": "h",
+            "text": "pipeline 的形状"
+          },
+          {
+            "kind": "p",
+            "text": "两条命令：先 `/spec`，再 `/build`。`/spec` 是 functional spec → repo-scout → flow-designer → tech-architect → impl-planner，中间人要回答未决问题。`/build` 是 03-steps → step-runner × N（每一步新的 context，验证并提交）→ draft PR。「两条命令，相当于八份文件的交接。」各阶段的职责和写出的文件是："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "repo-scout：找到可复用的真代码。只读。写出 `00-context-brief.md`。",
+              "flow-designer：用户看见什么、做什么，外加验收标准。写出 `01-user-flow.md`。",
+              "tech-architect：文件、类型、数据访问、测试计划。写出 `02-technical-definition.md`。",
+              "impl-planner：有序步骤，每步带一份自包含 prompt。写出 `03-implementation-steps.md`。",
+              "step-runner × N：恰好实现一步，代码加测试。产出 commits。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "每个 subagent 也只拿到一套窄工具。scout 只能用 Read、Grep 和 Glob。flow designer 能读写文档，但不能跑命令。只有 runners 能改代码、跑 Bash，而且只为了那些验证命令。"
+          },
+          {
+            "kind": "h",
+            "text": "agents 决定什么"
+          },
+          {
+            "kind": "p",
+            "text": "说实话，相当多。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "模仿哪份已有代码。scout 交回一份真实路径的 brief：最接近的屏幕、data hooks、一份有代表性的测试。每条路径必须存在，因为它打开过；找不到的进「Gaps」，而不是猜。",
+              "用户流程细节。状态（空、加载、错误、成功）、边界情况，以及 Given/When/Then 的验收标准。",
+              "技术设计。哪些文件会改、确切的类型、哪条测试覆盖哪条验收标准。",
+              "怎么拆活。planner 把设计拆成通常 1–3 个文件的步骤，先类型和数据访问、后 UI，每步结束时项目仍能编译。",
+              "代码本身，一次一步。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "我决定什么"
+          },
+          {
+            "kind": "p",
+            "text": "三件事，而且 pipeline 被建成不能跳过它们。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "产品问题。flow designer 被明确告知：不要自己裁定产品决策，把它们列出来。这一阶段之后，若 `01-user-flow.md` 里还有未决问题，orchestrator 会停下来把它们展示给我。产品决策不是 pipeline 该做的；只有得到答案才能继续，并把答案记进 01 的「Decisions」。这是整件事里最有价值的一条规则。我不希望 agent 自行给出「自以为合理的默认」的例子包括：用户没有权限时发生什么，或过滤器是否跨会话保持。把答案写进文件，也意味着后续阶段和 PR reviewer 看到的是决定，而不是猜测。",
+              "任何后端尚未确认的东西。architect 必须把后端还没提供的端点或字段标成 `ASSUMED`。这些假定一路走到 PR 正文的「Needs confirmation」。我曾被一个未核实的假定咬过——以为某个后端字段已经包含了什么；我宁愿先看见清单，也不愿在生产里才发现。",
+              "这份 PR 好不好。PR 以 draft 打开；合并仍是人的决策。pipeline 的工作是交给我一份每一步都已通过检查的 PR，让我的 review 谈的是设计和产品，而不是它能不能编译。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "文件就是接口"
+          },
+          {
+            "kind": "p",
+            "text": "各阶段不共享一场对话。每个 subagent 带着干净的 context 起步，只读它需要的文件。这带来我当初没完全料到的三件事。更少漂移：做 step 5 的实现者根本看不到 scout 打开过的那 40 个文件。一切可审：brief、流程、设计和计划放在代码旁边的文件夹里，同事可以在还没写下任何一行之前先审设计。重启便宜：若 step 4 出了错，我改 `03-implementation-steps.md`，从那里重跑。"
+          },
+          {
+            "kind": "h",
+            "text": "自包含的步骤 prompt"
+          },
+          {
+            "kind": "p",
+            "text": "步骤 prompt 是这条 pipeline 成败所在。planner 把每一步写成一个全新 agent 不需要其他 context 也能执行的样子。每份 prompt 必须在正文里写上：一句话目标；要创建或修改的确切文件，以及不要碰的文件；它需要的类型和签名，全文抄入；一份按路径指定的、可模仿的已有文件；要写的测试，以及它们覆盖哪些验收标准；验证命令。我对 planner 重复的一条规则：一步里永远不要写「as described above」。执行者看不见上面的任何东西。"
+          },
+          {
+            "kind": "h",
+            "text": "Gates，而不是信任"
+          },
+          {
+            "kind": "p",
+            "text": "step-runner 会报告自己的验证结果。orchestrator 不理这份报告："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "runner 返回时，自己重跑这一步的 Done-when 命令。信结果，不信报告。",
+              "绿 → 用 `step N: <title>` 提交并继续。",
+              "红 → 把失败输出送回给 `step-runner` 一次。仍红 → 停，分支维持原样，并报告哪一步失败、为什么。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "runner 还有一条硬规则：修原因，绝不为了让测试通过而跳过、削弱或删除测试。"
+          },
+          {
+            "kind": "h",
+            "text": "一份 conventions 文件"
+          },
+          {
+            "kind": "p",
+            "text": "每个 agent 在做任何事之前都先读 `.claude/pipeline/conventions.md`：技术栈、东西放在哪（每类文件带一份参考例子）、agent 容易搞错的规则，以及验证命令。这些命令就是每一步「done」的含义：`typecheck` 用 `npx tsc --noEmit`，`test` 用 `npx jest --findRelatedTests {files}`，`lint` 用 `npx eslint {files}`。这是换仓库时唯一会改的文件。Agents 是 stack-agnostic 的，并不绑定某一套技术栈。"
+          },
+          {
+            "kind": "h",
+            "text": "局限"
+          },
+          {
+            "kind": "p",
+            "text": "按每个功能算，它比一次聊天会话更慢。先写四份文档再写任何代码，对改一行的改动来说太重。我用它做功能，不用它改 typo。计划也可能是错的：`/build` 负责执行，不会重新解释架构；若某一步没法按写好的去做，它会停下来说明。这是故意的，但也意味着一份糟糕的 `02` 要付出重跑的代价。Gates 只和测试一样好。绿灯的 typecheck 和相关测试抓不住错误的产品行为。所以验收标准写在设计之前，而且之后仍会做 E2E 和一次 staging smoke test。这是我的工作流，不是一份 benchmark。"
+          },
+          {
+            "kind": "pull",
+            "text": "在第一个红步停下来，比看上去更重要。一个 agent 最糟的失败模式不是某一步坏了，而是在坏掉的一步之上又盖了五步。"
+          }
+        ]
+      },
+      "sourceUrl": "https://dev.to/diegoprieri/spec-to-pr-with-claude-code-what-the-agents-decide-and-what-i-still-decide-3eal",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "harnessly-fleet",
+      "company": "社区",
+      "companyColor": "#64748B",
+      "column": "选读",
+      "title": "三人团队用开源 harnessly 管三十路 agent：28 天开出 2,540 个 merge request",
+      "originalTitle": "How we run thirty Claude Code and Codex agents on our own servers (and the tool is now open source)",
+      "byline": "Roman Kalmykov · 11-05",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们做演唱会票务服务 Ticksly，所有代码都由 agents 写。自有服务器上，最多同时跑三十路 Claude Code 和 Codex session。过去 28 天，它们开出了 2,540 个 merge request，按 API 价格大约每条 $8。任务和方向由我们三个人来给。"
+          },
+          {
+            "kind": "p",
+            "text": "终端 tab 一多就很容易跟丢：一个 agent 等答复已经等了一阵，另一个花了三个小时在修错的东西，屏幕却分不出谁是谁。所以从春天起，我们给自己做了套架在 tmux 上的 web UI：harnessly。写它的也是同一批 agents：十月里，它们一边还在里面工作，一边用 19 天把它从 Node 重写成了 Go。今天我们按 Apache-2.0 发布。"
+          },
+          {
+            "kind": "h",
+            "text": "每个 tab 里在发生什么"
+          },
+          {
+            "kind": "p",
+            "text": "Claude Code 和 Codex 以原来的 CLI 跑在 tmux tab 里。harnessly 读它们的输出，给每个 tab 标上状态：working、waiting for you，或 done。agent 做完或提出问题，你会收到 push notification。一轮不再是一墙终端输出，而是一行就能放下，比如 “Worked 45 s · 6 actions”；展开可以看到 tool calls、计划和 subagent 报告。agent 正忙时，你也可以先写下一条消息，它会进队列，等空闲再发出；发送失败，消息也不会丢。"
+          },
+          {
+            "kind": "h",
+            "text": "额度、休眠和夜班"
+          },
+          {
+            "kind": "p",
+            "text": "输入框会显示订阅还剩多少，比如 “5h 97% wk 27%”，以及预计何时用完。如果夜里额度用尽，agent 会等到窗口重置，从停下的地方接着做；服务器重启后也是这样。闲置两小时的 agent 会休眠并释放内存，下一条消息会在同一 session 里把它唤醒。"
+          },
+          {
+            "kind": "h",
+            "text": "回滚、分叉、搬家"
+          },
+          {
+            "kind": "p",
+            "text": "每一轮都会存进单独的 shadow git 仓库；harnessly 不会碰你自己的仓库。你可以回滚到任意一轮。如果 agent 在第五步走错了，可以从第四步在另一条分支上继续，第二次尝试和第一次并排跑。也可以把整段对话作为加密包挪到另一台服务器。"
+          },
+          {
+            "kind": "p",
+            "text": "需要人做决定时，agent 会在 Telegram 里问，例如 `harnessly ask approve --to roman \"release 2.4\" && make deploy`。人点一下按钮，答案作为脚本的 exit code 传回来。"
+          },
+          {
+            "kind": "h",
+            "text": "agent 看不见的密钥"
+          },
+          {
+            "kind": "p",
+            "text": "agent 需要 GitHub token，但 token 不该出现在 chat 里。它通过 `harnessly secret ask` / `harnessly secret run` 来要（例如说明 `--why \"push the release\"` 来要 `github-token`，再带着环境里的 `GITHUB_TOKEN` 去跑 `gh pr create --fill`）。你这边弹出保险箱对话框，贴上值，它不会进 chat。agent 用环境里的密钥跑命令，输出里看到的是 `••••••`。登录 staging 站点也一样：agent 请浏览器登录，你在密码管理器里确认，agent 拿不到密码。"
+          },
+          {
+            "kind": "h",
+            "text": "给团队"
+          },
+          {
+            "kind": "p",
+            "text": "预算可以按人、按团队或按模型来设。到 80% 会警告，到 100% 工作停下。我们是在 subagents 用昂贵模型一周给账单加上 $1,900 之后，才加上这项的。"
+          },
+          {
+            "kind": "h",
+            "text": "还缺什么"
+          },
+          {
+            "kind": "p",
+            "text": "还没有 Windows，没有原生应用，API 也不稳定（我们还在 0.x）。hub 以单副本运行。保险箱防的是密钥泄进 chat，不是防一个有敌意的 agent。"
+          }
+        ]
+      },
+      "sourceUrl": "https://dev.to/dev1alone/how-we-run-thirty-claude-code-and-codex-agents-on-our-own-servers-and-the-tool-is-now-open-source-5c4e",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "anth-fable-52",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "选读",
+      "title": "Fable 5.2 每百万 token $8 / $40：FrontierCode High 45.3% 对 Opus 5.5 的 45.5%，成本大约一半",
+      "originalTitle": "Introducing Claude Fable 5.2 and Claude Mythos 5.2",
+      "byline": "Anthropic · 11-09",
+      "body": {
+        "pattern": "benchmark",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们升级了 Claude Fable 和 Claude Mythos——用来应对最棘手技术挑战的模型。Claude Fable 5.2 和 Claude Mythos 5.2 在编码、推理和视觉等方面有改进。两者是同一套底层模型。Fable 带有较强的网络安全和生物学防护，以防滥用，因此可以对所有用户开放；在网络安全或生物医学研究中做有益应用的组织，可以通过最近扩大的生命科学和网络验证项目申请使用 Mythos。"
+          },
+          {
+            "kind": "p",
+            "text": "测试者发现，Fable 5.2 和 Mythos 5.2 比以往的 Fable 和 Mythos 表达更清楚。它们生成输出比 Claude Fable 5.1 和 Claude Mythos 5.1 最多快 30%，也以更低的价格提供：每百万 input tokens $8，每百万 output tokens $40。可选的 fast mode 能把 token 生成加快最多 2.5 倍，价格是每百万 input tokens $16、每百万 output tokens $80。"
+          },
+          {
+            "kind": "h",
+            "text": "何时使用 Claude Fable 5.2 和 Mythos 5.2"
+          },
+          {
+            "kind": "p",
+            "text": "Fable 和 Mythos 最适合最吃功夫、开放式的技术工作。大多数编码和知识任务，我们建议先从 Claude Opus 5.5 起步，它是我们最强的日常主力，再按工作的范围和复杂度换模型：向上用 Fable 或 Mythos，向下用 Claude Sonnet 5.5 或 Claude Haiku 5.5。Fable 5.2 也可以担任 Advisor（Haiku、Sonnet 或 Opus 向它咨询，以解决更难的问题）或 Orchestrator（把更简单的任务交给更小的模型）。"
+          },
+          {
+            "kind": "p",
+            "text": "评测方法详见 Claude Fable 5.2 和 Claude Mythos 5.2 System Card。FrontierCode 2.0 衡量的是：模型的代码改动会不会被开源仓库的维护者合并。在 High effort 上，Fable 5.2 得 45.3%，与 Opus 5.5 的最好成绩 45.5% 大致相当，每个任务的成本大约一半；也高于 GPT-6 Astra 的最好成绩 42.8%，成本大致相当。在 Xhigh effort 上，Fable 5.2 达到 49.1%，是我们测过的已发布模型里最高的。表中其他对照（除非另有说明，均为各模型最高可用 effort）：Fable 5.1 为 32.4%（Xhigh），Gemini 4 Carbon 为 41.1%（Medium effort）。Medium effort 是 Claude 应用和 Claude Code 里的默认值；在这一档上，Fable 5.2 能用比 Fable 5.1 更少的 tokens 完成有挑战的任务。"
+          },
+          {
+            "kind": "h",
+            "text": "编码"
+          },
+          {
+            "kind": "p",
+            "text": "进 Anthropic 核心代码库且已合并的变更里，现在超过 90% 由 Claude 写（有人指导）。我们用 Fable 5.2 在几分钟内修好过顽固的 bug，优化过所有服务的性能，也完成过若用别的办法会太慢或太贵、因而不去做的高价值软件项目。一个跑着较早版本 Fable 5.2 的 agent 团队，把一项关键生产服务从 Python 迁到了 Rust——服务现在更高效、更可靠，启动大约快 26 倍。作为实验，一名 Anthropic 工程师从空文件夹出发，让 Fable 5.2 去设计一个原型操作系统：模型协调了超过 1,000 个 subagents，不分昼夜写、测、审了八天，做出了一个能在笔记本电脑上启动的操作系统，有自己的核心，磁盘、键盘和网络驱动，持久文件存储，窗口、登录屏、安装程序，以及内置的 Claude 功能。"
+          },
+          {
+            "kind": "p",
+            "text": "Claude Fable 5.2 即日起在所有平台可用，包括 Amazon Web Services、Google Cloud 和 Microsoft Azure。开发者可以在 Claude Platform 上使用 `claude-fable-5-2`。"
+          },
+          {
+            "kind": "pull",
+            "text": "大多数编码和知识任务，我们建议先从 Claude Opus 5.5 起步，它是我们最强的日常主力；Fable 和 Mythos 最适合最吃功夫、开放式的技术工作。"
+          },
+          {
+            "kind": "aside",
+            "text": "评测方法详见 System Card，这篇发布稿并未完整展开。除非另有说明，Fable 5.2、Fable 5.1 和 Opus 5.5 的分数是在防护打开时测的，且为各模型最高可用 effort。核心代码库「超过 90%」、较早版本 Fable 5.2 的 Python→Rust 迁移，以及空文件夹原型操作系统，都是文中的第一方叙述，不是可复现的公开 harness。"
+          }
+        ]
+      },
+      "sourceUrl": "https://www.anthropic.com/claude-fable-and-mythos-5-2",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "deepmind-alphaproof",
+      "company": "Google DeepMind",
+      "companyColor": "#4285F4",
+      "column": "选读",
+      "title": "AlphaProof Code 用四星期验证 Signal 协议实现：超过六百万行 Lean",
+      "originalTitle": "Introducing AlphaProof Code: a breakthrough in verifying complex software at depth",
+      "byline": "Pushmeet Kohli and Swarat Chaudhuri · 11-10",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "今天我们分享一项长期被视为软件安全重大挑战的里程碑：Google DeepMind 的研究者引导 AI agents，对 Signal 协议——保护 Signal 和 Google Messages 等应用里数十亿次私密对话的技术——底层的实际代码，就其关键安全性质给出了数学证明。这是用 AlphaProof Code 完成的：一套把人的专长和 AI agents 结合起来、在前所未有的深度做形式化验证的新型 agentic framework。形式化验证——用数学证明代码正确运行、没有缺陷——是安全保障的最高标准，但往往很难，也费人工。"
+          },
+          {
+            "kind": "p",
+            "text": "我们的工作，是第一次用 AI 在这一深度上形式化验证了被广泛部署的密码协议。这也是第一次，无论是否借助 AI，用任何方法形式化验证了这样一类被广泛部署的协议的实现。"
+          },
+          {
+            "kind": "h",
+            "text": "我们如何验证 Signal"
+          },
+          {
+            "kind": "p",
+            "text": "AlphaProof Code 是一套 multi-LLM 的 agentic framework，按研究团队的方式拆分形式化验证：人类专家与 AI 一起决定要证明什么，再由一组 AI agents 去做证明。首先，我们的研究者与一组模型协作，把 Signal 的安全目标写成形式化的数学规格，每一条都由人类专家审过。随后，由 Gemini Carbon 驱动的 agents 做证明，生成了超过六百万行 Lean——一种用数学证明代码正确性的计算机语言。接下来，agents 审计证明，标出需要人再看一眼的地方——只占代码库的百分之一；其余由 Lean 自动检查，我们的专家可以把审阅放在最需要人判断的地方。"
+          },
+          {
+            "kind": "p",
+            "text": "大多数协议验证停在设计层。我们的 agents 走得更远：证明编译后的代码满足关键安全性质——例如设备被暂时攻破之前和之后，消息仍受保护——一直到设备上跑的那份确切代码。真实世界的漏洞常常藏在设计与实现的缝隙里，补上这道缝会让这些证明复杂得多。"
+          },
+          {
+            "kind": "p",
+            "text": "为确认 AlphaProof Code 能区分正确代码和有 bug 的代码，我们把两个先前已修复的真实 bug 重新引入一份隔离的 Signal 代码版本。两种情况里，系统都给出了机器检查过的证明：这份有 bug 的版本是不安全的。"
+          },
+          {
+            "kind": "p",
+            "text": "我们正在把形式化验证的产物开源，供社区使用。要把这些技术扩大规模，还需要继续研究。"
+          },
+          {
+            "kind": "pull",
+            "text": "即便在这样的复杂度下，我们的验证过程只用了四星期——历史上专家团队往往要花上数年——证明 Signal 的核心密码代码，达到了我们的专家写下的那些安全保护。"
+          },
+          {
+            "kind": "aside",
+            "text": "这篇公开稿对编排只做了高层次说明，也没有写需要人再看的那百分之一是怎么选出的。"
+          }
+        ]
+      },
+      "sourceUrl": "https://deepmind.google/blog/introducing-alphaproof-code/",
+      "sourceLabel": "读原文"
+    }
+  ]
+}
