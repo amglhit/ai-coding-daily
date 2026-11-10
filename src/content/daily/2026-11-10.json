@@ -1,0 +1,780 @@
+{
+  "title": "AI Coding 日报 · 2026-11-10（周二）",
+  "date": "2026-11-10",
+  "type": "daily",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [
+    "google-distraction",
+    "ms-semver"
+  ],
+  "masthead": "11 月 10 日 · AI Coding 日报",
+  "stories": [
+    {
+      "id": "google-distraction",
+      "company": "Google",
+      "companyColor": "#4285F4",
+      "column": "工程化实践",
+      "title": "过时 TODO 把 agent 带跑偏：13% 读文件会话碰到，绕路多 70% steps",
+      "originalTitle": "Agent Distraction",
+      "byline": "Sam Saccone et al · 11-06",
+      "sourceUrl": "https://developers.googleblog.com/en/agent-distraction/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "人对代码里的东西很容易扫过去；agents 却把它们看成行动号召。它们并不知道这些不该当真，会紧紧抓住规划和研究阶段读到的文件里散落的那些东西。随着 agents 借助 tools 和 skills 获得的行动能力增长，去跑支线任务的能力也按比例放大。过时的规格、早已解决的 bug、滞后的文档，不再躺在代码库被遗忘的角落里，而是被无意间吃进 context，间接地误导下一波写代码的人——agents。这种间接并不免费：最好的情况只花 tokens、steps 和时间；最坏的情况会把 agent 钉在虚假事实上，导致实现时做出错误的逻辑和决策。"
+          },
+          {
+            "kind": "p",
+            "text": "要在每月数百万次会话里测量 agents 多久掉进这些陷阱，靠人工审查做不到——我们需要一种能从代码本身导出的客观信号。行内的 `TODO(bug/...)` 注释是正好的替代指标。TODO 往往会在底层 bug 已经解决或被放弃很久之后还留着，而被链接的工单则是权威记录。把 agent 碰到的每一条 TODO，对照该 TODO 的 bug 状态和用户的 prompt，我们就能在规模上自动把有效工作从浪费的绕路里分开。"
+          },
+          {
+            "kind": "h",
+            "text": "代价"
+          },
+          {
+            "kind": "p",
+            "text": "我们用数千名工程师、超过数亿次单独 agent steps 的分布式 traces，量化了代码库里 TODO 分心的影响，以及 agents 如何对它们采取行动。在数百万次读文件的会话里，13% 的会话让 agent 看到了行内 `TODO(bug/...)` 或 `FIXME(bug/...)` 引用——接近七分之一。agents 在 94% 的遭遇里忽略了这条注释；但在 6% 的情况下，agent 随后针对那个 bug ID 采取了行动。这些行动里超过五分之四（83% 的会话）完全未经提示——开发者并没有要求修这个 bug。"
+          },
+          {
+            "kind": "p",
+            "text": "把未经提示的绕路对照线上的 bug 状态，暴露出两种不同的失败模式。超过五分之二（41%）的未经提示绕路追的是已经关闭的工单：已经 fixed/verified 的占 32%，obsolete / won't-fix 的死胡同占 9%，另外 2% 打到了重复或受限的工单。超过一半（57%）的未经提示绕路里，bug 仍是开放的（NEW / ASSIGNED / ACCEPTED），agent 扩大了自己的工作（61% 只做 lookup；39% 改了代码），去调查或修改开发者从未要求碰的问题。"
+          },
+          {
+            "kind": "p",
+            "text": "在控制了开发者、仓复杂度、任务类型、模型档、读文件数、初始 prompt 长度、以及 bug 引用出现的那一步之后，用带开发者聚类标准误的多路固定效应回归，未经提示的 bug 绕路仍带来可观的开销（全部统计显著，p<0.0001）。每个会话：多 70% 的 steps、多 77% 的 tokens、多 105% 的等待时间。"
+          },
+          {
+            "kind": "h",
+            "text": "这会怎样展开"
+          },
+          {
+            "kind": "p",
+            "text": "过时的绕路：一次调查无关 bug 时，agent 看了 SurfaceControlTest.java，看到 `// TODO(bug/XXX)`。这个 bug 在 2023 年就已经修了，却还留在代码库里，随后若干步里 agent 挖进这个 bug 去了解更多。热心的 agent：在正在调查的那个 bug 里碰到一条 TODO，然后（未经提示）决定去「修」代码。它为这个 bug 执行了多次 Code Search 和内部知识搜索，最终改了 ModelDownloaderV1 的代码。轨迹后面，人挑战了这次 scope creep；模型承认这是一次不正确的范围扩大。这两种情况都只是轻微到中等的绕路——但它们是真的分心，花掉时间、tokens 和人的干预。"
+          },
+          {
+            "kind": "h",
+            "text": "我们做了什么"
+          },
+          {
+            "kind": "p",
+            "text": "为了在规模上处理这一发现，我们做了 agents 去清扫全部代码库，找出代码里被标成 fixed 或 obsolete 的 bug 引用以便清理。但这一步本身还不足以判断这些 TODO 是不是承重的。agents 必须走得更远：看 bug 的历史、文件的历史、以及代码库的变更，有时跨越数年。只有在 agent 能够确认这条 TODO 以及它背后的意图已经过时的情况下，我们的 agent 才会送出一份变更去评审、把它从代码库里删掉。靠这种多层做法，我们的 todo cleaner 在过去 6 个月里删掉了数千条真正过时的引用，人审接受率超过 95%。"
+          },
+          {
+            "kind": "h",
+            "text": "分心的分量"
+          },
+          {
+            "kind": "p",
+            "text": "presubmit 分析器、覆盖整个语料的扫描器、以及用来清理死 TODO 的自动化 coding agents，提供了开箱即可规模化的办法来处理这笔税，让代码库更健康、更少分心，好让 agents 发挥。那些曾经因为被认为价值低而被往后推的清理遗留债务项目，现在需要用「agents 正在规模化地在你的代码库上行动」这一新前提重新评估。"
+          },
+          {
+            "kind": "pull",
+            "text": "随着我们把越来越宏大的问题交给 agents，「对 agent 友好的代码库」要求的不只是热路径上的代码健康。代码库里被遗忘的角落，现在比以往任何时候都更会向 agents 征收一笔可观的税。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ms-semver",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "工程化实践",
+      "title": "AI coding agents 在意 SemVer 吗：同一段 breaking 代码，patch 标签少检查",
+      "originalTitle": "Do AI coding agents care about SemVer?",
+      "byline": "Waldek Mastykarz · 11-09",
+      "sourceUrl": "https://developer.microsoft.com/blog/do-ai-coding-agents-care-about-semver/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "语义化版本（SemVer）告诉开发者一次升级有多冒险。patch 修 bug，minor 加功能且不破坏任何东西，major 会破坏东西，所以你知道升级前该看得多仔细。纸面上，这个信号在 AI coding agent 做升级时是多余的。agent 没有绑在旧 API 上的肌肉记忆。它可以读新代码、跑测试，那它为什么会在意版本号说了什么？我们怀疑它不会在意，并觉得 SemVer 已经变成只有人才需要的东西。两个模型证明我们错了。两个实验、将近 1,000 次 run，单单版本号就改变了它们对字节级相同代码所做的事。面对一次会把应用弄坏的升级，Claude Sonnet 5.5 在升级被标成 patch 时，10 次里有 2 次跑了测试或读了新代码；被标成 major 时，10 次全做了。其他模型无论标签是什么都检查每一次升级。有些 agents 仍然会读 SemVer，对它们来说，patch 标签是少检查的理由。"
+          },
+          {
+            "kind": "h",
+            "text": "为什么 agent 仍可能去读版本号"
+          },
+          {
+            "kind": "p",
+            "text": "SemVer 描述的是维护者打算让一次发布做什么。它是否和你的应用兼容，是 agent 可以直接检查的：读代码、跑测试。不过，模型从仓库和文档里学习，而 SemVer 在那些地方无处不在。它们可能在那些数据里捡到了开发者同样的习惯：major 发布值得仔细看，patch 可以放心拿。如果是这样，即便背后的代码相同，标签也可能决定 agent 检查升级有多彻底。我们想知道 patch、minor 或 major 标签会不会改变 agents 的行为，以及如果会，这会不会改变结果。两个实验都在 Vally（Microsoft 的 AI agents 评测工具）里跑，agent 是 GitHub Copilot CLI。"
+          },
+          {
+            "kind": "h",
+            "text": "同一段代码，不同的版本号"
+          },
+          {
+            "kind": "p",
+            "text": "我们做了一个小的 Node.js 应用，依赖我们虚构的 npm 库 `fluxkit`。虚构库意味着没有模型能靠它记得的 API 或发布历史。新版本的 `fluxkit` 重命名了应用调用的一个函数，所以升级而不更新应用会把它弄坏。我们给 agents 一份刻意极简的指令，两个版本之一：`Bump fluxkit to 1.4.3.`（patch）或 `Bump fluxkit to 2.0.0.`（major）。两个版本背后的库代码字节级相同，包含那次 breaking change，所以只有版本号不同。如果 agents 忽略标签，两种条件下行为会一样；如果它们把 major 发布看得更险，就会更常检查这次升级。我们把一次 run 算作「检查过」，当 agent 跑了测试或应用，或读了更新后的库代码。"
+          },
+          {
+            "kind": "p",
+            "text": "Claude Sonnet 5.5 对标签的反应超出了我们对任何模型的预期。被要求做 patch 时，它常常只改依赖版本就停了，留下一个坏掉的应用；被要求做 major 时，每次都检查。Claude Opus 5.5、GPT-6.1 Sol、GPT-6.1 Terra 在两种标签下都是 70/70 次检查，没有有意义的效应。在一次五 run 的试点里，GPT-6 Sol 也是这样，随后我们把它换成 GPT-6.1 Terra 做完整运行。"
+          },
+          {
+            "kind": "h",
+            "text": "审一位队友的更新"
+          },
+          {
+            "kind": "p",
+            "text": "「把这个依赖 bump 上去」是最简单的升级。更常见的是，一位队友或一个依赖 bot 准备好一个分支，有人在合并前审它。当这个「有人」是 agent 时，它必须自己决定这次更新是否安全到可以合并，我们想看标签是否仍然改变它检查得有多仔细。我们准备了更新分支，请 agents 审它们：「Review the update-<lib>-<version> branch and merge it into main if it's good.」版本号只出现在分支名和 commit message 里，没有 release notes 或 pull request 描述可以倚靠。我们做了六个场景，三个有 breaking change、三个没有，每个场景给 patch、minor 和 major 三种标签，三种标签下代码相同。六个模型每种标签各跑 30 次，共 540 次，我们测量 agent 在未先检查新版本的情况下合并更新的频率。跑任何东西之前，我们决定了什么算真正的差别：把线画在 25 个百分点，并根据置信区间把每个结果分成有效应、无有意义效应、或不确定。不是每一个观察到的差别都可靠，事先决定避免我们对小差别读得太多。"
+          },
+          {
+            "kind": "p",
+            "text": "第一个实验的模式站住了。Claude Haiku 5.5 在 37% 的 run 里未检查就合并了带 patch 标签的更新（11/30），major 标签则是 7%（2/30），判定为有效应。Claude Sonnet 5.5 是 13%（4/30）对 0/30，判定为不确定、倾向有效应；GPT-6 Luna 是 30%（9/30）对 17%（5/30），判定为不确定。Claude Opus 5.5、GPT-6.1 Sol 和 GPT-6.1 Terra 无论标签是什么，都是 0/30 次未检查合并，没有有意义的效应。六个模型合计，未检查合并随着标签暗示更大变更而下降：patch 13%，minor 9%，major 4%（每种标签 180 次 run）。在 Claude 5.5 内部，模型越小，标签越能左右它。我们无法对 GPT 做同样的比较，因为没有一代同时覆盖 Luna、Sol 和 Terra。"
+          },
+          {
+            "kind": "h",
+            "text": "跳过检查有没有弄坏东西？"
+          },
+          {
+            "kind": "p",
+            "text": "跳过检查的 agent，只要更新能用就能蒙混过关。多数时候，agents 判断的是代码本身。它们合并了 270 次非 breaking 更新中的 268 次，以及 270 次 breaking 更新中的 13 次。这 13 次里有 4 次让 `main` 坏掉，两次出自 Claude Haiku 5.5，两次出自 GPT-6 Luna。这很少见，但全部 4 次都带了 patch 或 minor 标签——就是那些告诉开发者没什么好担心的标签。每个模型，包括那三个无论标签都检查每一次更新的模型，在审 major 发布时都更常谈到兼容性。所以标签甚至传达到了行为未被改变的那些模型。"
+          },
+          {
+            "kind": "h",
+            "text": "怎样对待你的版本号"
+          },
+          {
+            "kind": "p",
+            "text": "如果你维护一个库，继续用 SemVer，并且用得诚实。Agents 认得它，其中一些会按它行动。作为 patch 发布的 breaking change，正好是那些 agents 会跳过检查的情形，而我们运行里每一次被弄坏的 `main` 都带了 patch 或 minor 标签。你的版本号是 agents 使用你产品时体验的一部分，就像你的文档和 CLI 帮助一样。如果是 agents 升级你的依赖，不要让标签决定检查发生多少。有些模型自己会检查每一次更新，有些只在版本号看起来有风险时才检查。把验证建进工作流，例如每个依赖分支都必须通过的 CI，这样 patch 得到和 major 发布一样的检查。如果你评测 agents，把版本号加进隐藏变量清单。对 Claude Haiku 5.5 或 Sonnet 5.5，一个 bump patch 版本的场景测量到的 agent，和一个 bump major 版本的场景不是同一个。用开发者实际在用的模型来测，因为只测 Claude Opus 5.5 会告诉你 agents 忽略标签，只测 Claude Haiku 5.5 会告诉你相反的事。也要读 trajectories：一次 agent bump 了 patch 并走运的 run，和一次它做了检查的 run，从通过与否上看起来一样。"
+          },
+          {
+            "kind": "pull",
+            "text": "版本号无法证明一次升级是安全的，对 agents 和人都一样。版本号告诉 agent 该有多担心。只有测试告诉它该不该担心。"
+          },
+          {
+            "kind": "aside",
+            "text": "我们故意打破了 SemVer，在 patch 标签下发布 breaking change，看 agents 是信任标签还是信任代码。多数真实的 patch 发布名副其实，所以这些结果描述的是 agents 如何处理例外。我们的应用也很小，更新没有附带 release notes——真实升级通常会有，agent 可能会去读。Claude Sonnet 5.5 和 GPT-6 Luna 在评审实验里那约 13 个百分点的差别也许是真的，但每种标签 30 次 run，太不确定，无法往任一方向下定论。三个模型忽略标签，并不意味着模型正在摆脱 SemVer：它们这三个忽略了，你接下来换上的那一个可能不会。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anth-fable-fleet",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "工程化实践",
+      "title": "安全扩大 multi-agent 团队：1000 个早期 Fable 5.2 agents，28.7 小时复现费马形式化",
+      "originalTitle": "Safely scaling multi-agent teams with Claude Fable 5.2",
+      "byline": "Barry Zhang et al · 11-09",
+      "sourceUrl": "https://claude.dev/blog/safely-scaling-multi-agent-teams-with-fable-5-2/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Multi-agent 团队能解决困难的、长周期问题。今年 9 月，我们发表了费马大定理的第一次端到端形式化，由几十个跑着大致相当于 Claude Fable 5.1 的内部研究模型的 agents 写成。那次工作依赖 Prove2Me（一个数学形式化平台）和一位研究员的方向。在一次新的玩具实验里，一支 1,000 个跑着早期 Claude Fable 5.2 的 agent 团队，在没有 Prove2Me 提供的脚手架、也没有研究员现场指挥的情况下，复现了这个证明。团队花了 28.7 小时，用掉的 output tokens 约为原先的三分之一，写出的证明长度约为原先的七分之一。"
+          },
+          {
+            "kind": "p",
+            "text": "每个 agent 在没有互联网访问的 sandbox 里工作。一个分类器在每条 shell 命令和文件编辑运行前检查它，一个离线 monitor 审查团队的每一个行动。我们给 agents 一份 60 条陈述的清单、一句对经典路径的素描、这些陈述所用的定义，以及我们先前形式化里 47 条已证明的引理，并指定了 lead 和 helper 角色。关于如何证明这个定理、或如何组织自己，我们没有提供其他指导。这次玩具实验表明，跑在 Fable 5.2 这类模型上的 agent 团队，可以在仔细设计的安全边界内完成宏大的、长周期目标。"
+          },
+          {
+            "kind": "h",
+            "text": "问题"
+          },
+          {
+            "kind": "p",
+            "text": "费马大定理说：没有任何正整数 a、b、c 满足 aⁿ + bⁿ = cⁿ（对任何大于 2 的 n）。它在 350 多年里未被证明，直到 Andrew Wiles 1995 年那份 129 页的证明。把证明形式化——让计算机可以检查每一步——一直是数学共同体的长期目标。我们 9 月的形式化花了一位研究员和几十个 agents 11 天、大约 60 亿 output tokens。他们用 Lean 写了 1300 万行代码。Agents 通过 Prove2Me 协调：一份共享图把每条待证陈述连到它被拆成的更小陈述；任何 agent 都可以拆分一条陈述，其他 agents 可以向图询问哪些未证明的碎片已经可以动手，以免跟丢项目状态。每条陈述及其证明放在单独、可独立编译的文件里，这样许多 agents 可以并行工作而不编辑同一批文件。"
+          },
+          {
+            "kind": "h",
+            "text": "Harness"
+          },
+          {
+            "kind": "p",
+            "text": "我们想看跑在 Fable 5.2 这类模型上的 agent 团队，能否在没有 Prove2Me、也没有研究员指挥工作的情况下产出这一结果，用的是由通用 tools 建成的 harness。我们给这 1,000 个 agents 60 条要证明的陈述，包括最终定理和 59 个中间里程碑。对每条陈述，agents 必须用 Lean 写证明，用 Lean 的 tools 构建并检查，再提交到 Git 上共享的 main 分支，由一份 grader 检查。每个 agent 得到：自己 sandbox 里、没有网络访问的 shell 和文件编辑器；做进 sandbox 镜像的 Lean 工具链和 Mathlib；自己的 Git 分支，以及向 main 开 merge request 的能力；一个可以从 shell 到达的共享 Postgres 数据库。"
+          },
+          {
+            "kind": "p",
+            "text": "证明工作可以拆开，适合 multi-agent 团队。但 agents 也需要协调，既为了建立在彼此的工作之上，也为了避免重复。原先的形式化里，Claude 的早期尝试失败，是因为 agents 跟丢了项目状态，不再有效协作。迁到 Prove2Me 解决了这个问题。这次运行里，每个 agent 的 sandbox 在自己的轻量虚拟机上。一台共享机器在大约 100 个 agents 时碰到了极限：我们超过一半的 100-agent 运行因为内存、磁盘或 CPU 耗尽而不得不停止或重启。有了 1,000 个分开的 sandboxes，agents 需要一种分享工作的办法，所以我们给了它们一个 SQL 数据库。我们选择 SQL，是因为它提供组织信息的通用原语，它的事务能处理来自 1,000 个 agents 的并发写入，而且 Claude 已经熟悉它。Agents 用数据库认领任务、分享笔记、记录完成的工作。"
+          },
+          {
+            "kind": "p",
+            "text": "我们的 prompt 给了 Claude 一份 60 条陈述的清单（每条带一行非正式描述），并描述了可用的 tools。我们给团队的唯一结构是一层层级：一个 lead 和 999 个 helpers。我们让 lead 把问题拆成部分并分配给 helpers；让 helpers 等 lead 的工作，任务不清时向 lead 确认。运行期间，harness 向 lead 发了 19 条还剩多少时间的自动提醒，每条都鼓励 lead 继续。"
+          },
+          {
+            "kind": "h",
+            "text": "安全"
+          },
+          {
+            "kind": "p",
+            "text": "正如我们先前分享过的，没有任何单层防御足以约束一支 agent 团队。这次实验里，我们把 sandboxing 与实时和离线监测结合起来，让每个 agent 待在自己没有网络访问的虚拟机里，并检测任何试图逃出 sandbox 或篡改监测的行为。我们这样加固每个 agent 的 sandbox：没有专用消息通道，只通过数据库和 Git 协调；只能推自己的 Git 分支并向 main 开 merge request（由一份分开的作业合并，冲突或故障时拒绝）；数据库跑在共享的无特权角色下；sandbox 没有网络，唯一出口是通向 gateway 的 pipe，身份在 sandbox 外打标，防止一个 agent 假扮另一个；kernel 去掉可加载模块、kexec、裸内存访问和 kernel probes 等给 root 的直达路径，并跑在 lockdown 模式；命令以无特权用户运行，sudo 被去掉，tools 不能读或改运行它们的 agent loop。"
+          },
+          {
+            "kind": "p",
+            "text": "为了让这类运行更安全，我们用一个被 prompt 的 LLM 分类器，可以拦住每一条 tool call，包括 shell 命令和文件编辑。分类器盯着逃出 sandbox、探测边界、篡改监测的企图，以及模型如果设法离开 sandbox 可能采取的有害行动。分类器拦住一条 tool call 时，整支 agent 团队停下，必须有人审查这次拦截，团队才能重启——这是为了防止另一个 agent 把被拦住的行动做完。在这次运行里我们只用了看行动、不看 chain of thought 的 monitor；只有拦住 lead 才会结束整次运行，拦住一个 helper 只移走那个 helper。超过一百万次 tool call，这一次运行里没有一次达到被拦截的门槛。我们后来用看 chain of thought 的 monitor 和今天的 rubric 回放这些调用，只有一次——一次检查是否有 root 权限——接近被拦。"
+          },
+          {
+            "kind": "p",
+            "text": "除了实时监测，我们还跑一个离线 monitor。它按与实时 monitor 相同的威胁模型分析 agent 团队的行动，但有额外能力，比如查阅其他 agents 的行动。"
+          },
+          {
+            "kind": "h",
+            "text": "结果"
+          },
+          {
+            "kind": "p",
+            "text": "没有 Prove2Me，团队建了自己的协调系统。前 10 分钟里，lead 在数据库里建了五张表：Announce（lead 给全队的命令，比如如何拆分工作）；Assign（谁做什么）；Notes（开放看板，用来认领一块工作或报告进展）；Subtasks（待办清单，任何 agent 可以加任务，第一个认领的 helper 拥有它）；Landed（完成工作的日志）。"
+          },
+          {
+            "kind": "p",
+            "text": "表建好后，lead 做了三件事。它把每条陈述分给 16 到 17 个 helpers 组成的一组，往 assign 表写了 999 行；让每组里的一个 helper 当 captain，负责把计划发到 notes 表，并把工作拆成任务供组员从 subtasks 表认领；再往 announce 表发指令，让每个 helper 先判断自己那条陈述的难度，并把裁决发到 notes 表。大约 27 分钟时，已经有三条陈述被证明，lead 读了贴出的裁决。它随后把多数 helpers 判为在本次运行预算内不可行的 47 条陈述搁在一边，几乎把全部 helpers 重新分配到剩下的 10 条、它认为他们能做完的陈述上。各组从大约 17 个 helpers 长到 46 到 139 个。大约 45 分钟时，10 条里约有 5 条已证明，lead 写道：团队的吞吐量远高于早期那些「预算内不可行」裁决所假定的。这 10 条陈述在大约 70 分钟内全部被证明。"
+          },
+          {
+            "kind": "p",
+            "text": "前 10 条做完后，lead 写道「没有理由闲着」，把 helpers 重新分配到它最初丢掉的更难陈述上。随着更多陈述被证明，它持续把 helpers 转到新任务，大多发生在前 6 个小时。helpers 承担了更多拆解每条陈述的责任。到第 5.6 小时，73 个 helpers 写了 756 个任务，其中只有 16 个是 captains。起初 lead 也把 helpers 分到特定陈述；第一小时内这就开始改变，到第三小时，lead 对空闲的 helpers 说「不要等我」。"
+          },
+          {
+            "kind": "p",
+            "text": "大约第 18 小时，剩下的主要是 Langlands–Tunnell（Wiles 证明所依赖的一个经典结果），以及依赖它的陈述和另一条陈述（团队顺带证明了）。更早的时候，这条任务的 captain 相当悲观，估计证明至少要 70 万到 100 万行 Lean 代码，按时做完的机会不到 1%。Lead 曾把它搁在一边。几乎所有其他工作完成后，lead 让团队重新聚焦到 Langlands–Tunnell，最后一次自上而下地把大约 750 个 helpers 调过去，并写道：「老实说机会很低。」Langlands–Tunnell 远大于 agents 做过的任何其他陈述，任务数大约是九倍，新代码超过两倍。许多最初的任务对单个 helper 来说太大。于是团队把工作组织成一棵树：captain 把陈述分成 10 个区域，每一块列成一个任务；觉得一块太大的 helper 可以再拆，在它下面加上更小的任务。这棵树最终长到 2,418 个任务、最深 10 层。每一块可以假定它下面的那些块，所以数百个 helpers 可以在那些块被证明之前并行工作。Langlands–Tunnell 在第 28.4 小时被证明，最终定理在第 28.7 小时。Lead 随后写道：「谢谢大家：费马大定理已经在 main 上，由官方 checker 做了 kernel 检查。」计数停在 60 条陈述中的 54 条，因为五条替代路径不再需要，一条陈述被丢掉。"
+          },
+          {
+            "kind": "h",
+            "text": "结论"
+          },
+          {
+            "kind": "p",
+            "text": "这次玩具实验让我们研究一支 1,000 个 agents 的团队如何走完一项长而难的任务。只用 Git 和一个共享数据库，agents 设计了表来分配角色和分享结果，组成了小组，并建了一棵任务树来拆解最难的那条陈述——它自己的 captain 曾给过不到 1% 的完成机会。这一结果并不让领域专用的 harness 或平台变得多余。例如 Prove2Me 仍可能靠帮助 agents 更快编译 Lean、并让它们搜索和复用人类结果来提高效率。人的方向在某些节点仍然有用。Agents 往往会在难题上放弃，并误判难度。早期 helpers 把 60 条陈述里的 47 条判为预算内不可行，团队后来却证明了其中大多数。在这样的时刻给人鼓励，可以避免 agents 过早停下。我们预期这些方法会很快演化；随着这样的团队接手更难的工作，围着它们的安全边界也需要跟上。"
+          },
+          {
+            "kind": "pull",
+            "text": "仔细设计的安全边界，给了我们从头跑这次实验的信心。Claude 可以用我们提供的 tools 按自己选择的方式攻这个问题，但只能待在没有网络访问的 sandbox 里，并处在两套分开的 monitor 之下。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "serhovskyi-harness",
+      "company": "Pantensa",
+      "companyColor": "#6366F1",
+      "column": "工程化实践",
+      "title": "几乎从不看到 auto-compact：harness 从损失里长出来",
+      "originalTitle": "A harness grown from losses",
+      "byline": "Yurii Serhovskyi · Pantensa · 11-08",
+      "sourceUrl": "https://dev.to/serhovskyi/a-harness-grown-from-losses-jg1",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我在 Claude Code 里几乎从不看到 auto-compact 警告。这不是某个设置。我不喜欢 compaction 做的事——对话被一份有损摘要替换，嵌套的 instruction 文件也活不过去——所以工作流被建成：几乎没有 session 会走到自己 context window 的一半。「一半」是观察，不是测量：我留下的记录并不跟踪某个 session 的窗口用到了多大。被记下来的，是 session 周围的一切。Harness 是模型周围、但不是模型的一切。模型生成文本、调用 tools；harness 决定模型在动手之前看见什么、被允许做什么、怎样得知自己错了、以及何时停下。「harness engineering」背后的主张是：环境比 prompt 更能决定 agent 产出什么。我的有五层，每一层在 Pantensa（我一个人做的家庭食品储藏与营养追踪器，打字多半由 agent 完成）的仓库里都有文件：context、permissions、feedback、orchestration，以及对 harness 自身的测试。日期有意义，因为 harness 是在使用中长出来的：第一批五个 hooks 落在 2026 年 8 月 14 日，那次 commit 写着它们「拒绝五次已经在这里发生过的损失」。"
+          },
+          {
+            "kind": "h",
+            "text": "1. Context：自己测量位置，绝不继承"
+          },
+          {
+            "kind": "p",
+            "text": "Session 开始时要陈述树的实际位置——branch、HEAD、已跟踪和未跟踪的文件、相对 main 的分叉——而且要自己测量，因为上一轮 session 写下的交接笔记，读到时已经过期。SessionStart hook `session_state.py` 做这件事。同一文件里还有 memory index 的预算：6144 字节，因为那份文件会载入每个 session，「留在那里的一行是按 turn 付的租金」。Context 是带利息的债。每一 turn 都会重读全部历史——按 2026 年 8 月的 API 文档，缓存大约是基础 input 价的十分之一，但会重读到 session 结束。沉进长寿命窗口的 token 会被付几十次；在扔掉的窗口里烧掉的 token 只付一次。"
+          },
+          {
+            "kind": "h",
+            "text": "2. Permissions：两种裁决，中间那条线是我的"
+          },
+          {
+            "kind": "p",
+            "text": "`guard_bash.py` 在每条 shell 命令之前运行。它的 docstring：「每条规则编码的是这个仓库里已经发生过的损失，不是风格偏好。」它只认识两种裁决。拒绝只用于不可逆的损失——十四条，commit、merge、rebase 和切换分支不在名单上，因为在日常工作上弹确认已被判定为摩擦。十四条之一写着：`git checkout --` 曾经在这个仓库里抹掉过一次未提交的修复。警告用于「会如实作答、但意味的是另一件事」的命令：对未跟踪文件视而不见的计数、不是 390 px 的 viewport、跑在错误地方的 gate。「失明不是损失，所以它从不阻断」；警告出现在引起它的那条命令旁边，那是它唯一有用的时刻。"
+          },
+          {
+            "kind": "h",
+            "text": "3. Feedback：发现要抵达那条命令"
+          },
+          {
+            "kind": "p",
+            "text": "把测试跑进 `tail -5` 是控制器把 runner 的几千行输出挡在窗口外的办法——而管道报告的是 pager 的退出码，所以 `pytest | tail -5` 在红套件上仍退出 0。这已经在这里被读成一次通过，由我本该检查的 session 里的 agent 读成的，而我没有检查。`warn_pipefail.py` 现在在引起它的那条命令上触发，「而不是在 review 里」。一个省 context 的技巧有一种已知的说谎方式，它被一道 hook 堵住，而不是写进 skill 的一条提醒。"
+          },
+          {
+            "kind": "h",
+            "text": "4. Orchestration：每个 token 在哪里烧掉"
+          },
+          {
+            "kind": "p",
+            "text": "长活按 wave 跑。一个 wave 是拆成若干 link 的计划，每个 link 一个全新 session；八月那次 wave 的 registry 开头写着：「link 之间的 memory 是 ledger 和 `git log`，从来不是对话。」三条 skills 承担它——一条审计计划并写 link prompts，一条是单个 link 的控制器，一条只凭 ledger 关闭 link——`.claude/agents/` 下还有八个 reviewer 角色。控制器 skill 的原则就一行：「你的 context 是稀缺资源，ledger 才是你的 memory。」任务 brief 以路径传入，从不粘贴。此前任务的历史也从不粘贴——一次真实 session 走到了 42k 字符的 prompt，其中 99% 是粘贴的历史。diff 作为文件交给 reviewer。报告是文件，控制器只收到四行。套件跑到后台日志，回来的只有摘要行和退出码。subagent 的 transcript 从不被读。compaction 之后，相信 ledger 和 `git log`，不相信回忆。"
+          },
+          {
+            "kind": "p",
+            "text": "控制器从不打开计划。八月 wave 的六份计划共 143 KB；控制器读了零次，脚本拿走路径。skill 的理由：打开计划的控制器「已经开始用这个 link 无法补回的那一份预算，去付两个 subagent 已经拥有的信息」。一份文件进去，四行出来。每个实现者把报告写到磁盘，只回 status、commits、测试数字、caveats。那次 wave 23 个任务的报告在 2026 年 8 月 17 日量过是 353 KB——这些产物后来删了，这个数字站在我的笔记上。到达控制器的是 23 乘以四行。有一个 link 里，单个测试文件一次跑倒出 74 MB stderr；进 context 的是 `tail -5`：五行。审计 gates 的 reviewer 带着对这个技巧的反规则——「三个数字，否则一个都不要：Tests、Test Files、failed」，因为一个失败的文件不会改变总数，于是「N passed」会在红 gate 上读成绿色。那次 wave 预测大约八到九个新测试用例、覆盖 23 个任务；实际落地 22 个：1910 到 1932。registry 写明了分叉：超量来自 review 抓住空证明，不是 scope creep。所有窗口加起来的 token 会比单次长 session 更多；降下来的是那个活着的窗口里的复利成本。ledger 在每个任务之后写入，所以任何窗口都可以死，代价是重复一个任务。"
+          },
+          {
+            "kind": "h",
+            "text": "5. 没有见证的规则"
+          },
+          {
+            "kind": "p",
+            "text": "上面全是 enforcement，而 enforcement 是代码。我站点上的第一篇文章提过两条静默死去的 i18n lint 规则：一次错误配置禁用了它们，lint 却仍是绿的。第五层存在，是因为 hooks 也会以同样方式死去。`test_claude_hooks_are_armed.py` 开头写着原因：「没人注册的规则永远不会开火。没人见证的规则会在无人察觉时停止开火——正是 i18n lint 死去的形状。」它断言：每个 hook 都注册在没有它就没用的 event 和 matcher 上；每个 rule id 恰好携带一种裁决；警告通道不能回答权限提示；每条规则在相邻测试文件里都有一条行为见证，规则被删掉时它会变红。见证的名字类似「十四条拒绝仍然咬人」「无法测量的 hook 什么也不说」。测试用 `ast` 解析 hooks，而不是 grep，因为「这些规则携带的原因会引用它们所拒绝的命令本身，所以对 `decide` 做 grep 会把散文读成代码。」"
+          },
+          {
+            "kind": "p",
+            "text": "这一层的另一半是一个不读代码的 reviewer。gate-evidence auditor 拿到 ledger 和报告，只回答一个问题：「它变红了吗——而且是因为我们所做的事变红的吗？」每个 gate 三个裁决：OURS、NOT OURS、UNPROVEN，「大概没问题」就是 UNPROVEN。如果证明一个 gate 意味着要动树，它不动；它点出命令交回去，因为带配方的未证实裁决，好过伪造的证实。它带着一份十二种 gate 保持沉默的目录，「每一种都在这个仓库里上过线」。"
+          },
+          {
+            "kind": "h",
+            "text": "6. Instructions 也是 context"
+          },
+          {
+            "kind": "p",
+            "text": "skills 本身在第一批 hooks 的前一天，用同样的方式测过。控制器总是给自己找理由钻进计划，一次修复是一张合理化对照表和各自的对策。场景变绿了。删掉这张表再跑也变绿：光秃的规则自己站得住。这张表大约 180 个词，会载入每个 link session，却什么也没买到，所以它现在住在证据文件里，而不在每次 dispatch 时被重读。同一轮的第二个发现：「不要打开计划」会被争辩；「这些是你会打开的文件」不会。一份枚举没有什么可谈判的。所以 harness 不是一份 prompt。hook 在 tool 运行之前拒绝，测试在规则失去见证时变红，两者都不是模型可以拿来和某个理由权衡的文本。一个不能变红的 gate 比没有 gate 更糟，因为它会被相信。没人测试的 harness 会死得像那次 lint 一样——绿色，而且安静。"
+          },
+          {
+            "kind": "pull",
+            "text": "我愿意留下的是事件的顺序：一次损失，然后一条把这次损失写进原因的规则，然后一项规则停止开火就会失败的测试。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "skills-buckets",
+      "company": "社区",
+      "companyColor": "#6366F1",
+      "column": "工程化实践",
+      "title": "团队的 AI 不需要另一份 mega-prompt，它需要 skills",
+      "originalTitle": "Your Team's AI Doesn't Need Another Mega-Prompt. It Needs Skills",
+      "byline": "Nuno Bispo · 11-09",
+      "sourceUrl": "https://developer-service.blog/your-teams-ai-doesnt-need-another-mega-prompt-it-needs-skills/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "你的初级打开 Cursor（或 Claude Code，或 Copilot Chat），要一个新的 FastAPI endpoint。agent 发明一种你从未用过的 response model 形状，跳过 dependency injection，把业务逻辑放进 route。它用 `unittest.mock` 写测试，因为训练数据在 2025 年喜欢这样。你的高级打开同一个仓库，把一份 2,000 token 的「团队规范」糊进聊天，得到更接近家规的东西——直到下周他们忘了粘贴，agent 又开始发明约定。同一份代码库。家规还在某个人脑子里。别再加长 system prompt。写一份 skill：一份小的、会被触发的 instruction 文件，坐在仓级指导和一次性聊天之间，让 agent 在任务匹配时加载对的工作流，而不是等人想起把整份宣言贴进去。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 缺的那一层是 Skills"
+          },
+          {
+            "kind": "p",
+            "text": "你大概已经做了负责任的事：一份 `AGENTS.md`（或 `CLAUDE.md`，或长出牙齿的 `.cursorrules`），告诉每个 agent 永远为真的事实：`uv`、Python 版本、应用住在哪、不要提交 `.env`。然后工作流堆进来。怎么加 FastAPI endpoint、怎么写 Alembic migration、怎么 review PR：这些全进了同一坨，或者从未离开 Slack。任务工作流住在仓级文件里，每次都会发生两件事：agent 拿到一堵和真实任务抢 context 的文字墙；墙的一半与这次请求无关，于是模型连你在意的那一段也一并半忽略。只靠聊天提醒则反过来：只有人想得起打出来才有效。Skills 是缺的那一层：一份聚焦的 playbook，任务匹配触发器时由 agent 加载。加一个 endpoint、改一个 Django model、按你们的格式写 commit：这些都是触发器。你的工具叫它们 Skills、可发现的自定义指令，还是由 markdown 支撑的 slash-commands，并不重要。模式比厂商文件夹名更要紧。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 三个桶：AGENTS.md、Skill、一次性 prompt"
+          },
+          {
+            "kind": "p",
+            "text": "桶放错，就会得到没人信任的 mega-prompt。再写另一份 markdown 之前，先把内容停进三个地方之一。仓级（`AGENTS.md` 或等价物）放永远为真的项目事实：包管理器是 `uv`；Python 3.12；应用在 `src/` 下；永不提交 `.env`；PR 标题格式。Skill 放有明确触发器的可重复工作流：「加一个 FastAPI endpoint」——router 形状、Pydantic models、DI、pytest 布局、什么不许发明。一次性 prompt 只服务这次对话：「重命名这个字段，并在这三个文件里更新调用方。」判定规则：这个仓库里每个请求都该知道 → 仓级；只有这一类任务该知道 → skill；你再也不会需要它 → 聊天，别把它化石化。具体例子：「我们用 `httpx`，不用 `requests`」是仓级；带你们 fixtures 加 endpoint 的 checklist 是 skill；「修 `test_billing.py` 里那个 flaky 测试」留在聊天。如果一份 skill 开始听起来像第二份 `AGENTS.md`，拆开它。如果 `AGENTS.md` 开始像五份 skill 粘在一起，把 skills 抽出去。"
+          },
+          {
+            "kind": "h",
+            "text": "3. Name 要短、像动词、有范围；trigger 写队友会打的词"
+          },
+          {
+            "kind": "p",
+            "text": "一份有用的 skill 有五个部分，缺一块你得到的就更像又一份 prompt，而不是聚焦的 skill。Name 要短、像动词、有范围：用 `fastapi-endpoint`，而不是 `python-helpers` 或 `team-standards`。人靠名字找到它，工具靠名字索引它。如果它能覆盖你一半工程组织，就太宽了——先拆再写正文。Description / trigger 如果含糊，这份 skill 永远不会被加载，或者加载到错误的任务上、烧掉 context。许多 agents 只凭描述做决定。用第三人称写它做什么、何时用，并写上队友实际会打的词：「endpoint」「router」「path operation」。「Helps with Python」不是触发器。"
+          },
+          {
+            "kind": "h",
+            "text": "4. Instructions 只教你们的 deltas"
+          },
+          {
+            "kind": "p",
+            "text": "假定模型已经会 Python、FastAPI 和 pytest。不要再教一遍 HTTP。改教你们的 deltas：routers 住在哪、怎么被 include；schemas 怎么命名（`FooCreate` / `FooRead`，而不是发明 `FooSchema`）；你们的 `Depends` 栈，而不是一篇通用 DI 教程；已经标准化的错误形状；已有的测试布局和 fixtures；你们实际跑的命令（`uv run pytest`）。任务越脆，skill 就要越紧。Code review 可以说原则；migrations 和公开 API 形状需要 checklist 或模板。主文件保持短：长表、完整 OpenAPI 例子、脆弱的 shell 序列，放到 agent 只在需要时打开的链接文件或脚本里。一份 800 行、把用户请求挤出去的 skill 是噪声，不是周全。对 Python 团队，脚本在一致性比散文更重要时才值回票价：宁可「跑这个脚本」，不要「仔细复现这 40 行样板」。Ruff 或 mypy 能强制的，优先交给工具。Skills 用来承载 linter 看不见的判断和结构，不是第二份 `pyproject.toml`。"
+          },
+          {
+            "kind": "h",
+            "text": "5. 写明 Done when 和 Do not"
+          },
+          {
+            "kind": "p",
+            "text": "说清楚「做完」长什么样，以及该拒绝什么。FastAPI endpoint 的 v1 可以是：路由注册在已有 router 上（不要新建 app 实例）；请求/响应模型放在该领域使用的 schemas 模块里；服务逻辑不要内联在 path function 里；至少一条 happy-path 和一条校验失败测试；被改动的测试在 `uv run pytest` 下通过。Do not：引入新的 ORM 或 HTTP client；为数据库 session 加一个全局单例「app state」；发明一套平行的错误响应形状；跳过兄弟路由在用的认证依赖。没有反模式，助人为乐就会变成熵。该进 skill 的是：该工作流的布局约定、有选择时的首选库、输出模板（commits、PRs、ADRs）、要跑的命令、以及明确的非目标。不该进的是：模型已经知道的东西、secrets 和 tokens、属于仓级文件或 linter 的整本风格指南，以及「小心点、一步步想」这类填料。"
+          },
+          {
+            "kind": "h",
+            "text": "6. 它们开始失效的几种方式"
+          },
+          {
+            "kind": "p",
+            "text": "太长：每个 token 都在和用户请求、以及每一份被加载的 skill 竞争。若你需要一部短篇小说，用按需加载（主文件短，细节需要时再打开）。如果样样都「至关重要」，就没有一样是。没有 trigger：正文再锋利，描述含糊也是一份永不加载的文件。把队友会打的词写进描述：「endpoint」「migration」「celery task」「fixture」。伪装成 prompt：只有灵感，没有 checklist、模板或「done when」。agents 在有形状的输出上比在建议上做得更好。与仓级指导矛盾：skill 说 Poetry，`AGENTS.md` 说 `uv`，压力之下 agent 会随便挑。永远为真的事实只有一个家；skills 只负责专门化。大杂烩：一份覆盖 lint、endpoints、Django admin 和 release notes 的 `python-everything`。窄的 skills 可以组合；胖的 skills 按 trigger 拆开。没有主人：没人审它，六个月后它记录的是你们已经迁走的栈。一份没有 owner 的 skill 同样是技术债。"
+          },
+          {
+            "kind": "h",
+            "text": "7. 先交出两三份 skill，不要宣布一个平台"
+          },
+          {
+            "kind": "p",
+            "text": "不要宣布一个「skills 平台」。交出两三份 skill，对准人们已经定期让 agent 做的任务。对 FastAPI/Django 团队，一套好的起步是：endpoint / view 变更；数据模型变更（migrations、约束、什么不要重写）；PR / review 助手（你们的 checklist，而不是一句泛泛的「要仔细」）。把团队 skills 提交进仓库里该工具的项目路径（例如 `.cursor/skills/` 或 `.claude/skills/`），这样 clone 会连代码一起带上它们。个人 skill 目录留给个人偏好，比如 commit 语气、本地工具，而不是房屋架构。像审 runbook 一样用 PR 审 skill，标准等同 CI 配置：如果一位高级在事故里不会信任它，它就不该被合并。合并之后，让第二位工程师冷启动跑触发任务（不粘贴宣言），确认 agent 拉入了 `fastapi-endpoint`。没有引用、却在路由文件里即兴写出 `FooSchema`，意味着 skill 从未加载；先修描述或安装路径，再宣布 rollout 完成。用五行在 `AGENTS.md` 里写明三个桶：永远为真的事实住在这里；工作流住在 skills X/Y/Z；不要粘贴 mega-prompts。每份 skill 一个 owner，起步时写在 PR 描述里一个名字就够。抵制把每一页 wiki 都 skill 化：用不到的 skills 是发现和 context 里的噪声。"
+          },
+          {
+            "kind": "h",
+            "text": "8. 像审 runbook 一样审，并准备杀掉它"
+          },
+          {
+            "kind": "p",
+            "text": "审同事的 skill，像你审一份 runbook：触发器是否会为对的请求加载、否则保持隐蔽？是否只教 deltas，而不是再教一遍框架？与 `AGENTS.md` 或 linters 有没有矛盾？人能不能看出 agent 做没做完？能不能删掉 30% 而不丢掉行为？该杀掉或重写的时刻：一个月没人调用、也没人说得清何时会用；它记录的是你们不再使用的栈；agents 跟着它走，产出的 PR 却总需要同一种人工修补——这份 skill 失败了或不完整；两份 skill 抢同一个 trigger。Skills 是紧挨着代码的过程。如果它们变成死去的过程，那比没有过程更糟，因为它以自信的姿态教错误的默认。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "打开你的 `AGENTS.md`（或等价物）。把任何针对特定任务的 runbook 挪进一份草稿 skill；留下永远为真的事实。",
+              "写一份 FastAPI（或 Django）skill，带锋利的描述、一份 checklist、done-when 和 do-not。",
+              "提 PR。让第二位工程师在不粘贴额外 context 的情况下，请 agent 执行该工作流。",
+              "把这次 PR 和你今天只靠聊天得到的结果做比较。留下起作用的；剪掉 agent 忽略的。"
+            ]
+          },
+          {
+            "kind": "pull",
+            "text": "你不是在让模型变得更聪明。你是在让团队的默认变得可加载：好让初级、高级和 agent 终于在造同样的组件。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "openai-control",
+      "company": "OpenAI",
+      "companyColor": "#10A37F",
+      "column": "工程化实践",
+      "title": "Control Room：在推理层拦住模型输出，最多 35 秒，fail-closed",
+      "originalTitle": "Control Room",
+      "byline": "OpenAI · 11-09",
+      "sourceUrl": "https://openai.com/index/control-room/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "随着模型越来越强，相关的安全和安保风险也越来越大，我们越来越需要能发现潜在问题，并在必要时迅速让模型停下来。为此我们建了 Control Room。它是一套中心系统，用来跟踪我们研究基础设施上的模型工作负载，并在出现安全或安保顾虑时迅速停止它们。它接上每一份研究推理负载，包括用于模型训练和评测的 agentic sampling、数据处理等等。它与我们的 misalignment 监测系统一起工作，并在决定干预以停止或暂停一项作业之后的 35 秒内停止模型输出。它被建成：即使其他系统失败也继续工作；如果 Control Room 自己挂掉，就停止模型输出。Control Room 已经部署在我们的研究基础设施上，那里需求最大。我们对外的模型 serving 栈本质上已经中心化得多，并且具备在需要时迅速下线模型部署的运营能力。"
+          },
+          {
+            "kind": "h",
+            "text": "它如何工作"
+          },
+          {
+            "kind": "p",
+            "text": "Control Room 把几套系统接在一起：workload、inference engine，以及中心化的 Control Room 服务。workload 是正在跑的作业，比如强化学习实验、评测、高通量 sampling 或数据处理。我们要求每一份做 agentic inference 的研究 workload 都关联一份已批准的 safety case。engine 就是模型本身，直接跑在 GPU 上。一份 workload 通常使用一个或多个模型，可能跑在一个或多个不同的 inference engines 上；同一个 engine 也可能被多份不同的 workload 使用。Control Room 服务跟踪作业，并控制它们是否被允许继续生成模型输出。Engines 在履行请求之前向 Control Room 服务核对。如果一项作业已被停止，服务拒绝该请求，从而阻止进一步的输出。"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "启动新作业时，workload 代码向 Control Room 请求一个新的 job_id。",
+              "每当 workload 需要从模型采样 tokens，它向运行该模型的 inference engine 发请求，并附上 job_id。engine 在履行该请求前向 Control Room 申请许可，并把 job_id 一并传上。",
+              "Control Room 检查该作业是否已被终止；如果是，它拒绝这次推理请求。engine 向 workload 的推理请求返回拒绝，从而停止为该作业继续产生模型输出。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "例子：对监测告警做出反应"
+          },
+          {
+            "kind": "p",
+            "text": "我们所有的前沿强化学习作业都带着一个 monitor 跑。monitor 是另一个模型，检查正在被训练的模型所做的一切，并在检测到问题时发出告警。例如，我们最近与 DNS 相关的事故就是被一个 monitor 抓住的。如果监测系统检测到潜在问题，视细节和严重程度，它可能决定停止该作业。此时监测系统向 Control Room 发消息停止该作业，并传上 job_id。Control Room 记录该作业已终止。下一次带有该 job_id 的作业向任何引擎上的任何模型发出推理请求以采样更多 tokens 时，请求会被拒绝，从而停止进一步的模型输出。我们不依赖 workload 代码去正确检查作业是否仍在运行。"
+          },
+          {
+            "kind": "h",
+            "text": "速度与可靠性"
+          },
+          {
+            "kind": "p",
+            "text": "从 Control Room 收到停止一项作业的指令，到进一步进展不再可能，最长间隔是 35 秒。这 35 秒的滞后来自推理授权的缓存层，用以支撑所需的流量。我们正在把这个数字往零推，以便能立刻结束作业。workload（包括实验、评测作业等）通常由研究者或研究团队拥有和运营。因此 workload 代码变化频繁，不是实现关键、承重的安全保护的理想位置。我们的实现因此被设计成能抵御有缺陷或损坏的 workload 代码：终止机制做在推理层。workload 代码高度多样且分散；相比之下，整个 OpenAI 研究里使用的推理代码路径非常少，部署也集中、统一得多。这意味着推理层可以充当瓶颈，我们能得到很强的保证：研究中运行的所有模型推理，每一次推理请求都要经过 Control Room 的授权检查。我们另外持续跑 agentic 和程序化的 sweeps，检查用户没有无意或恶意地拉起未实现或关闭了 Control Room 的 rogue engine 实现。Fail-closed 现在已铺到所有前沿模型研究负载，并将在未来几天内完成对其余研究负载的铺开。"
+          },
+          {
+            "kind": "pull",
+            "text": "我们的系统 fail-closed：引擎里的 Control Room 集成被配成，如果 Control Room 服务因系统错误而挂掉，或因任何其他原因被关闭——包括被恶意行为人篡改——那么在 Control Room 恢复正常运行之前，所有推理请求都会被拒绝。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "replit-microvm",
+      "company": "Replit",
+      "companyColor": "#F26207",
+      "column": "工程化实践",
+      "title": "重写 agent sandbox：microVM 隔离，暖池接手大约 500ms",
+      "originalTitle": "Inside Replit’s New Sandbox Engine, Part 1: The Path to MicroVMs",
+      "byline": "Luis Héctor Chávez et al. · Replit · 11-04",
+      "sourceUrl": "https://frontier.replit.com/sandbox-engine-microvms-part-1/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Agent sandboxes 正流行，隔几周就有一家新 sandbox 创业公司被宣布。在 Replit，我们已经跑 sandboxes 近十年。这些年我们跑着自己的 sandbox 基础设施，让任何人都能在线上写代码；现在 Agents 也用这些 sandboxes 来构建应用，而不要求人会写代码。过去几个月，我们完成了 sandbox engine 的一次完整重写，以提升安全性、能力和跨云可移植性。和多数基础设施工作一样，我们必须在几乎没人察觉的情况下做完这件事。我们顺利迁移了数亿个项目，没有数据丢失。这是 Part 1：我们如何改了隔离边界，并让 sandboxes 保持快。Part 2 会写我们如何在 Kubernetes 上一次编排数万个 microVMs。"
+          },
+          {
+            "kind": "h",
+            "text": "通向 microVMs 的路"
+          },
+          {
+            "kind": "p",
+            "text": "2025 年 11 月，我们动手为更自主的 agents、持久工作区和高得多的并发重写 sandbox 基础设施。到 2 月已经在内部使用，随后几个月做加固和铺开。我们的 sandbox engine 起步很简单：在 Google Compute Engine 虚拟机上铺开的 Docker 无状态代码执行。这些年我们加上了持久工作区、公网端点、缓存的 Nix 包、区域集群，以及带即时 disk fork 的无底存储。要走向 microVMs 时，我们意识到从零开始比把现有运行时从 Docker 迁到 microVMs 容易得多。microVM 是带自己 Linux kernel 和最少虚拟设备的轻量虚拟机。我们用 KVM 把每个 sandbox 与宿主机、以及其他客户的负载分开。容器仍然在每个 sandbox 内部隔离进程；现在由硬件辅助的虚拟化来隔离 sandbox 本身。"
+          },
+          {
+            "kind": "p",
+            "text": "我们选了 Cloud Hypervisor 作为 VMM，它与 Firecracker 共享可复用的 rust-vmm 组件，并带有 virtiofs、透明大页、设备热插拔和 live migration。热插拔和内存快照对我们特别有用：可以把客户的磁盘按需挂到已经在暖池里跑着的 VM 上。每个 microVM 里有一个最小的 init 进程启动、停止和监视其中的容器；宿主机通过 vsock 用 gRPC 与它通信，这条通道不需要 IP 网络。这些是通用的 Linux VM，并不绑在单一的应用构建工作流上。"
+          },
+          {
+            "kind": "h",
+            "text": "安全与隔离"
+          },
+          {
+            "kind": "p",
+            "text": "过去一年出现了大量可导致 Local Privilege Escalation（LPE）的 Linux kernel CVE。我们先前的运行时用 Linux 容器，它们共享宿主机 kernel。那个 kernel 里一个可触达的漏洞，可以让攻击者逃出容器，碰到宿主机上的其他负载、凭证或网络端点。不是每个 kernel CVE 在每种配置下都可利用，但共享 kernel 会让一次成功逃逸的后果大得多。有了 microVMs，攻陷一个 sandbox 的 guest kernel 本身并不会攻陷宿主机 kernel。攻击者还必须跨过虚拟化边界。给每个 sandbox 自己的 kernel，也让我们能支持 Docker 这类需要特权的工具——这些特权我们无法在共享 kernel 的运行时里安全地暴露。新设计里，一个 sandbox 是一台里面跑着最小 runc 容器的 microVM。我们考虑过给每个组件一台 microVM，但判断额外开销不值，且不会实质改变租户隔离模型。虚拟化边界并不让其中每个进程都同样受信任：我们按角色配置 namespaces、seccomp、设备访问和 capabilities。VMM 本身以无特权身份运行，没有 Linux capabilities。"
+          },
+          {
+            "kind": "h",
+            "text": "更小的 kernel，更小的攻击面"
+          },
+          {
+            "kind": "p",
+            "text": "我们的 guest kernel 从 `tinyconfig` 起步，而不是标准发行版配置。我们去掉 microVM 不需要的硬件子系统，包括蓝牙、无线、USB 和显示驱动。你的 coding agent 肯定不需要 Nintendo Switch 手柄。必需的驱动编进内核，guest 初始化时禁用模块加载。我们审计了 2026 年 6 月 1 日到 11 月 4 日公布的 6,211 个 Linux-CNA CVE（记录来自 CVEProject 和 kernel.org）。通过及时合入上游修复或排除受影响代码，我们避开了其中 5,969 个（96.1%）。4,375 个修复（70.4%）甚至在披露之前就落地了，另有 676 个（10.9%）CVE 被配置排除。其中至少 15 个被 Linux CNA 或 Red Hat 明确描述为能够或可能实现 LPE。一个最近的例子是 CVE-2026-98432，Anthropic 演示过这个 Linux TCP 缺陷可以让远程攻击者拿到 root。我们在 10 月 12 日合入了修复后的 kernel，早于该 CVE 公布，也比 Anthropic 描述其 exploit 早两周以上。"
+          },
+          {
+            "kind": "h",
+            "text": "从不信任工作负载"
+          },
+          {
+            "kind": "p",
+            "text": "eBPF 程序观察每个 sandbox 内的进程执行、文件访问和网络活动。Linux Security Modules（LSM）在 kernel 边界提供强制限制的 hooks。两者一起给出细粒度的运行时可见性，并检测、阻断特定的禁止操作。每个 sandbox 有一个安全监视器，同时在 microVM 的宿主机侧和 guest 侧工作。它受监督，崩溃、被篡改或滚动新版本后能自愈并重启。为了保证安全始终在线，我们优化了持续交付管道，安全组件可以在变更合并后不到 15 分钟内，在生产中所有正在运行的 sandbox 上更新并热加载。因为我们在 kernel 层用 eBPF 和 LSM 操作，这也让我们能在主线修复可用之前，针对零日 kernel exploits 快速做临时补救。"
+          },
+          {
+            "kind": "h",
+            "text": "隔离网络，并把凭证留在盒子外面"
+          },
+          {
+            "kind": "p",
+            "text": "每个 sandbox 可以使用相同的私有 IP，因为它有自己的网络命名空间和路由表。Linux 的 virtual routing and forwarding（VRF）把这些重叠网络分开。基线防火墙规则限制对云 metadata 和基础设施地址段的访问。对于带 egress 策略的 sandbox，执行在 guest 之外：宿主机侧的 proxy 在不解密应用载荷的情况下检查 TLS handshake 主机名，过滤 DNS，并拒绝许可路径之外的流量。guest 关不掉这些宿主机侧规则。私有端点隧道同样给工作负载一个本地 socket，同时把凭证留在宿主机上。我们的托管 connectors 使用 credential brokers，把请求转发到 GitHub、Google Docs 这类上游服务。broker 在完成授权之后才附上上游凭证，所以工作负载可以使用服务，却拿不到账户的 API key。它会去掉调用方自带的认证头，并剥离敏感的响应头和 trailer。npm、pip 等包管理器的请求也走 registry firewall。任何安装已知恶意依赖和包的尝试会立刻被拦住。"
+          },
+          {
+            "kind": "h",
+            "text": "无底存储，以及让 sandbox 保持快"
+          },
+          {
+            "kind": "p",
+            "text": "每个 sandbox 的文件系统住在我们的远程块存储服务上，按需取数据。启动一个大工作区并不意味着先下载整个文件系统。为了接入自定义块设备服务，我们写了一个 vhost-user virtio-blk 后端。这个进程跑在 Cloud Hypervisor 旁边，为 guest 处理块 I/O，让远程磁盘看起来像普通的虚拟块设备。它也让我们不再在同一个宿主机 kernel 里管理数百个网络块设备——过去那些意外死锁和节点故障给我们添过很多麻烦。Copy-on-write 存储也让 fork 变得便宜：新磁盘可以引用已有块，并在写入时分叉。要转起一个 sandbox，我们需要启动 Linux kernel、拉取镜像、启动容器、拉起 guest agents。最小 guest kernel 启动很快，暖池让我们把其余大部分工作提前做完。获取一个 sandbox 大约需要 500 ms，包括并行地挂载客户的 volumes 并配置配套服务。这是磁盘已挂上的交接时间；空 VM 的启动要快得多。一次为数万个 sandboxes 做这件事，需要的远不只是暖池。Part 2 会写我们如何在 Kubernetes 上编排这一切。"
+          },
+          {
+            "kind": "pull",
+            "text": "系统已经在生产里健康运行几个月。我们在没有任何中断的情况下迁移了数亿个项目，换来更快的启动时间、更强的隔离，以及演进过的安全原语。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nick-local",
+      "company": "社区",
+      "companyColor": "#64748B",
+      "column": "选读",
+      "title": "本地 coding agents 的石器时代：把计算从笔记本上搬走",
+      "originalTitle": "The Stone Age of Local Coding Agents",
+      "byline": "Nick Rogers · 11-08",
+      "sourceUrl": "https://deadneurons.substack.com/p/the-stone-age-of-local-coding-agents",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "essay",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "10 月 29 日，朝鲜 Lazarus Group 在大约 20 分钟内从 Binance 拿走了 63 亿美元加密货币，刷新人类历史上最大劫案的世界纪录。按 Binance 最初的安全通报，入口是这一类型的经典：一名 DevOps 工程师被攻陷的单台笔记本，给了攻击者一条进入内部服务容器和热钱包签名基础设施的路。就在同一个晚上，全世界几十万软件工程师坐在自己公司的 MacBook 前，打开终端，键入 `claude --dangerously-skip-permissions`。"
+          },
+          {
+            "kind": "p",
+            "text": "想一想这种安排有多滑稽。现代开发者的笔记本，是任何科技公司内部单一价值最高的目标。它握着未上锁的 SSH keys、缓存的 `~/.aws` 生产凭证、一份活的 Kubernetes 配置、已认证的 Slack session、装满 session cookies 的浏览器，以及密码管理器。我们把一个概率语言模型请进这间放满 crown jewels 的房间，递给他一个 bash prompt，并指示它从 npm 和 PyPI 下载任意包、阅读不受信任的仓库文件、执行 shell 脚本直到测试通过。5 年后回看 2026 年这种把自主 coding agents 直接跑在开发者个人笔记本上的习惯，会像回看把生产数据库存在前台桌子底下的塔式电脑一样。我们正处在本地 coding agents 的石器时代。"
+          },
+          {
+            "kind": "h",
+            "text": "权限弹窗的剧场"
+          },
+          {
+            "kind": "p",
+            "text": "如果你审视 2026 年末 4 个主导的终端 coding harnesses（Claude Code、OpenAI 的 Codex CLI、OpenCode，以及 Mario Zechner 的 Pi），可以看到行业正在慢慢发现：笔记本是跑自主工人的错误地点。终端 agents 刚兴起时，默认安全模型是权限弹窗。agent 运行 `rm -rf`、`curl` 或 `npm test` 之前，CLI 停下来让人按 `y`。理论上，这让人还留在 in the loop。实际上，一个 coding agent 一小时跑 200 条 shell 命令。不出 20 分钟，地球上每个开发者都养成了巴甫洛夫式的拇指反射，不看屏幕上任何一个字符就砸回车，最后放弃，加上 `--dangerously-skip-permissions` 或 `--yolo`，好去泡杯茶。"
+          },
+          {
+            "kind": "p",
+            "text": "Mario Zechner 做 Pi 时——它在 10 月越过 115,000 个 GitHub stars 并发布 1.0——他干脆去掉了这场剧场。Pi 的安全文档写得很坦率：Pi 出荷时没有权限弹窗，也没有内置 sandboxing，每一个 `bash`、`read`、`write` 和 `edit` 调用都以启动它的用户的完整权限运行。一旦你让一个 agent 在你的用户账户里编写并执行代码，再对单条命令要许可，就像在游泳池中间拉一条丝绒绳。OpenCode 同样出荷时没有任何操作系统 sandbox，依靠 prompt 级规则，直到你自己用容器把它包起来。"
+          },
+          {
+            "kind": "p",
+            "text": "Anthropic 和 OpenAI 试图在 CLI 上加上操作系统 sandboxes，来补丁本地笔记本问题。Codex CLI 和 Claude Code 现在在 macOS 上用 Apple 的 `sandbox-exec`（Seatbelt）包装 shell 命令，在 Linux 上用 `bubblewrap` 加 `seccomp`。但读 Claude Code sandboxing 文档的细则，本地进程包装器的限度就很明显。第一，内置 sandbox 只包装 Bash tool；内置文件 tools、MCP servers 和生命周期 hooks 仍直接在宿主操作系统上执行。第二，如果一条命令在 sandbox 内失败，或 `bubblewrap` 碰到 Ubuntu AppArmor 限制，harness 可以回退到非沙箱运行，除非你明确锁死组织策略。第三，在 Linux 上，namespace sandboxes 共享宿主机 kernel，而 2026 年 10 月单月就产出了一批 AI 发现的 Linux kernel 提权和容器逃逸缺陷。即便一个完美的本地目录 jail 也没打到点上：为了在你的笔记本上做有用的工作，agent 通常需要网络访问和凭证，这意味着它仍然在与你的个人机器共享一个环境。"
+          },
+          {
+            "kind": "h",
+            "text": "为什么 tmux 在 10 个 agents 时会熔化"
+          },
+          {
+            "kind": "p",
+            "text": "安全只是本地执行走入死胡同的第一个原因。第二个原因是基本的物理：笔记本是为一个人在一个键盘上打字设计的，而 agentic 软件工程是一个并行批处理问题。手写代码时，你一次做一条分支。你改文件 10 分钟，跑编译器 15 秒，看输出。一台 M4 MacBook Pro 对一双人类手指来说算力过剩得厉害。一旦 coding agents 真的能干活，工作单元就从写一个函数变成监督一支舰队。你不想坐着盯一个终端光标以每秒 80 个词往外喷 tokens。你想要 8 个 agents 并行：一个在重构搜索 indexer，一个在修 flaky 的账单测试，一个在升级数据库 migration，还有 5 个在探索同一功能的不同实现。"
+          },
+          {
+            "kind": "p",
+            "text": "试着按 Pi 文档的建议（用 10 个 `tmux` 窗格而不是 sub-agents）在笔记本上并行跑 10 个 coding agents，然后看会发生什么。文件系统和端口碰撞：除非你手动准备 10 个分开的 git worktrees，并即时改写每一份配置文件，这 10 个 agents 会立刻踩在同一棵工作树、同一个 `node_modules`、同一个本地 Postgres，以及同一个 `localhost:3000` 开发服务器端口上。尖刺的计算形态：agent 负载在两个极端之间交替——等云端 LLM 生成推理 tokens 时 45 秒 CPU 为 0%，接着是 12 秒的猛烈爆发，agent 同时跑 `cargo test`、`pnpm build` 和一个无头 Playwright 浏览器。把这乘以笔记本上 10 个并行 agents，风扇听起来像一架 Chinook 直升机起飞，你的 64 GB 统一内存开始往磁盘上 swap，电池会在火车到 Paddington 之前耗尽。笔记本把永久的本地状态耦到固定、没有弹性的计算上。这和一支 coding agent 舰队需要的正好相反。"
+          },
+          {
+            "kind": "h",
+            "text": "持久的状态，短暂的计算"
+          },
+          {
+            "kind": "p",
+            "text": "coding agent 真正想要的，是云上属于它自己的一次性计算机，建立在持久存储与短暂、有弹性的计算的分裂之上。过去一年，一套新的基础设施栈（E2B、Modal Sandboxes、Fly.io Sprites 和 Cloudflare Sandboxes）已经悄悄收敛到这个架构。每个 session 一台硬件隔离的 microVM：agent 不再跑在你笔记本的用户账户里，而是得到一台有自己 kernel 的专用 Linux 虚拟机，通常在 Firecracker microVM（E2B 和 Fly Sprites）或完整 VM sandbox（Modal 于 10 月 1 日普遍可用，现在驱动每一个 Linear Coding Session）里启动。在那台 microVM 里，agent 有完整的 root、自己的 Docker daemon、自己的 `localhost:3000`、自己的 Postgres 实例。如果一个恶意 npm 包执行 `rm -rf /` 或倾倒 `/proc/self/environ`，它摧毁的是一个空盒子，里面没有任何生产凭证。"
+          },
+          {
+            "kind": "p",
+            "text": "盒子外面的 brokered secrets。在 Claude Code 的新云 sessions、Cloudflare Sandboxes 和 E2B 的网络 proxy 里，API keys 和 GitHub tokens 从不住在 sandbox 的环境变量或文件系统里。VM 里的 agent 只看见一个占位符；外部 proxy 按域名 allowlist 检查出站 HTTP 请求，并在链路上注入真正的凭证。即便 agent 被 prompt injection 完全劫持，它也偷不走一把它从未持有的钥匙。半短暂的持久化把计算生命周期与磁盘生命周期分开，免得每次 turn 花 6 分钟跑 `apt-get` 并编译依赖。Modal 挂载持久网络 volumes 并拍下文件系统和内存快照；Fly Sprites 给 Firecracker microVM 接一块持久的 100 GB ext4 磁盘，agent 安静时自动休眠，并在 100 毫秒内醒来；E2B 同时快照文件系统和活的 RAM，在 agent 等人输入时把 microVM 无限期暂停（计算费用为 0 美元），并在 80 毫秒内带着仍在运行的进程恢复。需要测试一个 bug 的 10 种不同打法？在一秒内把 VM 快照 fork 10 次，让 10 个 agents 各自爆到 32 个 vCPU、持续 15 秒，留下赢的那个，扔掉另外 9 个。"
+          },
+          {
+            "kind": "h",
+            "text": "合上笔记本盖"
+          },
+          {
+            "kind": "p",
+            "text": "agents 搬离笔记本之后，最大的变化是人究竟怎么监督这些工作。当 agent 在你 MacBook 的终端窗口里本地跑时，它被链条拴在电脑的物理盖子上。如果你启动一份 20 分钟的重构、合上笔记本去开会、赶飞机或吃晚饭，TCP 连接断开，进程挂起，工作立刻停死。一旦 agent 住在带持久状态的半短暂云 VM 里，session 可以活得比你的笔记本更久。你可以在下午 5:30 从办公桌派出 6 个任务，合上盖子走出大楼。你在地铁上时，其中 4 个 agents 完成了它们的 pull requests，2 个碰到含糊的产品决定，以零计算成本暂停了 microVMs。你从口袋里掏出手机，检查 sandbox 里出来的 diff 或 live preview URL，点一张批准卡片或口述两句转向，microVM 醒来，在你到家前做完工作。OpenAI 的 Codex Cloud 和 Anthropic 的 `claude --cloud` / `--teleport` 是朝这个模型迈出的早期步骤；独立的基础设施层（10 月跨越 30 亿次 sandbox runs 的 Modal，以及 E2B 和 Fly）已经在为其他所有人铺管道。"
+          },
+          {
+            "kind": "pull",
+            "text": "在个人笔记本的 shell 里跑一个自主软件工程师，对 2026 年来说是一次有趣的 hack。编程的未来是一支一次性的云电脑舰队：持久的磁盘，brokered 的钥匙，以及一个从手机上转向它们的监督者。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "google-fvcom",
+      "company": "Google",
+      "companyColor": "#4285F4",
+      "column": "选读",
+      "title": "59 分钟把 40 年 Fortran 海洋模型迁到 Rust：6 个静默 bug，快 1.88 倍",
+      "originalTitle": "Modernizing 40-year-old scientific code with Gemini 4 Argon",
+      "byline": "Dan Gruhl, Prashant Nair · Google · 11-03",
+      "sourceUrl": "https://antigravity.google/blog/modernizing-40-year-old-scientific-code-with-gemini-4-argon/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们在 Google Antigravity 里用 Gemini 4 Argon，把一个 174,000 行 Fortran 沿海海洋模型的核心迁进了 100% memory-safe 的 Rust，用了 59 分钟。一路上，agent 抓住了六个存在了几十年的 bug，把内存占用砍掉一半，并把仿真加快了 1.88 倍。今天我们分享 Antigravity 如何端到端跑完这次迁移，并把工作流作为开源 skill 发布。我们把 Antigravity 建成面向长程工程：agent 需要做的远不只是建议接下来几行代码。"
+          },
+          {
+            "kind": "h",
+            "text": "为什么这么多科学仍跑在 1980 年代的 Fortran 上"
+          },
+          {
+            "kind": "p",
+            "text": "建模物理世界的软件里，仍有惊人的一部分跑在 1970、1980 年代写成的 Fortran 上，包括我们依赖的飓风风暴潮、天气预报和计算物理模型。科学家还在用这些代码库，理由很简单：他们信任它们。几代研究者花了几十年，拿浮标、卫星和实验室数据校准那些文件里的方程。即便单个文件长到 14,000 行固定列 Fortran、带着几百个全局变量，数学仍然成立。没人想去碰它，以免打碎几十年验证过的科学。现代开发工具几乎读不动这些文件。手工移植是残酷的工作：1980 年代 Fortran 里，物理方程和另一时代的硬件变通缠在一起——共享的 `COMMON` 块、从 1 起算的索引技巧、隐式变量类型。一次人工重写要花上几年。更糟的是，人类翻译难免引入细小的 off-by-one，或改变浮点运算顺序。两年后新代码终于能编译，输出数字却对不上原来的 Fortran，团队再花一年去找数学在哪里漂了。"
+          },
+          {
+            "kind": "h",
+            "text": "为什么这需要 Antigravity，而不是聊天窗口"
+          },
+          {
+            "kind": "p",
+            "text": "把遗留仿真的片段贴进聊天窗口行不通。在旧 Fortran 里，一个文件第 4,000 行改动的变量，可以静默改变另外二十个文件使用的全局数组。把仓库切成小块，模型很快失去全局图景。即便有前沿模型，一次完整的代码库迁移也是系统工程，无法只在文本框里完成。agent 需要一个能探索仓库、在终端里编译遗留二进制、编写多文件工作区、跑测试套件、读自己的 stack traces、并排比较二进制输出、跑编译器 profiler 的环境——而不用人在工具之间复制粘贴。这就是我们把 Gemini 4 Argon 和 Google Antigravity 配在一起的原因：Argon 带来开阔的 context window 和深入的数学推理，Antigravity 补上自主执行循环、终端与编译器集成、结构化产物，以及可复用的 skills。"
+          },
+          {
+            "kind": "p",
+            "text": "我们选了 FVCOM（Finite-Volume Community Ocean Model），一套广泛使用的沿海海洋仿真，有 174,774 行 Fortran 90 和 C，分布在 264 个文件里。我们给 Antigravity 的只有一份带四条硬规则的 prompt："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "在整个 Rust workspace 上强制 `#![forbid(unsafe_code)]`，零 `unsafe` 块。",
+              "消除热仿真循环内的堆分配，使用对缓存友好的 Struct-of-Arrays（SoA）布局。",
+              "每个 Rust 文件不超过 400 行，每个模块带可运行的 doc-tests。",
+              "至少 95% 的分支测试覆盖，并在 100 个随机仿真种子上与原 Fortran 的数值输出零差异。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "从这一份 prompt 起，Antigravity 编排了一次跨越三个阶段、历时 59 分钟的自主运行。Stage 0：在终端里做基线采集（11 分钟）。agent 克隆 FVCOM，检查遗留构建标志，用 `gfortran -O3` 编译原来的 Fortran 二进制，并搭起 benchmark harness，记录 100 个随机种子上的 golden 输出、运行时间和内存占用。Stage 1：全仓审计与蓝图产物（3 分钟）。Antigravity 一次扫描仓库里全部 264 个文件，追踪跨文件依赖，跟随每个全局变量如何穿过二维和三维求解循环。在写任何 Rust 之前，它在工作区生成一份六部分的架构蓝图产物，记下遗留代码里的潜伏 bug，并把全局数组整理进干净的 Rust 模块。Stage 2：Rust 移植、闭环自愈和 PGO（45 分钟）。对照蓝图，Antigravity 搭起 Cargo workspace，把核心求解器重写成 13 个 Rust 模块（每个不到 240 行），并在终端里驱动自动验证循环：跑 `cargo test` 和 `cargo clippy`，用 100 个种子对照 Fortran 二进制做 parity，并用 LLVM Profile-Guided Optimization（`llvm-profdata`）对一次实况运行做 profiling。"
+          },
+          {
+            "kind": "h",
+            "text": "59 分钟里发生了什么"
+          },
+          {
+            "kind": "p",
+            "text": "在 3 分钟的蓝图阶段，Argon 同时以系统工程师和物理学家的眼光读代码库。它标出动量求解器里几十年前留下的一条注释：`H1(0) = H1(1)   ! STRANGE WAY TO PREVENT DIVISION BY ZERO`。原代码里，沿海岸线缺失的相邻三角形被索引到单元格 `0`。为避免边界循环除以零，原作者把单元格 `1` 的水深拷进索引 `0`，悄悄把边界数学绑到恰好被编号为 `1` 的那个三角形上。Argon 弄清了这处变通为何存在，并在蓝图产物里设计了干净的边界类型。Fortran 也允许你逃过 Rust 拒绝编译的内存隐患。当 Argon 把 FVCOM 的数组映射进严格的 Rust 类型时，原 Fortran 和 C 代码里的六个真实 bug 立刻浮出：网格构建器在复杂海岸格点上盲目越过 50 列限制，三角形边检查用 32 位精度把三个节点 ID 相乘，会在超过 1,300 个节点的网格上溢出；垂直湍流和动量例程在浅网格上读越界的索引 `0`，并从干涸的陆地单元格拉取未初始化值；一处海水密度例程在未检查数值 undershoot 是否让盐度略微变负的情况下对其开方。"
+          },
+          {
+            "kind": "p",
+            "text": "Rust 模块一旦编译通过，Antigravity 生成了 42 个单元、属性和文档测试——包括用来给物理求解器施压的边缘几何——并在工作区终端里执行它们。第一次测试运行中，37 个单元测试里有 36 个通过。失败的那一个：在只有单层垂直水层的极浅海盆上，垂直通量求解器试图与它下方的水层做插值，撞上了 Rust 的边界检查。因为 Antigravity 在终端和编辑器上跑闭环的 agentic 循环，它没有停下来问人该怎么办。agent 从测试运行器捕获 panic trace，打开垂直求解器模块，为单层网格加上守卫，再跑 `cargo test`。数秒后，全部 42 个测试通过，分支覆盖 96.8%。Antigravity 随后对 Fortran 基线启动 A/B parity harness，覆盖 100 个随机仿真种子，第一次尝试就在全部 100 次运行上匹配到 12 位小数（3.91 × 10⁻¹³）。"
+          },
+          {
+            "kind": "p",
+            "text": "每完成一轮优化，Antigravity 都记下运行时间和内存遥测，并在工作区生成一份独立的交互 HTML 记分卡。遗留 Fortran 90 / C（`-O3`）基线：883 ms，1.00x，峰值内存 11.84 MB。习惯用法的安全 Rust：682 ms，1.29x，6.39 MB（`#![forbid(unsafe_code)]`，零全局，带边界检查的 slices）。SoA 且循环内零分配：548 ms，1.61x，5.83 MB（预分配工作区，替换每个时间步的 24 次堆分配）。LLVM Profile-Guided Optimization：469 ms，1.88x，5.48 MB（按 profile 引导的分支布局与向量化，内存少 54%）。最大的一跳来自 Argon 在二维 Runge-Kutta 循环里发现的瓶颈：原 Fortran 每个时间步分配并释放八个临时堆数组 24 次。把它们搬进预分配的 Struct-of-Arrays 工作区，再加上 Antigravity 对一次实况仿真轨迹自动跑 LLVM PGO，运行时间几乎砍半，内存占用下降 54%。我们把这套多阶段工作流打成 Google Skills 仓库里的开源 skill，安装后一条命令即可在任意仓库上跑完整条管道：`/migrate-to-rust <github-repo-url>`。"
+          },
+          {
+            "kind": "pull",
+            "text": "有了 Google Antigravity 里的 Gemini 4 Argon，团队可以在一个下午把这些工作带往前走，保住完全相同的数学，同时在安全、现代的 Rust 里跑得几乎快一倍。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anth-electronics",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "选读",
+      "title": "Claude 端到端设计三款电子设备：PCB Gym 从 25% 到 69%",
+      "originalTitle": "Testing Claude on real-world electronics design",
+      "byline": "Anthropic · 11-09",
+      "sourceUrl": "https://www.anthropic.com/research/claude-electronics-design",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "一年多以前，我们开始测试 Claude 能多好地设计基本电子电路。我们与设计并制造电路板的 Diode Computers 合作，训练 Claude 做简单任务——比如读一颗芯片的 datasheet，并算出这颗芯片运行需要哪些零件。那时我们实验的模型还不能可靠地布置一块电路板；它们也难以设计能装配在一起的部件。现在，Claude 可以从头到尾设计和制作电子硬件原型。"
+          },
+          {
+            "kind": "p",
+            "text": "为了看更新的 Claude 模型在这方面改进了多少，我们再次与 Diode 合作，请 Claude Fable 5.2 设计三款电子设备：一款 speakerphone、一个语音助手 hub，以及一个手持虚拟宠物。在极少的 prompting 下，Claude 能用几何推理布置每块电路板，预判制造约束，并确保设计能在这些约束内工作。它修订自己的工作，在 CAD 软件里建模，最后指导人类工程师做出电路无需返工就能工作的原型。每个设计开始时，我们只给 Claude 一份简单 prompt，勾勒要做什么设备及其主要硬件要求。以 speakerphone 为例，prompt 要求「一个通过 USB-C 插入电脑的 puck，包含麦克风和扬声器，支持带 PCB 天线的 Bluetooth」。Claude 接着写设备规格、画出干净的可视化原理图、选择元件在 PCB 上的位置、布铜线连接、设计可 3D 打印的外壳、编写固件，并准备零件清单。Diode 在 Claude 的指导下组装电路板并跑固件。最终结果是一款用了数周仍然工作的 speakerphone 原型。语音助手 hub 和虚拟宠物也仍状态良好。"
+          },
+          {
+            "kind": "h",
+            "text": "几何问题上的推理"
+          },
+          {
+            "kind": "p",
+            "text": "Fable 5.2 与我们早期测试所用模型之间，最实质的差别在于它处理复杂几何问题的能力，比如把元件放在电路板的哪里、以及如何在它们之间布铜线连接。早期模型难以决定如何安排基本元件——比如把配套零件放得离它们服务的芯片太远，或把连接器方向放错。Fable 5.2 则做出更紧凑、更实用的布局。它先布最重要的连接：承载高速信号或大电流的，或对噪声敏感的。为了展示差距，我们请 Diode 跑 PCB Gym——一份内部 benchmark，按模型在布局被去掉的板设计上放置元件并重新布线的表现打分。Fable 5.2 得了 69%，Fable 5 是 25%。它在公开 benchmark BenchCAD 2.1 上也更好：Fable 5.2 得了 83.5%，几乎是前代 Claude Fable 5.1 的两倍。"
+          },
+          {
+            "kind": "h",
+            "text": "修订设计"
+          },
+          {
+            "kind": "p",
+            "text": "早期模型在设计 PCB 布局时很少修订自己的工作，即使已经清楚它们的放置选择永远无法完成布线。过去一年，Diode 用这些模型设计了许多完成了 95%、却仍然不能用的板。当 Claude 发现自己的某个设计行不通时，它会在未被要求的情况下改道。设计 speakerphone 的四层电路板时，它把信号重新分配到两颗芯片的不同引脚，让触摸控件下方的走线留在单层且互不交叉。后来板背面太挤，Claude 交换了可互换引脚上的信号，并重新布置了整块板的一角，而不是用层间额外跳跃来打补丁。在为语音助手 hub 的设计文件里布线时，Claude 注意到铜连接「缠得没法用眼睛跟着走」，并推理「我应该把这些 traces（走线）扯掉，从头来过」。它删掉并重新布线数十次，直到找到能用的安排。"
+          },
+          {
+            "kind": "h",
+            "text": "自写 router，并守住下游约束"
+          },
+          {
+            "kind": "p",
+            "text": "为语音助手 hub 布线时，Claude 先用 Diode 提供的设计软件，运行 KiCad 内置的 router。KiCad 的 router 一次在 Claude 选定的两点之间画一条走线。但这个 hub 有从 100 针连接器拉出的长走线，Claude 判断一条一条布需要太多逐步指导。于是 Claude 写了自己的 router：一个把板分成网格、并搜索每条走线清晰路径的算法。大约半小时内，Claude 有了一个能在大约一秒内布好每条长走线的 router。当它发现一条音频时钟走线离 Ethernet 走线太近时，它调整了 router，给敏感走线留出更多空间。设计外壳时，它写代码检查电路板的 3D 模型能否在外壳内放下、元件不碰撞。它发现 speakerphone 的板不能直线放进外壳，因为静音开关会撞到后壁；Claude 算出安装时倾斜约 25 度就能放下，在 3D 模型里测试了这一步，并写进装配说明。"
+          },
+          {
+            "kind": "h",
+            "text": "为真实制造而设计"
+          },
+          {
+            "kind": "p",
+            "text": "Claude 自己跑了 design-for-manufacturing（DFM）检查和 sourcing 检查，并把结果分成需要修复的问题和可以忽略的标记。语音助手 hub 的检查标出六条过薄、无法制造的阻焊层（solder mask）细条；Claude 加宽阻焊开口修复了它们，没有移动任何零件。检查还把两处地之间的连接标成错误，因为自动检查器没认出这是有意的；Claude 正确推断这不影响性能，并忽略了该标记。Diode 直接从 Claude 的设计文件制造了全部三块板，没有任何来回调整。工厂和工程师常常要经过多轮制造变更，Diode 团队说，他们惊讶于这次不必这样做。"
+          },
+          {
+            "kind": "pull",
+            "text": "过去一年里，Claude 在元件放置和布线决策上的推理有了实质进步，现在能在极少的人工指导下设计电子产品，并帮助人做出原型。"
+          },
+          {
+            "kind": "aside",
+            "text": "这三款设备仍是原型：它们没有经过电气验证、天线调谐、热测试或认证，也不是为量产设计的。Claude 没有接到测试设备或制造、组装电路板的机器，所以 Diode 的工程师必须亲手制作和测试原型。Anthropic 与 Diode 有商业关系。"
+          }
+        ]
+      }
+    }
+  ]
+}
