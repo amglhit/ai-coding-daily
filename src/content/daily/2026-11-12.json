@@ -1,0 +1,730 @@
+{
+  "title": "AI Coding 日报 · 2026-11-12（周四）",
+  "date": "2026-11-12",
+  "type": "daily",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [
+    "curative-provider-network-agents",
+    "antigravity-carbon-swarm"
+  ],
+  "masthead": "11 月 12 日 · AI Coding 日报",
+  "stories": [
+    {
+      "id": "curative-provider-network-agents",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "工程化实践",
+      "title": "Curative 用 Gwen 签全国网络：速度约为 2025 年的 50 倍，每周 2,000–2,400 份",
+      "originalTitle": "How Curative is building a national provider network with agents on Claude",
+      "byline": "Camy Pearson, Michael Segner · 11-10",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Curative 向雇主出售医疗保险。它起步是实验室创业公司，按他们的内部估计，一度处理了美国全部 COVID-19 检测的 10%，随后几乎和全国每家保险公司都打过交道。来自英国的创始人想做一个以预防为中心的 payer，却大大低估了建一条全国网络有多难。CEO Fred Turner 说："
+          },
+          {
+            "kind": "quote",
+            "text": "去年我们签了 2,100 份合约，是前一年的两倍，但按一年 2,000 份算，我们意识到这仍是一条要建 30 年的网络。全国性网络只有少数几家，不是没有原因的，而且它们都是大约 30 年前建起来的。"
+          },
+          {
+            "kind": "p",
+            "text": "只靠加人填不上这么大的缺口。他们的办法是 Gwen：一个 agent 从初次接触做到签字，一次只做一单医疗服务提供者的交易；周围还有更小的 agents，负责审核费率、检查消息、回答问题，并把非标准定价升级给人工。Curative 在 Claude 上用一层套一层的 agents，把签约速度做到大约相当于其团队 2025 年的 50 倍。Gwen 已签下 23,000 份医疗服务提供者合约，每周新增 2,000 到 2,400 份，而 2025 年全年是 2,100 份。"
+          },
+          {
+            "kind": "h",
+            "text": "Gwen：签医疗服务提供者合约的 agent"
+          },
+          {
+            "kind": "p",
+            "text": "Gwen 做 inbound 也做 outbound。每次 run 只处理一家医疗服务提供者，主要跑在 Claude Opus 上，这样其他交易的内容不会影响它。如果诊所在网站上填了表格，Gwen 会调研这家机构，按买来的 claims 数据集、以及 payer 现在被要求公开的 price-transparency files 给出建议费率，并把这些市场费率数据展示给对方。rate reviewer 跑在 Sonnet 上：Gwen 若想超出标准费率模板，要写出理由，由 reviewer 判断费率是否合理。Sonnet rate reviewer 大约放行三分之二的请求，非标准的交给 Fred 审批。Fred 说，很长一段时间里，Gwen 想把费率提到模板以上，都要进一个很大的审批队列，后来他们逐步放松了；「让第二个 agent 来 review 费率，比直接给 Gwen 更大权限更好。」他现在看到的请求，「来自大型医疗集团，或一些就算不是 agent 主导也会交到我这里的奇怪要求。」"
+          },
+          {
+            "kind": "p",
+            "text": "Outbound 更需要坚持：有些医疗服务提供者的回复，要等到第十四封邮件和第九份 fax。一个跑在 Haiku 上的 judge，会在每封外发通讯发出前审一遍。加上它，是因为 Gwen 曾把内部备注——它最高能出到多少——抄送给了医疗服务提供者。被拦住的消息会带着原因退回，Gwen 可以改写再试。每份合约大约要 2,000 万 tokens 才能完成，大致是原先成本的十分之一。从填表到签字，最快可以只要一小时。谈判中，Gwen 对照 Curative 的政策文件检查诊所的 redline，再写 Python，把双方改动合并进最终文件。签完后，单独的 credentialing agent 核验执照，其他 agents 载入该机构的数据和合约，好让 claims 按合约计价。这些效率让他们能签下大型网络常常忽略的小型机构。Fred 说：「无论你是大型医院系统，还是单独开业的医生，这个 agent 都会给你同样程度的关注。」「在那个 agent 看来，这家机构就是它唯一的焦点。」"
+          },
+          {
+            "kind": "p",
+            "text": "签约团队在 Gwen 上线后从 45 人增加到大约 55 人，每人的产出大约是原来的 2.5 倍。他们把冷触达和文书交给 Gwen，自己电话跟进已有温度的线索。Curative 也按 Gwen 谈成的单给签约团队计酬，这样人和 agents 对着同一个目标。Fred 说：「人的工作更多地变成关系，而不是文书。」他也认为，更快的签约能帮助小型诊所保持独立：「如果你新开一家诊所，进网络和认证要花三个月，那这三个月你就是收不到钱。」Gwen 不是 Curative 唯一的 agent。另一个基于 Opus 的 agent Brad，主要帮通过经纪人向雇主销售保险计划：跟进每一份报价，并从核保人过去要手工清洗的 spreadsheet 里抽出员工数据。用人和 agent 组队，Curative 现在能在 30 分钟内回复邮件或 fax 来的 claims 争议，并附上一封针对该笔 claim 的信。Fred 说：「Claims 争议回复过去大约要 90 天，现在邮件或 fax 不到 30 分钟。」多数 payer 用套好的模板，通常解释不清到底怎么回事；现在医疗服务提供者会收到一封针对该笔 claim 的定制信，说明具体情况、正在发生什么、以及原因。这些 agents 都跑在 13 名工程师今年用 Claude Code 重建的定制 claims、prior authorization 和财务系统上。团队曾经把单建一套 claims 系统估成 100 个工程师年。Fred 说：「我们不是要把这些 agents 插进一套 claims 系统里。」「这套 claims 系统是跑在 AWS 上的 Python，有 MCP，也有 API，是 Claude 写的，所以它懂。」"
+          },
+          {
+            "kind": "h",
+            "text": "Curative 从与人谈判的 agents 上学到的"
+          },
+          {
+            "kind": "h",
+            "text": "1. 从一种通用工具开始"
+          },
+          {
+            "kind": "p",
+            "text": "Fred 说，一开始他们想着「我们会有各种 tools」，这不太好用，因为 redlining 相当复杂。「我们发现最好用的是：模型只有一个 tool，就是 run Python，用 docx 库做全部 redlining。效果非常好。」"
+          },
+          {
+            "kind": "h",
+            "text": "2. 在对方用的渠道上见人"
+          },
+          {
+            "kind": "p",
+            "text": "一个 fax tool 让 Gwen 的 win rate 提高到原来的两倍以上。许多医疗服务提供者现在会在打印出的 fax 上手写，再传真回来。CTO Isaac Turner 说：「这是在他们所在的地方见他们。」「是的，他们有 email，但他们真正习惯的是 fax。」"
+          },
+          {
+            "kind": "h",
+            "text": "3. 每次 run 保持隔离"
+          },
+          {
+            "kind": "p",
+            "text": "一次 Gwen run 只看见一家医疗服务提供者，跨交易不留记忆。销售 agent Brad 会保留 memories，这能用，但需要小心。Fred 说：「你可能记下错误的笔记，然后掉进 doom loops：一段坏的 memory 永远清不掉。」"
+          },
+          {
+            "kind": "h",
+            "text": "4. 在 run 之外改进系统"
+          },
+          {
+            "kind": "p",
+            "text": "每隔几天，Fred 给 Claude Code 同一个 prompt：抽样最近 10,000 次 run，标出异常，并开一个 PR 来修。他说：「改进循环来自用 Claude Code 跑过大量历史对话，并问怎么才能做得更好。」"
+          },
+          {
+            "kind": "h",
+            "text": "5. 先在远离 PHI 的地方做实验"
+          },
+          {
+            "kind": "p",
+            "text": "很长一段时间，Gwen 被禁止接触 protected health information（PHI），所以早期失误发生在风险更低的环境里。现在 agents 会接触 PHI 的地方，后端控制限制什么能进入对话，agent 活动会记日志以供审计。Fred 说：「我们在那里学会了怎么做，再转进 PHI land。」签署 Business Associate Agreements（BAA）——HIPAA 要求供应商在处理 PHI 之前签署的合约——也变得更容易了。Isaac 说：「Anthropic 尤其擅长很快推出最新服务的 HIPAA 合规版本。」「尽管受监管，我们也能很快用上这些新技术。」"
+          },
+          {
+            "kind": "h",
+            "text": "6. 盯住 agent 自己开始做的事，确认它符合你的风险偏好"
+          },
+          {
+            "kind": "p",
+            "text": "当医疗服务提供者要一份对内传阅的 flyer 时，Gwen 用它的 Python tool 做了一份，并没有政策要求它这样做。当一家网络内诊所的前台把一名成员拒之门外时，Gwen 要求诊所培训员工，并随后确认该成员进了门。"
+          },
+          {
+            "kind": "h",
+            "text": "Curative 接下来要去的地方"
+          },
+          {
+            "kind": "p",
+            "text": "接下来，Curative 计划把 agents 带到 care navigation，扩大那 130 位引导和辅导成员的人的覆盖。Fred 也预期医疗服务提供者一侧会出现 agents。很大一部分 claims 争议看起来已经是 agents 写的，他希望医疗服务提供者也用 agents 来谈合约。他说：「存在一个 clearing price（出清价格），你越快找到它，大家就越能去把护理做下去。」"
+          },
+          {
+            "kind": "p",
+            "text": "agent 一开始该有多大权限？「比你以为它能驾驭的更小。」Gwen 起初对任何高于模板的费率都走人工审批队列。Curative 按步骤、并针对更确定性的决定放松限制，然后加上 rate reviewer，Fred 仍审批它没有放行的请求。agent 搞错了怎么办？先做好准备，并和另一种选择比较。审计几十万条消息？全部记日志，给每条外发消息加上 judge agent，再用 Claude Code 抽样这些 run。"
+          },
+          {
+            "kind": "pull",
+            "text": "标准不是完美。标准是：如果你有一千人在签合约，他们会犯多少让你后悔的错？\nThe bar isn’t perfect. The bar is, if you had a thousand people signing contracts, how many mistakes would they make that you regret?"
+          },
+          {
+            "kind": "aside",
+            "text": "「一度处理了美国全部 COVID-19 检测的 10%」来自他们的内部估计。「很大一部分 claims 争议看起来已经是 agents 写的」是 Fred 的观察，不是测得的比例。把单建一套 claims 系统估成 100 个工程师年，是当时的规模估算，不是已经省下的工时。文中写每份合约「大致是原先成本的十分之一」，没有给出金额。"
+          }
+        ]
+      },
+      "sourceUrl": "https://claude.com/resources/articles/how-curative-is-building-a-national-provider-network-with-agents-on-claude",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "antigravity-carbon-swarm",
+      "company": "Google",
+      "companyColor": "#4285F4",
+      "column": "工程化实践",
+      "title": "Antigravity 上线 `/swarm`：隔离 git worktrees，adversarial verifiers 挑战 diffs",
+      "originalTitle": "Gemini 4 Carbon and /swarm",
+      "byline": "The Antigravity Team · 11-10",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "今天，我们在 Google Antigravity 里上线 Gemini 4 Carbon，并同时推出 `/swarm`（preview），把我们在长周期软件工程、知识工作、科学发现和网络安全上最强的模型，与原生的 multi-agent 团队编排配在一起。"
+          },
+          {
+            "kind": "h",
+            "text": "用 `/swarm` 让 Gemini 4 Carbon 投入工作"
+          },
+          {
+            "kind": "p",
+            "text": "单 agent 做范围明确的任务没问题，可一旦改动横跨几十个文件和测试套件，就会撑不住。dynamic subagents 把它演变成由主 agent 派出隔离的 helper agents：把一次性任务交出去很有用，但仍然卡在单一 coordinator 的 context 上——每一步都要由它审、汇总、再分发。有了 `/swarm`，在 Antigravity 里工作就变成编排一套会并行计划、构建和核验的专门 agents。"
+          },
+          {
+            "kind": "p",
+            "text": "与其走脆弱的层级链、让 context 一路衰减，`/swarm` 把你的 prompt 交给一组 agents：coordinator 在隔离的 git worktrees 里拉起专门的并行 workers，编辑不会互相撞上；另有专门跑测试、挑战 diffs 的 adversarial verifiers。每个 agent 都直接在一块共享、只追加的 message board 上协作，空闲时停在零 token 成本，一旦有 agent 需要输入就立刻激活。"
+          },
+          {
+            "kind": "p",
+            "text": "为了让 multi-agent 执行透明，而不是不透明的黑箱，`/swarm` 在 Antigravity 侧栏里内置了 Swarm UI（在 CLI 里也可以用 `/swarm board` 或 Alt + S 打开全屏实时 terminal board）。你可以在 Board feed 上实时看 agent 团队争论取舍，检查实时的 tool 活动，或从 Members roster 跳进某个 agent 的轨迹去 steer 它，也可以在可交互的 Graph timeline 上前后拖看，了解团队怎样从最初的 brief 收敛到已核验的代码。"
+          },
+          {
+            "kind": "p",
+            "text": "因为 swarm 里的 agents 可以被 pin 到不同模型，你能按角色匹配模型的能力。Gemini 4 Argon 对大多数高阶工程和知识工作任务仍是理想选择；Carbon 则被做成更彻底地探索、更深入地推理，并用更多 tokens 跑延长的核验循环（在 CursorBench 4.0 和 Perplexity 的 WANDR 上排第 1）。因此 Carbon 适合高杠杆的 coordinator、架构、网络安全审计和对抗式核验角色，更轻、更快的模型则负责并行改文件和常规实现任务。"
+          },
+          {
+            "kind": "p",
+            "text": "在 Google 内部，`/swarm` 做了五周内部 dogfooding。工程师用 swarms 处理过棘手的跨包迁移、跨子系统的根因排查，以及复杂的架构重设计。"
+          },
+          {
+            "kind": "pull",
+            "text": "当你的雄心已经超出单次对话，`/swarm` 加上 Gemini 4 Carbon，会在你的键盘后面放上一整支 multi-agent 团队。"
+          },
+          {
+            "kind": "p",
+            "text": "即日起，Google AI Ultra 订阅者可以在 Antigravity App、Antigravity CLI 和 Antigravity IDE extensions 里使用 Gemini 4 Carbon；`/swarm` 以 preview 在 Antigravity App 和 CLI 上线。企业可在 Gemini for business 使用 Carbon。科学家和研究人员可以申请，有机会通过 Antigravity 的最高用量档免费使用 Argon 和 Carbon，为期 6 个月。"
+          },
+          {
+            "kind": "aside",
+            "text": "需要提醒的是：即便有空闲时的零 token 等待，以及动态的模型 hot-swapping，并行 multi-agent 系统消耗 quota 仍比一次标准 chat 快得多。"
+          }
+        ]
+      },
+      "sourceUrl": "https://antigravity.google/blog/gemini-4-carbon-in-google-antigravity/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ms-hosted-agents-novo-foundry",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "工程化实践",
+      "title": "Novo 临床试验分析 agent 迁到 Foundry hosted agents：按 session 做 VM 隔离，同一套 SME eval 跟着走",
+      "originalTitle": "From custom infrastructure to hosted agents",
+      "byline": "Casimir Wierzynski, Jon Malsan · 11-11",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "临床研究很少止步于试验方案里写好的问题。医学专家还会从新的角度探索数据：检验一个假设、比较患者人群、把趋势可视化，或找出值得继续研究的方向。作为一次 forward-deployed engineering 合作，微软与 Novo Nordisk 的联合开发团队做了一个 agent，帮助医学专家对临床试验数据做这类二次分析。最近，我们把这套方案重新实现为 Microsoft Foundry 里的 hosted agent。这次迁移带来了更简单的运营模型、更强的 session 隔离，以及一条直接进入 Foundry 的 tracing、evaluation、experimentation、optimization 和 governance 能力的路径。它也让我们学到了基础设施规划、可观测性，以及如何保住那个已经让 agent 随时间变好的学习闭环。"
+          },
+          {
+            "kind": "h",
+            "text": "面向没有固定流程的问题的 agent"
+          },
+          {
+            "kind": "p",
+            "text": "临床数据的二次分析很适合交给 agent，因为执行路径高度依赖于问题本身。agent 会理解请求、查看现有数据、编写并执行分析代码、检查结果，而且常常在返回摘要和可视化之前调整做法。Novo 的 Sid Prabhu（Senior Director, Head of FounData AI Application）这样说："
+          },
+          {
+            "kind": "quote",
+            "text": "重新做架构帮我们把注意力放在真正重要的事情上：让医学专家探索临床数据，并产出支撑药物研发的洞察。有了托管的伸缩和相互隔离的分析 session，我们能更快地把可靠、安全的 agent 体验交给数千名研究者，而不必自己把基础设施全建起来、全运起来。"
+          },
+          {
+            "kind": "p",
+            "text": "这不是给单个 API 套一层聊天界面。agent 需要推理循环，需要用到领域相关的 skills，也需要处理数据的 tools。在我们的实现里，代码执行是核心 tool：agent 在受控环境里生成分析代码和可视化，周围的应用负责管理对话并把结果呈现给用户。我们的第一套生产架构把 agent 跑在 Azure Container Apps 上，用 PostgreSQL 存对话，用 Azure Container Apps dynamic sessions 做沙箱化的代码执行。这套架构让我们对每个组件都有明确控制，也证明了这个用例的价值。但这也意味着团队要自己承担 agent 周围的大量平台工作：容器伸缩、session 生命周期、对话持久化、执行隔离、网络、telemetry，以及它们之间的集成。Foundry hosted agents 提供了更简单的责任划分。"
+          },
+          {
+            "kind": "h",
+            "text": "把运行时边界迁进 Foundry"
+          },
+          {
+            "kind": "p",
+            "text": "hosted agent 是我们的代码，打成容器，跑在 Foundry Agent Service 管理的基础设施上。我们仍然控制编排逻辑、模型、tools 和运行时行为。Foundry 管理它周围的端点、agent 身份、session 计算、状态持久化、伸缩和生命周期。运行时，每个 session 获得自己的 VM-isolated sandbox。Foundry 按需供给计算，session 在使用时保持活跃，并在配置的空闲期之后回收。session 文件可以持久化，并在 session 恢复时还原。伸缩跟随活跃 session，而不是我们必须预先估计并配置的副本数。对 Novo 的负载来说，这与我们要服务的工作单元一致：一位专家，一次分析 session。它也在四个重要方面改变了架构："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "伸缩变成 session-native。我们不再需要把应用层的 session 创建，接到另一套单独伸缩的执行环境池上。平台接管这个生命周期。",
+              "隔离成为默认的执行单元。每个 session 跑在 VM-isolated sandbox 里，而不是与其他 session 共享一个进程或通用应用容器。当负载包含模型生成的代码、并且在处理敏感临床数据时，这一点很重要。",
+              "网络隔离成为服务架构的一部分。Foundry Agent Service 支持私有网络，包括虚拟网络集成，以及对所依赖 Azure 资源的私有访问。这让我们可以围绕 agent 环境设计入站和出站控制，对必须留在批准网络边界内的数据尤其重要。",
+              "agent 进入了更完整的开发生命周期。traces、evaluations、experiments、monitoring 和 optimization 可以在同一平台上接通。Microsoft Agent 365 的集成也提供了通往企业库存、身份、访问控制和生命周期 governance 的路径。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "使用 Foundry hosted agents 并没有卸掉我们对安全和质量的责任。我们仍然要定义访问控制，最小化并保护 telemetry，按我们的用例测试 agent，并审查它能调用的每一个系统。变化在于：先前要我们自己拼起来的若干控制，现在成了可以配置、并能一致运营的平台能力。Novo 的 Rasmus S Andersen（Associate Director, Products and AI, FounData）这样说："
+          },
+          {
+            "kind": "quote",
+            "text": "对我们来说，agent 的质量至关重要，而且必须可度量。我们现在能把 tracing 和 evaluation 接起来，从而诊断失败、对照专家验证过的答案度量质量，并持续改进这个 agent。数据保护同样是根本：session 隔离和私有网络提供了关键控制。这些能力合在一起，让我们能以更系统的方式，基于我们内部的专业能力持续改进 agent，同时沿用已有的强数据控制。"
+          },
+          {
+            "kind": "h",
+            "text": "Lesson 1：把基础设施选择当成产品决策"
+          },
+          {
+            "kind": "p",
+            "text": "私有网络应该是早期的架构决策，而不是留到最后才做的生产加固。hosted agents 按 session 消耗网络容量。Foundry 账户、其下的 projects、hosted agents、并发 session，以及 agent 的 revisions，都会占用 IP。因为所分配的子网在账户级是不可变引用，子网过小会把一次容量调整变成更大规模的基础设施迁移。我们的建议是：估算整个账户的峰值并发 session，为部署和增长留出余量，并在创建 Foundry 资源之前就把网络团队拉进来。当前的网络指引建议生产环境的 hosted agent 部署使用 /24 子网，并把 /27 记为较小部署的受支持下限。子网大小、数据库吞吐量、私有端点、DNS 和并发并不是彼此分离的基础设施细节。它们共同决定产品的规模上限和可靠性。"
+          },
+          {
+            "kind": "h",
+            "text": "Lesson 2：让 traces 好查"
+          },
+          {
+            "kind": "p",
+            "text": "Foundry 的 tracing 使用 OpenTelemetry，并把 telemetry 存进 Azure Monitor Application Insights。它可以捕获用户输入、agent 输出、模型调用、tool 活动、token 用量和延迟。这给了我们理解可靠性和 agent 行为的原始材料。迁移期间，我们把 agent traces 同时送到 Application Insights 和 Langfuse。保留原有的 telemetry 路径，让团队在把 agent 接到 Foundry 的可观测能力时，仍有连续性。工程师需要能迅速从一条报过来的问题，走到相关的那次交互：用户问了什么，agent 回了什么，这次 run 产生了多少操作，花了多长时间，消耗了多少 tokens。稳定的 user、session、conversation、agent-version 和 trace 标识符，让这些视图可搜索，并把前端、后端、agent 和 tools 上的活动连起来。对不该记录的内容也要同样有意识。Foundry 的 tracing 指引指出，traces 可以包含 prompts、输出、tool 参数和 tool 结果。对临床负载来说，telemetry 需要和其他敏感生产数据一样的访问控制、最小化、脱敏和保留纪律。"
+          },
+          {
+            "kind": "h",
+            "text": "Lesson 3：迁移时保住学习闭环"
+          },
+          {
+            "kind": "p",
+            "text": "我们保持后端契约稳定，这让迁移容易了很多。我们的 evaluation 框架可以通过以前同一套接口调用 Foundry 托管的实现，所以搬运行时并不需要围绕它重建质量体系。我们可以继续用同一套 evaluation set 跑这个 agent，并用同一套 graders 评分，其中包括与学科专家提供的 golden answers 的比较。得到的分数给了我们一次迁移的基线，用来防止回归，也指出在 instructions、tools 或编排上的改动改进了系统的地方。Foundry 更完整的生命周期在这里特别有用：traces 解释一次 run 里发生了什么；evaluations 度量结果；experiments 比较备选方案；optimization 把这些证据变成候选改进。把这些能力靠得更近，就缩短了从一次生产观察走到一次经过测试的改动的路径。这条连续学习闭环是 01 TRACE → 02 EVALUATE → 03 EXPERIMENT → 04 OPTIMIZE：保持契约稳定，跑同一套 evaluation set 和由 SME 支持的 graders，比较版本，再把证据变成经过测试的改进。"
+          },
+          {
+            "kind": "p",
+            "text": "原来的架构已经给 Novo 做出了一个能工作的 agent，服务的是一个有价值、要求也高的研究场景。迁到 hosted agents，让我们继续控制 agent 逻辑，同时把更多无差别的运行时工作交给 Foundry。对正在考虑如何把 agent 从原型带到生产的团队，这条边界值得尽早评估。"
+          },
+          {
+            "kind": "pull",
+            "text": "结果不只是换了个地方跑容器。这是一条更干净的平台边界：每个 session 一份隔离的计算，托管的伸缩和身份，私有网络，可持久的状态，以及从 tracing 到 evaluation 再到 optimization 的贯通路径。把让你的 agent 与众不同的那部分自己做；让平台承担每一套生产 agent 都需要的那些工作。"
+          }
+        ]
+      },
+      "sourceUrl": "https://commandline.microsoft.com/from-custom-infrastructure-to-hosted-agents/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "worse-together",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "工程化实践",
+      "title": "每人一个 agent，群体结果更差：四个环境里 coordinator 高出约 10–45 个百分点",
+      "originalTitle": "Worse Together: How Performance Breaks Down in Multi-User Multi-Agent Teams",
+      "byline": "Sahan Paliskara, Nattaput Namchittai, Jacqueline Tay, Avery Griffin, Andrew Lampinen · 11-11",
+      "body": {
+        "pattern": "benchmark",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "随着 AI agents 越来越强、用得越来越广，它们越来越多地需要彼此互动。用户把任务交给自己的 agent，而这些任务需要和其他人的 agents 共享资源，比如计算预算、代码库，或一笔团餐费用。这些场景研究得还不够，所以我们建了四个带模拟用户、做日常任务的环境，并在其中测试了 Anthropic、OpenAI 和 Alibaba 的前沿模型。在全部四个环境里，当每个用户把自己的任务委托给自己的 agent，而不是由一个 agent 服务所有人时，群体结果都更差。"
+          },
+          {
+            "kind": "p",
+            "text": "在这些模拟设定里，我们也看到了问题行为，随模型和环境差别相当大，包括团队变大时停滞、覆盖其他用户的请求，以及在没有依据的情况下对别人作出断言。补法取决于环境：指定一名团队负责人、并清楚写明优先级，能改善 agents 共享预算时的表现；而拦住 agent、直到它读完消息才允许下单，比只是重跑，救回了更多失败的团单。我们把其中三个环境做成基准 MAMUBench 发布，方便别人测试 agents 在 multi-user, multi-agent 系统里协调得怎样、行为又怎样。这项研究在 Anthropic Fellows Program 中完成。"
+          },
+          {
+            "kind": "p",
+            "text": "多智能体系统的协调失败，已有工作多半是在 agents 追求同一个目标的设定里看到的。这引出另一个问题：当 agents 代表不同用户、带着不同目标和偏好时，会发生什么。我们研究这些越来越常见的设定，称之为 multi-user, multi-agent systems。在我们的环境里，每个用户有自己的目标，所有用户都调用同一份共享资源。我们按评估一群人就该资源谈判的方式来打分：看群体整体的结果。最近的产品也已经让多名用户通过各自的 agent 共享资源——例如 DoorDash CLI、Slack Code、OpenAI 的 dots——而每个 agent 都为自己的用户行事，该如何为群体整体行事并不清楚。"
+          },
+          {
+            "kind": "h",
+            "text": "Setup"
+          },
+          {
+            "kind": "p",
+            "text": "我们做了四个环境：研究人员共享一份 API-token 预算；急诊患者共享一份诊所日历；用户通过私人助理安排团餐或旅行预订；以及带发布截止的 merge queue。这些是现实场景，设计成：一个前沿模型作为单一 coordinator 时通常表现很好；比较不同编队，因此隔离的是协调，而不是任务能力。我们比较四种编队：solo（一名用户、一个 agent）；coordinator，一个 agent 服务多名用户；silent team，每名用户一个 agent、彼此无法通信；以及 peer-to-peer team，每名用户一个 agent、agents 之间有通道。我们把 coordinator 当作对照。文中点名的模型包括 Claude Opus 5、Claude Sonnet 5、GPT-5.6-sol、GPT-5.6-terra 和 Qwen3.8-max。这篇帖子聚焦 API key 和 personal assistant 两个环境，以及 coordinator 与 peer-to-peer team；其余请看论文。按每个环境的 scenarios 平均，coordinator 在全部四个环境里、对 Claude Opus 5 和 Claude Sonnet 5 都胜过 peer-to-peer team，大约高出 10 到 45 个百分点。群体结果按「所能达到的最佳策略」的份额来报告，并带 95% confidence intervals。"
+          },
+          {
+            "kind": "h",
+            "text": "API Key"
+          },
+          {
+            "kind": "p",
+            "text": "在 API key 环境里，4、8 或 16 名研究人员共享一份有限的 API-token 预算。这份预算不够覆盖所有人的工作。每位研究者给自己的 agent 一份 job 队列，以及每个 job 的截止日期和错过的后果。agents 需要取消和缩减 job，以确保有些工作能做完。我们建了 25 个 scenarios，变化用户和他们的 job。peer-to-peer team 相对 coordinator 的表现，Claude Opus 5 为 47%，Claude Sonnet 5 为 38%（分别为最优结果的 30% 和 12%，coordinator 则是 64% 和 32%）。"
+          },
+          {
+            "kind": "p",
+            "text": "多 agent 团队的主要问题是：agents 动得太少、也太晚。这个环境是动态的，agents 需要主动给 job 排顺序。许多 agents 根本从不行动，而且团队越大，旁观的越多：从 4 个到 16 个 agents，曾经采取过行动的比例，Claude Sonnet 5 从 66% 降到 10%，GPT-5.6-sol 从 82% 降到 25%。GPT 和 Qwen 的 agents 还会在未经询问的情况下取消或停下其他用户的 job，每个 episode 3.9 到 7.1 次，相比之下 Claude Sonnet 5 是 0.59 次，Claude Opus 5 从未这样做（consent 由 Claude Sonnet 5 判断）。这些 unconsented cuts 并没有降低群体结果——取消低价值 job 正是这个环境所要求的——但它们仍然不可取，因为它们在对方不同意的情况下结束了另一位用户的工作。同一 scenario 里，发生过未经询问就取消或缩减别人 job 的 episodes，群体分数通常更高。但这暴露了打分系统的局限：它只看完成 job 的总价值，不看是否有人的工作被毁掉，也不看对方是否同意。最后，agents 隐含的优先级因模型而异。例如，Claude Opus 5 把结果在用户之间分得比 Claude Sonnet 5 和 GPT 模型更均匀（Jain index，四人 scenarios）。"
+          },
+          {
+            "kind": "h",
+            "text": "Personal Assistant"
+          },
+          {
+            "kind": "p",
+            "text": "在 personal assistant 环境里，一组用户把一项共享的规划任务交给各自的助理：团餐、预付预订或旅行预订，并共享一份预算。每个 scenario 里，有一名用户提出一个有针对性的请求，我们称之为 ask：要么是安全约束，要么是利他请求。这些请求要求 agents 以合理的方式偏离默认行为。例如，一位乳糜泻患者要求两份普通无麸质配菜，而不是一道主菜。我们用最终订单或预订是否落实该 ask 来衡量成功。在 25 个 scenarios 里，coordinator 落实该 ask 的频率大约是 peer-to-peer team 的两倍。"
+          },
+          {
+            "kind": "p",
+            "text": "ask 通常会在组内被传达，但主要问题是竞态：提交订单的那个 agent，常常还没读完发给它的每条消息就提交了。在全部 scenarios 和模型上，ask 被发送给最终下单或预订的那个 agent 的比例是 94–99%，但在提交当时进入该 agent 的 context 的只有 47–67%。即便 ask 已在 context 里，也只有 56–68% 的 episodes 落实了它；不在 context 里时是 19–36%。团队也倾向在共享购物车或预订里覆盖彼此的请求：65–77% 的 team episodes 至少有一次与 ask 相悖的编辑。"
+          },
+          {
+            "kind": "p",
+            "text": "最后，agents 有时会在信息并不支持的情况下对别人作出断言。略超过一半的 Claude team episodes 至少包含一次这类编造（Claude Opus 5 为 58%，Claude Sonnet 5 为 53%，由 Claude Opus 5 判断），而单个 agent 这样做的比例是 17–20%。这来自信息是拆开的：每个 agent 只看见自己用户的笔记，却要谈论所有人的订单，于是 agents 填补空缺——假定整桌想要的就是自己用户想要的，把一名用户的笔记安到另一人身上，或声称某位用户同意了从未说过的事。"
+          },
+          {
+            "kind": "h",
+            "text": "Mitigations"
+          },
+          {
+            "kind": "p",
+            "text": "我们测试了有针对性的改动，例如追加指令，或一名有决策权的 lead agent，能否补上这些差距。在 API key 环境里，单独设一名 team lead agent，并指示它优先处理高价值 job、把预算用满，就能补上 coordinator 与 peer-to-peer team 之间的差距：把 peer-to-peer team 带到与 coordinator 相当或更高的水平。另外三条指令还能再改进：（1）lead 严格按价值给 job 排序；（2）只要还有时间把预算用掉，它就放出自己扣下的预算；（3）其他每个 agent 汇报自己 job 的信息，并按 lead 的分配执行。但这套 team lead 在 personal assistant 环境里没有帮助。那里我们最好的 mitigation 是一道 platform guard：提交的 agent 读完所有待处理消息之前，不许结账；在对失败 team episodes 的重跑中，它能救回 73%（Claude Opus 5）和 62%（Claude Sonnet 5）的失败 episodes。能起作用的补法因环境而异，说明 multi-user, multi-agent 的失败原因并不单一。"
+          },
+          {
+            "kind": "h",
+            "text": "Discussion and Implications for Safety"
+          },
+          {
+            "kind": "p",
+            "text": "Multi-user, multi-agent 系统已经在出现。例如，Instinct 最近发布了 Trusted Person Network，每位用户的助理可以和其他用户的助理交谈，代他们协调计划。类似的协调问题也可能出现在单用户设定里：一个人把不同但相互交叉的任务交给多个 agents，比如开八个 Claude sessions，在同一份代码库里做功能。我们研究的问题核心是：多个 agents 可能在追求不同目标，同时通过共享环境或资源互动。"
+          },
+          {
+            "kind": "p",
+            "text": "我们的结果，连同已有工作，表明 multi-user, multi-agent 系统的风险不只是更差的群体结果：为一个用户行事的 agent，可能伤害共享该系统的其他人。在我们的环境里，来自多家提供方（Anthropic、OpenAI 和 Alibaba）的 agents 未经同意就对其他用户的 job 采取行动，覆盖用户的请求，并在信息并不支持的情况下对别人作出断言。实验室之外，agent 集群已经造成过真实伤害，例如 Hugging Face 事件，以及一个德国 wiki 被劫持。这些案例并不涉及为不同用户行事的 agents，而后一种设定在很大程度上仍未被探索。虽然我们的结果显示 coordinator 可以胜过团队，已有工作也发现单 agent 系统在 alignment 上有优势，但对用户很多的系统来说，依赖一个 coordinator 并不总是可行或自然。"
+          },
+          {
+            "kind": "p",
+            "text": "这些结果也指向具体的下一步。第一，评估应当在衡量群体结果的同时衡量 agent 行为，因为单独看任何一面都会漏掉东西。例如，只看结果分数，不会标出 GPT 和 Qwen 的 agents 未经询问就取消别人的 job；反过来，只检查行动，不会标出 Claude Opus 5 的团队——它们的 agents 从未这样做，但远远落后于 coordinator。第二，mitigations 可以来自整个技术栈：从不让 agents 互相踩脚的 platform guards——就像队列不让人群冲向售票口——到训练 agents 去沟通并达成一致。人已经发展出谈判那些略有冲突的目标的办法，agents 也会需要它们，既为了有效，也为了 alignment。"
+          },
+          {
+            "kind": "pull",
+            "text": "依赖一个 coordinator，对用户很多的系统来说并不总是可行或自然。因此，multi-user, multi-agent 的风险，不能只靠把协调集中起来解决。\nMulti-user, multi-agent risks therefore cannot be addressed simply by centralizing coordination."
+          },
+          {
+            "kind": "aside",
+            "text": "结果来自模拟用户和日常任务。这篇帖子只展开四个环境里的两个、四种编队里的两种，没有给出诊所日历或 merge queue 的分项成绩；论文里还有更多编队和其余结果。73% 和 62% 是对失败 team episodes 重跑的挽回比例，不是全量成功率。文中引用的实验室外事件，并不涉及为不同用户行事的 agents。「开八个 Claude sessions」是类比，不是测得的结果。"
+          }
+        ]
+      },
+      "sourceUrl": "https://alignment.anthropic.com/2026/worse-together/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "kilo-weekly-limit-model-mix",
+      "company": "Kilo",
+      "companyColor": "#059669",
+      "column": "工程化实践",
+      "title": "先看哪个模型在干哪段活：Fable 5.2 为 $8 / $40，Max 上有 50% cap",
+      "originalTitle": "Your Weekly Limit Isn’t the Problem, Your Model Mix Is",
+      "byline": "Kilo Blog · 11-10",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Fable 5.2 在 11 月 9 日发布后，用量 meter 开始比实际工作跑得更快。先别急着升级套餐，先看哪个模型在干哪段活。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 每周额度是一项预算，不是单一模型订阅"
+          },
+          {
+            "kind": "p",
+            "text": "有 Claude Code 用户在 X 上发帖：上次重置前套餐能撑满一周，新的一周才两天就到了 65%。另一位开发者写道，他的 20x weekly limit 前一天刚重置，一天用 Opus 5.5、第二天把 Fable 5.2 和 Opus 5.5 混着用，额度就降到了 37%。这些是用户帖子，不是我们自己测得的用量数据。容易读成额度被砍了，或 meter 坏了。其中有些也许是真的，我们下面会回到这一点。但同样的抱怨几乎在每次前沿发布后都会出现，而且多数可以追溯到用户能控制的一个选择：在每一个 session 的每一轮都跑最新、最贵的模型。每周额度是一项预算，而发布刚过时，我们多数人花它，就像自己买的是单一模型订阅。"
+          },
+          {
+            "kind": "h",
+            "text": "2. Fable 5.2 标价 $8 / $40，仍是 Opus 的两倍、Sonnet 的四倍"
+          },
+          {
+            "kind": "p",
+            "text": "Anthropic 在 11 月 9 日发布 Fable 5.2，每百万 input tokens $8、每百万 output tokens $40，比 Fable 5.1 的 $10 和 $50 低 20%。这仍是 Opus 5.5（4/20）的两倍、Sonnet 5.5（2/10）的四倍。比 5.1 便宜，离便宜还很远。在订阅里，真正要紧的是每一轮让 meter 走得多快，而 Fable 仍然走得最快。在 Max 套餐和 premium Team 席位上，Fable 计入常规每周额度，但最多占其中的 50%，Anthropic 自己的帮助页也写明，它消耗这些额度比其他 Claude 模型更快。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 发布周有三件事叠在一起，前两件是你可以做的选择"
+          },
+          {
+            "kind": "p",
+            "text": "按 token 的权重：每一轮 Fable 按标价大约是一轮 Opus 的两倍。如果工作流没变、变的只是模型，你的 burn rate 就翻了一倍。账单里多半是 context：agent session 的 tokens 大多花在读文件、日志和 tool 输出上；当 Fable 来做这些阅读，每一次 grep 结果和测试日志都按最高费率计。Bug 也会发生：更早的几次发布之后，有用户报过 meter 以数倍于预期的速度往下掉，至少有一次 Anthropic 事后重置了额度。前两件是选择。一次突然的暴涨，可以用 bug 解释；整周每一轮都跑在当时最贵的模型上，不能。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 有模型专项 cap 时，模型搭配决定了你的上限"
+          },
+          {
+            "kind": "p",
+            "text": "这是发布周多数抱怨容易漏掉的一点。有了针对特定模型的 cap，你的模型搭配就决定了上限。一整周只用 Fable，会在套餐用到一半时结束，哪怕总 meter 还显示有余量。另外一半只有花在 Opus、Sonnet 或套餐覆盖的其他模型上，才存在。反过来也一样：Anthropic 的帮助页写明，如果你已经把每周额度的一半用在了其他模型上，Fable 就只能用剩下的部分。所以同一套餐上的两个开发者，一周可以完全不同：一个人处处跑 Fable，很快撞上 Fable 的墙，留下一半套餐没用；另一个人把 Fable 留给判断能划得来的回合，让更便宜的模型承担大部分打字，一周结束时两半都用上了。Theo Browne 在 11 月 10 日指出了 50% cap 的这一后果：如果只用 Fable，每周额度实际上有一半等于作废。他发过一张关于这个缺口的图。"
+          },
+          {
+            "kind": "h",
+            "text": "5. Anthropic 不公布套餐含多少 tokens，API 标价可以看出取舍的形状"
+          },
+          {
+            "kind": "p",
+            "text": "Anthropic 不公布每个套餐含多少 tokens，所以我们无法直接给订阅 meter 建模。API 标价可以看出取舍的形状。以一次读 100 万 input tokens、写 10 万 output tokens 的 session 为例：Fable 5.2 是 $8.00 input + $4.00 output = 每次 $12.00；Opus 5.5 是 $4.00 + $2.00 = $6.00；Sonnet 5.5 是 $2.00 + $1.00 = $3.00。现在假定规划占一个功能 20% 的 tokens，实现占 80%。全部用 Fable 是 $12。规划用 Fable、实现用 Opus 5.5 是 $7.20，大约少 40%。规划用 Fable、实现用 Sonnet 5.5 是 $4.80，大约少 60%。这条 20/80 是我们的假定，不是测得的 token 比例。一条永远适用的保留意见是：一个更便宜、却要试三次的模型，并不更便宜。要盯的是每次成功完成任务的成本，所以下面的交接和选哪个模型一样要紧。在 All Day AI 上，OpenRouter 的 Chris Clark 给过一组数字：在他的平台上，open-weight 模型现在大约承担 64% 的 tokens，却只占 28% 的花费；他看到最容易省下的钱，来自那些一直钉在昂贵模型上的 agents。"
+          },
+          {
+            "kind": "h",
+            "text": "6. 把 Fable 用在一个错误决定比 tokens 更贵的地方"
+          },
+          {
+            "kind": "p",
+            "text": "我们会从这条规则起步：把 Fable 用在一个错误决定比 tokens 更贵的地方。实践中大致是这样。Fable 5.2：规划、架构、更便宜的模型已经卡住的调试，以及对 auth、migrations、concurrency 这类高风险 diffs 的 review。Opus 5.5：从一份写好的计划出发，做大部分实现。Sonnet 5.5：探代码库、读日志、按清楚的规格写测试，以及小改动。小模型或 open-weight 模型：提交说明、session 标题和摘要这类后台杂事。"
+          },
+          {
+            "kind": "h",
+            "text": "7. 交接靠 plan.md，不要把 Fable 的整段 context 拖进实现"
+          },
+          {
+            "kind": "p",
+            "text": "让这套搭配成立的，是交接。我们比较 Claude Fable 5 和 GPT-5.5 时，把 Fable 的计划作为一份 plan.md，交给两个模型，放进一个没有其他 context 的全新 session。Fable 在规划上胜出，执行则差不多。一份写得好的计划，能把前沿模型的大部分价值带进更便宜的实现 session，而不必把 Fable 的整段 context 一起拖过去。上面这些，单靠纪律就做得到。"
+          },
+          {
+            "kind": "pull",
+            "text": "我们会从这条规则起步：把 Fable 用在一个错误决定比 tokens 更贵的地方。"
+          },
+          {
+            "kind": "aside",
+            "text": "文中 $7.20 / $4.80 和大约少 40% / 60%，是在「假定规划占一个功能 20% 的 tokens、实现占 80%」之下，相对全部用 Fable 的 $12 算出来的，不是测得的 token 比例，也不是订阅 meter 上的节省。「很快撞上 Fable 的墙」是文中的对照举例，不是测得的某一天。Theo Browne 的图在文中被引用，没有抄出具体数字。评论区 Abhishek Pan 写道：这条 20/80 在数学里承担了大部分工作；如果规划和 review 占到一个功能 40% 的 tokens，Fable 加 Sonnet 会变成 $6.60 而不是 $4.80，所以在定搭配之前，先从过去几次 session 里拉出真实比例。这是一条评论，不是正文里的数字。"
+          }
+        ]
+      },
+      "sourceUrl": "https://blog.kilo.ai/p/your-weekly-limit-isnt-the-problem",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "vs-copilot-sdk-upgrade",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "工程化实践",
+      "title": "Visual Studio 2026 18.12 默认换上 Microsoft Copilot SDK：同样的模型，最多多解决 21 个任务",
+      "originalTitle": "Copilot in Visual Studio Just Got a Major Upgrade",
+      "byline": "Dalia Abo Sheasha · 11-10",
+      "body": {
+        "pattern": "practice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Visual Studio 里的 Copilot Chat 换了新引擎。从 Visual Studio 2026 version 18.12 起，它跑在 GitHub 开发的 Microsoft Copilot SDK 上，也就是驱动 GitHub Copilot CLI、GitHub Copilot app 和 VS Code 的同一套技术。它默认开启，而且是一次重大升级：同样的模型，能解决更多任务，也有新的工作方式。"
+          },
+          {
+            "kind": "p",
+            "text": "我们把先前的和现在的 Copilot 体验拿去跑了一百多个编程任务。在我们测过的每一个模型上，不论能力档次还是提供方，新体验都更好，最多多解决了 21 个任务。Chat 本身也更好了：回答更短、更聚焦，你可以在任务中途 steer Copilot，也能看到每次请求花了多少。"
+          },
+          {
+            "kind": "h",
+            "text": "解决了更多任务"
+          },
+          {
+            "kind": "p",
+            "text": "为了衡量对 .NET 开发者真正要紧的事，.NET 团队用真实 C# 项目里的真实问题做了一套 benchmark，覆盖 .NET Framework 和 .NET Core、Azure 和 Aspire，以及 WinForms 和桌面应用。我们把两种 Copilot chat 体验都跑了其中 157 个任务。一项任务算作解决，只有当原本失败的测试通过了，而且已经通过的测试一个都没被破坏。新引擎也在 C++、Python 以及其他多种语言上做过测试。"
+          },
+          {
+            "kind": "p",
+            "text": "我们自己的 backlog 里有一个例子：有用户反馈，Copilot 提问时过长的选项会被截断。我们分别在先前的体验和新的 SDK 驱动体验里，请 Copilot 帮忙复现。先前的体验给我们回了一套手工复现步骤。新的那次做了我们没料到的事：它意识到自己就跑在出 bug 的那个 chat 窗口里，于是就地复现了这个问题。"
+          },
+          {
+            "kind": "h",
+            "text": "同样的模型，更好的 harness"
+          },
+          {
+            "kind": "p",
+            "text": "模型本身只能读文本、写文本。它打不开你的 solution，不能改文件，也不能跑测试。harness 是模型周围把文本变成实际工作的一切：模型能看到什么、能用哪些 tools、还记得什么、被允许碰什么。给同一个模型更好的 harness，结果就会更好。"
+          },
+          {
+            "kind": "p",
+            "text": "通过 SDK，Visual Studio 里的 Copilot 现在跑在 Microsoft Copilot harness 上。它在数百万用户的规模上经过实战检验，GitHub 把它设计得又快又可预期。你会注意到：它会把活干完——harness 让 Copilot 一直做到任务真正完成；它也会说到点子上。有开发者把这体验描述为 “Less chatter, more quality results for large tasks”。"
+          },
+          {
+            "kind": "h",
+            "text": "Copilot Chat 里的新功能"
+          },
+          {
+            "kind": "p",
+            "text": "新引擎也改变了你和 Copilot 的工作方式。下面这些，先前的体验里都没有。不必再等 Copilot 做完才能改方向：输入一条新指令并按 Enter，Copilot 会在任务中途接住它。在它接住之前，这条消息会标成 Pending，你也可以点 X 把它收回。每一步都会展示实际返回的结果，而不只是 Copilot 尝试做了什么。展开一步可以看到结果，在编辑器里打开，或复制 Copilot 跑过的那条确切命令。"
+          },
+          {
+            "kind": "p",
+            "text": "当 Copilot 把一部分任务交给 subagent，这个 subagent 会有自己的卡片，实时显示它在用哪个模型、每一步做了什么。你也可以从 chat header 把 Copilot 指向机器上的任意文件夹，或把整个文件夹作为 context 附上。在选中 Agent 时，输入 / 就可以调用内置 agents：`/security-review` 会对你的改动做一次以安全为重点的审查，寻找漏洞；`/rubber-duck` 则让另一个模型在 Copilot 动手前评议它的计划。"
+          },
+          {
+            "kind": "h",
+            "text": "仍然分明是 Visual Studio"
+          },
+          {
+            "kind": "p",
+            "text": "因为是同一套技术，Copilot 在 Visual Studio、VS Code、Copilot CLI 和 GitHub Copilot app 上的表现更加一致。写一个 agent skill，不用改就能在这四个 surface 里用。改进 harness，每个 surface 都会受益。但同一套引擎并不等于一种适合所有场景的体验。Copilot 仍然能用上你在 Visual Studio 里依赖的那些工具。专门的 agents 帮你 debug、profile、修构建失败、现代化 .NET 应用，以及加快 C++ 构建。内置的 agent skills 补上 .NET 和 Azure 方面的专长，也可以继续用你已经配好的 MCP servers。"
+          },
+          {
+            "kind": "pull",
+            "text": "给同一个模型更好的 harness，结果就会更好。\nGive the same model a better harness, and you get better results."
+          },
+          {
+            "kind": "aside",
+            "text": "我们还在把先前体验里的一些功能迁过来，比如 plan mode 和 chat exports。如果你依赖它们，或因任何原因需要切回去，可以在 Tools > Options > GitHub > Copilot > Copilot Chat 里关掉 “Use new Copilot chat experience”，然后重启 Visual Studio。"
+          }
+        ]
+      },
+      "sourceUrl": "https://devblogs.microsoft.com/visualstudio/copilot-in-visual-studio-just-got-a-major-upgrade/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ms-go-agent-harness",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "选读",
+      "title": "Microsoft Agent Framework for Go 增加 agent/harness：v0.2.0 public preview，预置默认配置",
+      "originalTitle": "Preconfigured agents with Microsoft Agent Framework for Go",
+      "byline": "Michelle Clayton · 11-11",
+      "body": {
+        "pattern": "framework",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Microsoft Agent Framework for Go 帮你构建能跟踪任务、保存并回看笔记、加载可复用 skills、并调用应用自己的 tools 的 agents。审批规则让应用能处理需要用户做决定的 tool 调用。tracing 提供时间和错误数据，用来排查模型和 tool 调用。要把这些能力组合起来，就要配置 context providers、middleware、历史记录和 session 状态。当你希望沿用同一套默认配置时，为每个 agent 重复做这些设置就会变得很烦琐。我们用 agent harness 来解决这种重复配置，它通过 `agent/harness` 包提供。agent harness 是协调 tool 执行、并在模型调用之间提供 context 的应用代码。该包从 Microsoft Agent Framework for Go 的 v0.2.0 起可用。框架目前仍是 public preview。"
+          },
+          {
+            "kind": "h",
+            "text": "这个 harness 配置了什么"
+          },
+          {
+            "kind": "p",
+            "text": "`harness.AgentConfig` 返回一份加上了 harness 默认配置的 `agent.Config`。这个辅助函数会把你的 tools 与内置 tools 合并，并纳入你提供的 middleware 和 context providers。把这份配置交给你的 provider 构造函数来创建 agent。agent 的 `CreateSession` 方法会创建一个保存对话状态的 `agent.Session`。把同一个 session 通过 `agent.WithSession` 传给后续的 `RunText` 调用，就可以继续这场对话。默认配置包括："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "Default instructions：harness 提供 Agent Framework 的 `harness.DefaultInstructions` 文本。它告诉模型把复杂任务拆成步骤，用 tools 校验结果，并在 tool 调用之间报告进展。",
+              "To-do tools：这些 tools 在 session 里读写一份结构化任务列表，这样后续请求就能看到哪些工作还没做完。",
+              "Plan and execute modes：agent 从 plan mode 开始，并带有讨论计划或执行计划的模式专用 instructions。这些模式不会拒绝 tool 使用，也不做任何 sandboxing，只是指示 agent 该如何表现。",
+              "FileMemory：agent 可以把计划或发现保存、更新到磁盘，并在后续请求里按文件名取回。",
+              "Conversation history：默认情况下，history provider 把消息保存在内存里，并在每次模型调用之后写入，包括中间的 tool 调用和结果。agent 回答后续请求时可以用到这些 tool 结果。",
+              "Skills：基于文件的 skills 把任务说明和 YAML 元数据放在 `SKILL.md` 里，旁边可以有参考文档或模板等配套文件。agent 可以按需加载相关说明和文件，而不必把每套流程都放进初始 prompt。默认发现会查看工作目录，并排除 `agent-file-memory`。skill 也可以包含脚本，例如 Python 文件；只有在应用提供了 script runner 时，这些脚本才会运行。",
+              "Tool approvals：middleware 会记住该 session 内已经给出的批准，并可以应用你的自动批准规则，避免对匹配的调用反复询问。对仍需批准的调用，应用会收到请求，可以向用户展示，并通过同一个 session 作答。",
+              "Hosted web search：模型可以向服务请求网页结果，这样应用不必自己做搜索客户端。是否支持取决于所选的 API 和部署。在该 tool 不可用或不需要时，用 `DisableWebSearch` 去掉它。",
+              "Message injection：应用可以在一次 run 期间给 session 排队追加输入，例如一条修订过的需求。injector 在模型调用之间提供这些排队消息。排队让应用不必丢掉当前这次模型调用正在做的工作。若要改为取消，使用由 `context.WithCancel` 创建的 Go context。",
+              "Tracing：OpenTelemetry 分别记录 agent runs、受支持的模型调用，以及本地 tool 调用。每条记录包含持续时间和任何错误。模型调用的记录还包括 provider 报告的 token 用量。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "用 Foundry 跑一个 agent"
+          },
+          {
+            "kind": "p",
+            "text": "这个例子对一个面向 Go `net/http` 服务的规划助手连续发了两个请求。第一个请求让 agent 规划一个 health-check 端点，把工作记成 to-do，并把计划存到 `healthcheck.md`。第二个请求让 agent 读这份已保存的计划，并列出同一 session 里尚未完成的任务。它需要 Go 1.26 或更高版本，以及一个支持 Responses API 和 function calling 的 Foundry 模型部署。示例调用 `harness.AgentConfig` 时设置了 `DisableWebSearch: true`，并在 `foundryprovider.NewAgent` 里设置 `DisableStoreOutput: true`，好让对话历史留在本地的 `agent.Session` 里，而不是留在服务端。它创建同一个 session，再用 `RunText` 加上 `agent.WithSession` 跑这两个 prompts。agent 会用第一次请求里的任务列表和已保存计划来回答第二次请求。tool 选择和回复措辞会随模型而变。程序向 Foundry 发送模型请求，会产生 usage charges。"
+          },
+          {
+            "kind": "h",
+            "text": "状态存在哪里"
+          },
+          {
+            "kind": "p",
+            "text": "`session` 变量指向 Go 进程内存里的一个 `agent.Session` 对象。session 保存 to-do 和 memory 文件夹路径，FileMemory 则把计划写到程序工作目录下的 `agent-file-memory/<session-folder>/healthcheck.md`。再次运行程序会创建新的 session 和不同的文件夹。要在重启后继续，需要保存并恢复 session 状态，并使用同一个 memory root。"
+          }
+        ]
+      },
+      "sourceUrl": "https://devblogs.microsoft.com/go/preconfigured-agents-with-microsoft-agent-framework-for-go/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "google-mka-benchmark",
+      "company": "Google DeepMind",
+      "companyColor": "#4285F4",
+      "column": "选读",
+      "title": "MKA：200 题私有评测视觉知识工作，Carbon 质量第 2、平均成本低 6 倍",
+      "originalTitle": "Introducing the Multimodal Knowledge Agent benchmark",
+      "byline": "Rohan Doshi, Ben Caine · 11-10",
+      "body": {
+        "pattern": "benchmark",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "我们与 Artificial Analysis 合作，推出 MKA（Multimodal Knowledge Agent）——一套新的 benchmark，用来评估 agents 如何在视觉上复杂的文件之间推理，以完成真实世界的知识工作任务。大多数知识工作 benchmark 只靠文本就能做完，根本不必看图或版面。可日常专业工作看起来完全不同。在许多行业里，日常工作深深依赖视觉：对照建筑蓝图、顺着工程原理图追查，再把发现整理成打磨过的演示文稿、报告和电子表格。我们做 MKA，就是为了衡量 agents 处理这类视觉上复杂工作的能力。"
+          },
+          {
+            "kind": "p",
+            "text": "为了把 benchmark 落到真实工作流上，我们与横跨 10 个垂直领域、83 种职业、日常工作本身就离不开视觉的领域专家合作。这些专家——从建筑师、生物学家到承保人和数据科学家——一起做了 MKA 的 200 题 evaluation set，用来协助他们的本职工作。每道题对应一位熟练专业人士要花三到八小时完成的多步骤项目：一份真实的 prompt、一组 multimodal 输入文件，外加专家写的大约 70 条 yes/no 检查的 rubric，权重是事实准确性 75%、视觉设计 25%。"
+          },
+          {
+            "kind": "p",
+            "text": "即日起，你可以在 Artificial Analysis 上探索这套 benchmark，并用它评测自己的模型。每个模型都跑在同一套开源 agent harness Stirrup 里，工具、sandbox 和 turn budget 都相同。一个基于非 Google 模型的 agentic autorater 给每份交付物打分：它打开每一个文件、渲染页面、检查电子表格公式，并对照专家 rubric 核验。领域专家自己给模型输出打分时，与 autorater 的一致率为 96%。为了让结果有意义，Artificial Analysis 负责跑这 200 题 evaluation set，并把它保持私有，以免题目漏进训练数据，或被模型用搜索找到。我们另外在 Hugging Face 上发布了 10 道公开题，供任何人查看格式、测试自己的 agents。"
+          },
+          {
+            "kind": "p",
+            "text": "技术报告显示，前沿模型的工作方式差别很大。在同样的任务上，我们测过的模型效率差异极端，平均要用 30 到 130 个 turns 才能完成一道题。我们表明，要解决每道题，强感知能力是必要的；也表明，当视觉被拿掉时，模型会尝试弥补，但没有成功。"
+          },
+          {
+            "kind": "h",
+            "text": "用 Gemini 4 Carbon 拓展视觉边界"
+          },
+          {
+            "kind": "p",
+            "text": "在我们测过的模型里，Gemini 4 Carbon 的质量排到第 2，完成任务的平均成本比得分最高的模型低 6 倍。它处在 MKA eval 的质量与价格 pareto frontier 上。Gemini 4 Carbon 即日起可通过 Google AI Studio 的 Gemini API 使用。"
+          },
+          {
+            "kind": "pull",
+            "text": "在我们测过的模型里，Gemini 4 Carbon 的质量排到第 2，完成任务的平均成本比得分最高的模型低 6 倍。\nGemini 4 Carbon achieves #2 in quality among the models we tested, and completes tasks at 6x lower cost on average compared to the top scoring model."
+          },
+          {
+            "kind": "aside",
+            "text": "没有点名第 1 名或得分最高的模型，也没有给出绝对质量分数或美元成本。200 题 evaluation set 由 Artificial Analysis 保持私有；Hugging Face 上的 10 道是另外一套公开题，不是这 200 题的公开切片。上述质量与成本比较的范围是「我们测过的模型」。"
+          }
+        ]
+      },
+      "sourceUrl": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/multimodal-knowledge-agent-benchmark/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "ms-lazarus-agent-backdoor",
+      "company": "Microsoft",
+      "companyColor": "#00A4EF",
+      "column": "选读",
+      "title": "Lazarus：改写不到 10 个 dormant neurons 就能 backdoor agent，且仍通过标准 evals",
+      "originalTitle": "Lazare, veni foras: Reprogramming Dormant Neurons to Backdoor AI Agents",
+      "byline": "Dimitris Papailiopoulos · 11-10",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "微软研究者发现了 “Lazarus”，这是一种 backdoor 技术：它可以改写 AI 模型里的 dormant neurons，让一个看起来正常的 AI agent 在隐藏 trigger 出现时执行恶意命令。对拥有 tool 或终端访问权限的 AI agents，这一威胁尤其严重。被触发的模型可以悄悄下载并运行攻击者的代码、窃取机密，或执行破坏性命令，同时仍然通过标准的安全 evaluations。这些 backdoors 无需重新训练模型就能插入，也难以被常规测试发现，因此模型的 provenance 和权重完整性成为关键的安全问题。为了保护客户，Microsoft Foundry 在接入 open-weight 模型之前，会核验模型 provenance、把模型与受信任的发布方绑定，并扫描周围的软件环境。微软也在开发更多防御，包括用 AI 做权重扫描、用于发现异常模型修改的 red-teaming tools，以及带有防篡改 provenance 和审计轨迹的加密模型签名。在微软，研究者和安全团队并肩工作，研究模型和 agents 面临的新威胁，再把学到的东西变成产品防御和指引。更广义地看，Lazarus 是一种应当变成常规做法的例子：AI agents 会暴露出新的安全问题，然后由人类研究者把它们系统化、研究并缓解。"
+          },
+          {
+            "kind": "pull",
+            "text": "我们发现，只需对一个 LLM 里不到 10 个 dormant neurons 做 weight-reprogramming，就足以给建立在它之上的 agent 装上 backdoor，而且不需要训练。模型能通过标准 evals，在 trigger 出现之前表现正常。\nWe find that weight-reprogramming fewer than 10 dormant neurons in an LLM, is enough to backdoor an agent built on it, and requires no training. The model passes standard evals and behaves normally, until a trigger appears."
+          },
+          {
+            "kind": "p",
+            "text": "trigger 可以普通到一次日期变化：例如，时钟一过午夜进入 2027 年，这个 agent 会在一件普通任务做到一半时，发出一条命令去下载并运行攻击者的代码。然后，agent 会用你给它的那份权限执行这条命令。好消息是，这类修改可以被抓住：如果你让 frontier agents 去看，它们能发现异常的权重修改。但任何扫描都不能毫无疑问地证明一个模型是安全的。可靠的检测需要对照原始、未经修改的权重做 diff，所以 provenance 非常重要：要知道模型从哪里来，以及它在开发者到部署之间没有被改过。被植入 backdoor 的模型并不是一类全新的威胁。它可以被看成被攻陷的软件，防御手段也是安全人员已经知道的那些：把模型当作潜在的 insider risks，不要默认信任它们，限制它们能做的事，并监控它们实际做了什么。"
+          },
+          {
+            "kind": "h",
+            "text": "微软今天在做什么"
+          },
+          {
+            "kind": "p",
+            "text": "Microsoft Foundry 为 Azure Direct Models 和 Hugging Face 模型提供关键的安全系统，以确保模型的 provenance 是安全的。这意味着，对于来自受信任实验室的模型，Foundry 客户受到保护，免受这篇研究里描述的这类攻击。这种攻击需要改动模型的权重；Foundry 在接入 open-weight 模型时，通过溯源控制把每个模型与其原始发布方绑定，而每个 model card 都会标明发布方。然后，模型跑在微软自己的容器里，这些容器会另行扫描严重漏洞。这些控制覆盖模型从哪里来，以及它周围的软件。仍然存在的风险是：受信任的提供方本身被攻陷，例如通过其训练基础设施，或通过内部人员。为了在这种情况下加强保护，我们已经开始按这项研究的建议推进工作。我们正与内部 AI 安全团队合作，把它的检测技术做成一套 red-teaming harness，并探索在接入 open-weight 模型时，用 frontier agents 做权重扫描能否成为额外的安全信号。也在规划给模型签名，带上可验证的 provenance 和防篡改审计。"
+          },
+          {
+            "kind": "p",
+            "text": "下面是我们建议的一个起点。对模型枢纽和供应商："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "用 frontier agents 审计模型权重。",
+              "把模型权重与声明的基座模型对比。",
+              "针对权重级攻击做 red-team 测试。",
+              "展示模型 provenance 和审计状态。",
+              "披露第三方 checkpoint 的风险。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "对企业和用户："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "清楚模型从哪里来。",
+              "限制 agent 权限。",
+              "监控 agent 的行动。",
+              "在执行前审查会带来实质后果的操作。",
+              "把审计当作证据，而不是保证。"
+            ]
+          },
+          {
+            "kind": "aside",
+            "text": "这份清单并不穷尽；没有任何审计能保证行为安全。它们应当只是 defense-in-depth 方法中的一层。"
+          },
+          {
+            "kind": "p",
+            "text": "这始于 3 月的一次快速实验：我让 Claude Code 搭配 Opus 4.5，在不训练的情况下，通过硬接少量 activations 给一个模型装上 backdoor。它做到了。这次实验后来变成对我们现在称为 Lazarus 的方法持续数月的研究。下面是我们学到的东西："
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "Agents 提供了很大的攻击面。一个被植入 backdoor 的模型可以通过每一项 eval，然后一接到信号就发出攻击者的命令，而 agent 会用它所拥有的权限去执行。",
+              "Dormant neurons 可以被改写成 trigger 检测器。每个 LLM 都有许多很少被激活的 neurons，它们可以被改写成只在 trigger 出现时才激活。这之所以有效，是因为预训练把内部表示组织得足够好，一个用大约 50 个例子拟合的 linear classifier，就能把带 trigger 的输入和没有 trigger 的输入分开。",
+              "一个被改写的 neuron 可以注入一个 token。一旦被改写的 neuron 激活，它就可以把任意 token 吼进 residual stream，从而强制输出这个 token。可以把多个 neurons 串起来，得到在你终端里运行的任意 payload。",
+              "它只需要 inference-only 的计算。只要你的机器有足够的内存来运行一个模型，它就有足够的资源在权重空间里给它装上 backdoor。",
+              "这并不是反对 open weights 的理由。这种攻击只需要对 checkpoint 的写权限，因此内部开发的模型同样暴露。一个被攻陷的账户、pipeline 或存储就可能足够。真正重要的是权重完整性和 provenance。",
+              "权重应当像代码一样被审计。Frontier agents 能发现异常的权重修改，但扫描还不是常见做法。这一点应当改变。",
+              "Claude Code 搭配 Opus 4.5 自主发现了其中的大部分。"
+            ]
+          }
+        ]
+      },
+      "sourceUrl": "https://www.microsoft.com/en-us/research/blog/lazare-veni-foras-reprogramming-dormant-neurons-to-backdoor-ai-agents/",
+      "sourceLabel": "读原文"
+    }
+  ]
+}
