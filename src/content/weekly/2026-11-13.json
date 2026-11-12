@@ -78,9 +78,13 @@
       ]
     },
     {
-      "title": "同一模型换 harness，比先换模型更能动针",
-      "summary": "IBM Research 给三个 harness 同样的开源权重模型和同样的 90 个 AppWorld 任务，只换 harness，任务完成率就从 30% 走到 81%。Hugging Face 按每个模型和每个 harness 训 LoRA adapter，模型发出的每一次 tool call 在运行前都经 safeagents 检查。Anthropic 的选模型指南则说：多数工作从 Claude Opus 5.5 的 medium 开始，换模型前先调 effort；公开榜只给你一个起始模型，然后要在自己的任务上测试这些候选再做决定。",
+      "title": "同一模型换 harness，新的执行模型也在上场",
+      "summary": "Google 推出 Gemini 4 Hydrogen，定位日常编码与 agentic 工作流里的快速执行，与擅长长周期推理的 Carbon、Argon 搭配；Antigravity 的 Orchestrator 在同一次 session 里动态切换模型，在 Terminal-Bench 4.0 上达到接近 Carbon 的任务成功率，平均少消耗 24% 的 quota，完成速度快 19%。IBM Research 给三个 harness 同样的开源权重模型和同样的 90 个 AppWorld 任务，只换 harness，任务完成率就从 30% 走到 81%。Hugging Face 按每个模型和每个 harness 训 LoRA adapter，模型发出的每一次 tool call 在运行前都经 safeagents 检查。Anthropic 的选模型指南则说：多数工作从 Claude Opus 5.5 的 medium 开始，换模型前先调 effort；公开榜只给你一个起始模型，然后要在自己的任务上测试这些候选再做决定。",
       "links": [
+        {
+          "label": "Gemini 4 Hydrogen",
+          "href": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-hydrogen/"
+        },
         {
           "label": "同一模型换 harness（日报 11-09）",
           "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-09/"
@@ -552,6 +556,74 @@
           {
             "kind": "aside",
             "text": "这是我搭建并运营的一支舰队，数据里的批准也都由我做出。一次观察性案例不能证明因果；文中的假设应据此阅读。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gemini-4-hydrogen",
+      "company": "Google DeepMind",
+      "companyColor": "#4285F4",
+      "column": "选读",
+      "title": "Gemini 4 Hydrogen：为日常编码和 agent 工作流做快速执行",
+      "originalTitle": "Introducing Gemini 4 Hydrogen",
+      "byline": "Koray Kavukcuoglu · Google DeepMind · 11-12",
+      "sourceUrl": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-hydrogen/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "result",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "今天我们推出 Gemini 4 Hydrogen，把前沿智能带到每个人——为日常编码和 agentic 工作流提供速度和效率。我们的前沿模型 Gemini 4 Carbon 和 Gemini 4 Argon 擅长在最难的问题上做深的、长周期推理；Hydrogen 则是为多样 agentic 工作流里的快速执行而建。我们也把 Gemini 4 带到所有人：Google AI Studio 的所有档位、Gemini API、Gemini for business、Gemini app、Google Search，以及 Google Antigravity 里付费的 Google AI Pro 和 Ultra 订阅者。"
+          },
+          {
+            "kind": "pull",
+            "text": "我们的前沿模型 Gemini 4 Carbon 和 Gemini 4 Argon 擅长在最难的问题上做深的、长周期推理；Hydrogen 则是为多样 agentic 工作流里的快速执行而建。\nWhile our frontier models, Gemini 4 Carbon and Gemini 4 Argon, excel at deep, long-horizon reasoning on your hardest problems, Hydrogen is built for rapid execution across diverse agentic workflows."
+          },
+          {
+            "kind": "p",
+            "text": "Hydrogen 在 Artificial Analysis Intelligence Index 上、默认的 high thinking 超过 Argon（51 对 50，最高的 xhigh thinking 设定达到 54），而且常常比同档模型更快完成任务。整个 100 万 token 的 context window 统一定价：每百万 input tokens $1.50，每百万 output tokens $7.50。"
+          },
+          {
+            "kind": "h",
+            "text": "多模型工作负载里的效率"
+          },
+          {
+            "kind": "p",
+            "text": "真实的软件开发里，团队在设计系统或解开细微 bug 时依赖 Carbon 和 Argon 做深的架构判断，但仍需要一个快、有纪律的执行模型来写代码、跑测试、核验变更。Hydrogen 可以单独承担日常工作，也可以在多模型工作流里作为高效执行引擎，与 Carbon 和 Argon 搭配。"
+          },
+          {
+            "kind": "p",
+            "text": "为了让这种多模型协作自动发生，我们在 Google Antigravity 里推出 Orchestrator。它不再从头到尾只用一个模型，而是在同一次 session 里动态切换 Carbon 和 Hydrogen 这类模型。在 Terminal-Bench 4.0 上，Orchestrator 达到接近 Carbon 的任务成功率，同时平均少消耗 24% 的 quota，完成速度快 19%。需要并行 agents 的工作流里，Carbon 可以当 coordinator，Hydrogen 驱动 worker 和 verifier agents，在隔离的 workspace 里同时构建和测试变更。"
+          },
+          {
+            "kind": "h",
+            "text": "从 Gemini 3.8 Flash 迁过来"
+          },
+          {
+            "kind": "p",
+            "text": "对从 Gemini 3.8 Flash 迁过来的团队，Hydrogen 是一次单独的重大升级。它在默认的 high 设定下完成任务快 2.5 倍，同时把 Terminal-Bench 4.1 分数提高到三倍以上（57% 对 18.2%），把虚构的声称削减了 5 倍以上，并在 tool call 失败或搜索返回空时干净地适应。它擅长把读文件和搜索的调用原生批量并行发出，而不是一份一份看；早期测试里，合作伙伴在复杂 graphs、SQL 和数据密集的企业工作流上看到，Hydrogen 比 3.8 Flash 快 2 倍到 2.8 倍，token 用量减少 12% 到 23%。"
+          },
+          {
+            "kind": "h",
+            "text": "四个 thinking levels"
+          },
+          {
+            "kind": "p",
+            "text": "Hydrogen 有四档 thinking：low、medium、high（默认），以及新的 xhigh。质量、延迟和成本按可预期的梯度缩放，你只需为任务所需的推理深度等待和付费。"
+          },
+          {
+            "kind": "h",
+            "text": "为规模化、可依赖的执行而做的安全"
+          },
+          {
+            "kind": "p",
+            "text": "Hydrogen 把我们最新的 Gemini 4 safety 与 security 栈改进带到迄今最广的受众，把内置训练和实时表面防护结合起来，帮助缓解 misalignment 和 misuse。相对 3.8 Flash，它在 agentic 任务里把 overreach 最多降低 81%，under-service 最多降低 79%，并在 tool-use 和 coding 评测里把偏离对齐的动作和任务 shortcut 削减 12 倍。面对不可能或被拦住的任务，它绕过权限边界的可能性最多低 2 倍，在内部 agent honesty 评测上达到 96.7% 的诚实率。面对间接 prompt injection，它在 Gray Swan IPI benchmark 上强 2.3 倍以上。"
+          },
+          {
+            "kind": "p",
+            "text": "即日起，开发者可以在 AI Studio 和 Android Studio 里用 Gemini API 调用它；付费的 Google AI Pro 和 Ultra 订阅者也可以在 Google Antigravity 里试用。企业可以通过 API 或模型下拉在 Gemini for business 里部署。所有人可以在 Gemini app 的模型下拉和 Google Search 里用到它。在 Gemini app 里，免费用户会在它适合这条 prompt 时，经由自动选模型用到 Gemini 4 Hydrogen。"
           }
         ]
       }

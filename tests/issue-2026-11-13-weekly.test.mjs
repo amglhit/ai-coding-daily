@@ -14,6 +14,7 @@ const STORY_IDS = [
   "anth-memory",
   "google-distraction",
   "hf-coord",
+  "gemini-4-hydrogen",
 ];
 
 test("2026-11-13 weekly keeps the source issue", () => {
@@ -28,6 +29,7 @@ test("2026-11-13 weekly keeps the source issue", () => {
   );
   assert.equal(issue.themes.length, 5);
   assert.equal(issue.themes[0].title, "多 agent 团队能冲规模，也会一起变差");
+  assert.equal(issue.themes[4].title, "同一模型换 harness，新的执行模型也在上场");
   assert.equal(issue.practices.length, 5);
   const worse = issue.stories.find((story) => story.id === "worse-together");
   assert.equal(worse.column, "行业动向");
@@ -47,6 +49,12 @@ test("2026-11-13 weekly keeps the source issue", () => {
   assert.equal(
     fleet.sourceUrl,
     "https://claude.dev/blog/safely-scaling-multi-agent-teams-with-fable-5-2/",
+  );
+  const hydrogen = issue.stories.find((story) => story.id === "gemini-4-hydrogen");
+  assert.equal(hydrogen.column, "选读");
+  assert.equal(
+    hydrogen.sourceUrl,
+    "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-hydrogen/",
   );
 });
 
