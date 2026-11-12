@@ -1,0 +1,632 @@
+{
+  "title": "AI Coding 周报 · 2026-11-13（周五）",
+  "date": "2026-11-13",
+  "type": "weekly",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点"
+  ],
+  "must_read": [
+    "anth-memory",
+    "worse-together"
+  ],
+  "masthead": "11 月 13 日 · AI Coding 周报",
+  "themes": [
+    {
+      "title": "多 agent 团队能冲规模，也会一起变差",
+      "summary": "Anthropic 用 1,000 个早期 Fable 5.2 agents，在没有互联网的 sandbox 里、再加分类器与离线 monitor，28.7 小时复现了费马形式化：output tokens 约为原先的三分之一，写出的证明约为原先的七分之一。同周 Worse Together 在四个共享资源的环境里发现：每人把任务交给自己的 agent，群体结果都差过由一个 coordinator 服务所有人；按每个环境的 scenarios 平均，coordinator 大约高出 10 到 45 个百分点。七机舰队跑了 103 天的 Coordination Decay 则写到，一套协调协议可以守住每一条安全不变量，却仍被弃用。Cursor 也在本周把 Projects 做成 multiplayer：共享 context 与任务板，并让不同队友的 agents 互相通讯，现以 beta 向所有用户放开。",
+      "links": [
+        {
+          "label": "1,000 agents 复现费马形式化（日报 11-10）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-10/"
+        },
+        {
+          "label": "Worse Together（日报 11-12）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-12/"
+        },
+        {
+          "label": "Coordination Decay（日报 11-09）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-09/"
+        },
+        {
+          "label": "Cursor Projects 现已 multiplayer",
+          "href": "https://cursor.com/blog/projects-multiplayer"
+        }
+      ]
+    },
+    {
+      "title": "Agent memory 多了离线整理这一层",
+      "summary": "Anthropic 把 agent memory 比作海马体与新皮层的分工，并写出 Dreaming：用交互之间的闲时算力整理 memory，纠正错误、写 notes、建立新的 memory 表征，或决定预先载入未来会话的内容。Curative 在生产里从另一面碰到风险：一次 Gwen run 只看见一家医疗服务提供者，跨交易不留记忆；销售 agent 若保留 memories，一段坏的 memory 可能永远清不掉，掉进 doom loops。",
+      "links": [
+        {
+          "label": "Dreaming（日报 11-09）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-09/"
+        },
+        {
+          "label": "Curative 全国网络（日报 11-12）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-12/"
+        }
+      ]
+    },
+    {
+      "title": "提交暴涨之后，review 要分流，盖戳变少说明不了质量",
+      "summary": "GitHub 写道，今年 10 月单周提交超过 12 亿次，比一年前多 400% 以上；Faros AI 的一项研究发现，团队从低 AI 采用走到高 AI 采用时，pull requests 花在 review 上的时间长了 441%。他们给出 Plan→Build→Verify→Observe 来铺 agent 工作流。Sourcegraph 用 Ship / Show / Ask 给 PR 审批 bot 分流，并写明：更少的 stamp 请求几乎说明不了评审质量。",
+      "links": [
+        {
+          "label": "GitHub agentic engineering（日报 11-09）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-09/"
+        },
+        {
+          "label": "Sourcegraph PR 审批 bot（日报 11-11）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-11/"
+        }
+      ]
+    },
+    {
+      "title": "过时信号会向 agents 征收一笔税",
+      "summary": "Google 观察到，人对过时 TODO、已解决的 bug 和滞后文档很容易扫过去，agents 却把它们看成行动号召：13% 的读文件会话会碰到，绕路多 70% steps。Microsoft 用同一段会把应用弄坏的升级代码做实验：单单版本号就改变了模型对字节级相同代码所做的事；Claude Sonnet 5.5 在升级被标成 patch 时，10 次里有 2 次跑了测试或读了新代码，被标成 major 时 10 次全做了。版本号告诉 agent 该有多担心，只有测试告诉它该不该担心。",
+      "links": [
+        {
+          "label": "过时 TODO 把 agent 带跑偏（日报 11-10）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-10/"
+        },
+        {
+          "label": "Agents 与 SemVer（日报 11-10）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-10/"
+        }
+      ]
+    },
+    {
+      "title": "同一模型换 harness，新的执行模型也在上场",
+      "summary": "Google 推出 Gemini 4 Hydrogen，定位日常编码与 agentic 工作流里的快速执行，与擅长长周期推理的 Carbon、Argon 搭配；Antigravity 的 Orchestrator 在同一次 session 里动态切换模型，在 Terminal-Bench 4.0 上达到接近 Carbon 的任务成功率，平均少消耗 24% 的 quota，完成速度快 19%。IBM Research 给三个 harness 同样的开源权重模型和同样的 90 个 AppWorld 任务，只换 harness，任务完成率就从 30% 走到 81%。Hugging Face 按每个模型和每个 harness 训 LoRA adapter，模型发出的每一次 tool call 在运行前都经 safeagents 检查。Anthropic 的选模型指南则说：多数工作从 Claude Opus 5.5 的 medium 开始，换模型前先调 effort；公开榜只给你一个起始模型，然后要在自己的任务上测试这些候选再做决定。",
+      "links": [
+        {
+          "label": "Gemini 4 Hydrogen",
+          "href": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-hydrogen/"
+        },
+        {
+          "label": "同一模型换 harness（日报 11-09）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-09/"
+        },
+        {
+          "label": "Harness adapters（日报 11-09）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-09/"
+        },
+        {
+          "label": "选 Claude 模型（日报 11-11）",
+          "href": "https://amglhit.github.io/ai-coding-daily/daily/2026-11-11/"
+        }
+      ]
+    }
+  ],
+  "practices": [
+    "清理代码库里过时的 TODO、已解决的 bug 记录和滞后文档。Google 测到 13% 的读文件会话会碰到这类内容，绕路多 70% steps；对 agent 友好的代码库，要求的不只是热路径上的代码健康。",
+    "PR 按 Ship / Show / Ask 分流，先把这次变更要不要等人盖戳说清楚；不要把 stamp 请求变少当成评审质量变好。",
+    "升级依赖时不要只看 patch / major 标签。同一段会弄坏应用的代码，Claude Sonnet 5.5 在被标成 patch 时 10 次里只有 2 次跑测试或读新代码，标成 major 时 10 次全做了；版本号告诉该有多担心，只有测试告诉该不该担心。",
+    "多数 Claude 工作从 Opus 5.5 的 medium 开始，换模型前先调 effort；公开基准只是起始点，用自己的任务再测。",
+    "多人共用 agents、共享预算或代码库时，不要默认「每人一个 agent」就更好：Worse Together 在四个环境里都是一个 coordinator 服务所有人结果更好；若要用编队，先写明优先级，或在提交、下单这类关键动作前强制读完待处理消息。共享 memory 要能改、能清，避免一段坏笔记进 doom loop。"
+  ],
+  "stories": [
+    {
+      "id": "worse-together",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "行业动向",
+      "title": "每人一个 agent，群体结果更差：四个环境里 coordinator 高出约 10–45 个百分点",
+      "originalTitle": "Worse Together: How Performance Breaks Down in Multi-User Multi-Agent Teams",
+      "byline": "Sahan Paliskara, Nattaput Namchittai, Jacqueline Tay, Avery Griffin, Andrew Lampinen · 11-11",
+      "body": {
+        "pattern": "benchmark",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "用户把任务交给自己的 agent，而这些任务需要和其他人的 agents 共享资源，比如计算预算、代码库，或一笔团餐费用。这些场景研究得还不够，所以我们建了四个带模拟用户、做日常任务的环境——研究人员共享一份 API-token 预算、急诊患者共享一份诊所日历、用户通过私人助理安排团餐或旅行预订、以及带发布截止的 merge queue——并在其中测试了 Anthropic、OpenAI 和 Alibaba 的前沿模型。"
+          },
+          {
+            "kind": "pull",
+            "text": "在全部四个环境里，当每个用户把自己的任务委托给自己的 agent，而不是由一个 agent 服务所有人时，群体结果都更差。\nIn all four environments, group outcomes were worse when each user delegated to their own agent rather than when one agent served everyone."
+          },
+          {
+            "kind": "p",
+            "text": "按每个环境的 scenarios 平均，coordinator（一个 agent 服务多名用户）在全部四个环境里、对 Claude Opus 5 和 Claude Sonnet 5 都胜过 peer-to-peer team（每名用户一个 agent，agents 之间有通道），大约高出 10 到 45 个百分点。在这些模拟设定里，我们也看到了问题行为，随模型和环境差别相当大，包括团队变大时停滞、覆盖其他用户的请求，以及在没有依据的情况下对别人作出断言。补法取决于环境：指定一名团队负责人、并清楚写明优先级，能改善 agents 共享预算时的表现；而拦住 agent、直到它读完消息才允许下单，比只是重跑，救回了更多失败的团单。我们把其中三个环境做成基准 MAMUBench 发布。"
+          },
+          {
+            "kind": "h",
+            "text": "API Key"
+          },
+          {
+            "kind": "p",
+            "text": "4、8 或 16 名研究人员共享一份不够覆盖所有人工作的 API-token 预算。25 个 scenarios 里，peer-to-peer team 相对 coordinator 的表现，Claude Opus 5 为 47%，Claude Sonnet 5 为 38%；按最优结果计，则分别是 30% 和 12%，coordinator 为 64% 和 32%。主要问题是 agents 动得太少、也太晚：从 4 个到 16 个 agents，曾经采取过行动的比例，Claude Sonnet 5 从 66% 降到 10%，GPT-5.6-sol 从 82% 降到 25%。GPT 和 Qwen 的 agents 还会在未经询问的情况下取消或停下其他用户的 job；这些 unconsented cuts 并没有降低群体结果，但仍然不可取，因为它们在对方不同意的情况下结束了另一位用户的工作。"
+          },
+          {
+            "kind": "h",
+            "text": "Personal Assistant"
+          },
+          {
+            "kind": "p",
+            "text": "一组用户把团餐或预订交给各自的助理，并共享一份预算。每个 scenario 里有一名用户提出一个有针对性的请求，我们称之为 ask：要么是安全约束，要么是利他请求。在 25 个 scenarios 里，coordinator 落实该 ask 的频率大约是 peer-to-peer team 的两倍。ask 通常会在组内被传达，但主要问题是竞态：提交订单的那个 agent，常常还没读完发给它的每条消息就提交了。ask 被发送给最终下单的那个 agent 的比例是 94–99%，但在提交当时进入该 agent 的 context 的只有 47–67%。即便 ask 已在 context 里，也只有 56–68% 的 episodes 落实了它；不在 context 里时是 19–36%。略超过一半的 Claude team episodes 至少包含一次在信息并不支持的情况下对别人作出的断言，单个 agent 是 17–20%。"
+          },
+          {
+            "kind": "h",
+            "text": "Mitigations"
+          },
+          {
+            "kind": "p",
+            "text": "在 API key 环境里，单独设一名 team lead agent，并指示它优先处理高价值 job、把预算用满，就能把 peer-to-peer team 带到与 coordinator 相当或更高的水平。另外三条指令还能再改进：lead 严格按价值给 job 排序；只要还有时间把预算用掉，它就放出自己扣下的预算；其他每个 agent 汇报自己 job 的信息，并按 lead 的分配执行。但这套 team lead 在 personal assistant 环境里没有帮助。那里我们最好的 mitigation 是一道 platform guard：提交的 agent 读完所有待处理消息之前，不许结账；在对失败 team episodes 的重跑中，它能救回 73%（Claude Opus 5）和 62%（Claude Sonnet 5）的失败 episodes。能起作用的补法因环境而异。"
+          },
+          {
+            "kind": "p",
+            "text": "类似的协调问题也可能出现在单用户设定里：一个人把不同但相互交叉的任务交给多个 agents，比如开八个 Claude sessions，在同一份代码库里做功能。虽然我们的结果显示 coordinator 可以胜过团队，但对用户很多的系统来说，依赖一个 coordinator 并不总是可行或自然。因此，multi-user, multi-agent 的风险，不能只靠把协调集中起来解决。评估也应当在衡量群体结果的同时衡量 agent 行为，因为单独看任何一面都会漏掉东西。"
+          },
+          {
+            "kind": "aside",
+            "text": "结果来自模拟用户和日常任务。环境的设计是：一个前沿模型作为单一 coordinator 时通常表现很好，比较编队因此隔离的是协调，而不是任务能力。这篇帖子只展开四个环境里的两个、四种编队里的两种，没有给出诊所日历或 merge queue 的分项成绩。群体分数带 95% confidence intervals。未经同意与编造的标注本身由模型判断。73% 和 62% 是对失败 team episodes 重跑的挽回比例，不是全量成功率。「开八个 Claude sessions」是类比，不是测得的结果。"
+          }
+        ]
+      },
+      "sourceUrl": "https://alignment.anthropic.com/2026/worse-together/",
+      "sourceLabel": "读原文"
+    },
+    {
+      "id": "anth-fable-fleet",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "行业动向",
+      "title": "安全扩大 multi-agent 团队：1000 个早期 Fable 5.2 agents，28.7 小时复现费马形式化",
+      "originalTitle": "Safely scaling multi-agent teams with Claude Fable 5.2",
+      "byline": "Barry Zhang et al · 11-09",
+      "sourceUrl": "https://claude.dev/blog/safely-scaling-multi-agent-teams-with-fable-5-2/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "Multi-agent 团队能解决困难的、长周期问题。今年 9 月，我们发表了费马大定理的第一次端到端形式化，由几十个跑着大致相当于 Claude Fable 5.1 的内部研究模型的 agents 写成。那次工作依赖 Prove2Me（一个数学形式化平台）和一位研究员的方向。在一次新的玩具实验里，一支 1,000 个跑着早期 Claude Fable 5.2 的 agent 团队，在没有 Prove2Me 提供的脚手架、也没有研究员现场指挥的情况下，复现了这个证明。团队花了 28.7 小时，用掉的 output tokens 约为原先的三分之一，写出的证明长度约为原先的七分之一。"
+          },
+          {
+            "kind": "p",
+            "text": "每个 agent 在没有互联网访问的 sandbox 里工作。一个分类器在每条 shell 命令和文件编辑运行前检查它，一个离线 monitor 审查团队的每一个行动。我们给 agents 一份 60 条陈述的清单、一句对经典路径的素描、这些陈述所用的定义，以及我们先前形式化里 47 条已证明的引理，并指定了 lead 和 helper 角色。关于如何证明这个定理、或如何组织自己，我们没有提供其他指导。这次玩具实验表明，跑在 Fable 5.2 这类模型上的 agent 团队，可以在仔细设计的安全边界内完成宏大的、长周期目标。"
+          },
+          {
+            "kind": "h",
+            "text": "问题"
+          },
+          {
+            "kind": "p",
+            "text": "费马大定理说：没有任何正整数 a、b、c 满足 aⁿ + bⁿ = cⁿ（对任何大于 2 的 n）。它在 350 多年里未被证明，直到 Andrew Wiles 1995 年那份 129 页的证明。把证明形式化——让计算机可以检查每一步——一直是数学共同体的长期目标。我们 9 月的形式化花了一位研究员和几十个 agents 11 天、大约 60 亿 output tokens。他们用 Lean 写了 1300 万行代码。Agents 通过 Prove2Me 协调：一份共享图把每条待证陈述连到它被拆成的更小陈述；任何 agent 都可以拆分一条陈述，其他 agents 可以向图询问哪些未证明的碎片已经可以动手，以免跟丢项目状态。每条陈述及其证明放在单独、可独立编译的文件里，这样许多 agents 可以并行工作而不编辑同一批文件。"
+          },
+          {
+            "kind": "h",
+            "text": "Harness"
+          },
+          {
+            "kind": "p",
+            "text": "我们想看跑在 Fable 5.2 这类模型上的 agent 团队，能否在没有 Prove2Me、也没有研究员指挥工作的情况下产出这一结果，用的是由通用 tools 建成的 harness。我们给这 1,000 个 agents 60 条要证明的陈述，包括最终定理和 59 个中间里程碑。对每条陈述，agents 必须用 Lean 写证明，用 Lean 的 tools 构建并检查，再提交到 Git 上共享的 main 分支，由一份 grader 检查。每个 agent 得到：自己 sandbox 里、没有网络访问的 shell 和文件编辑器；做进 sandbox 镜像的 Lean 工具链和 Mathlib；自己的 Git 分支，以及向 main 开 merge request 的能力；一个可以从 shell 到达的共享 Postgres 数据库。"
+          },
+          {
+            "kind": "p",
+            "text": "证明工作可以拆开，适合 multi-agent 团队。但 agents 也需要协调，既为了建立在彼此的工作之上，也为了避免重复。原先的形式化里，Claude 的早期尝试失败，是因为 agents 跟丢了项目状态，不再有效协作。迁到 Prove2Me 解决了这个问题。这次运行里，每个 agent 的 sandbox 在自己的轻量虚拟机上。一台共享机器在大约 100 个 agents 时碰到了极限：我们超过一半的 100-agent 运行因为内存、磁盘或 CPU 耗尽而不得不停止或重启。有了 1,000 个分开的 sandboxes，agents 需要一种分享工作的办法，所以我们给了它们一个 SQL 数据库。我们选择 SQL，是因为它提供组织信息的通用原语，它的事务能处理来自 1,000 个 agents 的并发写入，而且 Claude 已经熟悉它。Agents 用数据库认领任务、分享笔记、记录完成的工作。"
+          },
+          {
+            "kind": "p",
+            "text": "我们的 prompt 给了 Claude 一份 60 条陈述的清单（每条带一行非正式描述），并描述了可用的 tools。我们给团队的唯一结构是一层层级：一个 lead 和 999 个 helpers。我们让 lead 把问题拆成部分并分配给 helpers；让 helpers 等 lead 的工作，任务不清时向 lead 确认。运行期间，harness 向 lead 发了 19 条还剩多少时间的自动提醒，每条都鼓励 lead 继续。"
+          },
+          {
+            "kind": "h",
+            "text": "安全"
+          },
+          {
+            "kind": "p",
+            "text": "正如我们先前分享过的，没有任何单层防御足以约束一支 agent 团队。这次实验里，我们把 sandboxing 与实时和离线监测结合起来，让每个 agent 待在自己没有网络访问的虚拟机里，并检测任何试图逃出 sandbox 或篡改监测的行为。我们这样加固每个 agent 的 sandbox：没有专用消息通道，只通过数据库和 Git 协调；只能推自己的 Git 分支并向 main 开 merge request（由一份分开的作业合并，冲突或故障时拒绝）；数据库跑在共享的无特权角色下；sandbox 没有网络，唯一出口是通向 gateway 的 pipe，身份在 sandbox 外打标，防止一个 agent 假扮另一个；kernel 去掉可加载模块、kexec、裸内存访问和 kernel probes 等给 root 的直达路径，并跑在 lockdown 模式；命令以无特权用户运行，sudo 被去掉，tools 不能读或改运行它们的 agent loop。"
+          },
+          {
+            "kind": "p",
+            "text": "为了让这类运行更安全，我们用一个被 prompt 的 LLM 分类器，可以拦住每一条 tool call，包括 shell 命令和文件编辑。分类器盯着逃出 sandbox、探测边界、篡改监测的企图，以及模型如果设法离开 sandbox 可能采取的有害行动。分类器拦住一条 tool call 时，整支 agent 团队停下，必须有人审查这次拦截，团队才能重启——这是为了防止另一个 agent 把被拦住的行动做完。在这次运行里我们只用了看行动、不看 chain of thought 的 monitor；只有拦住 lead 才会结束整次运行，拦住一个 helper 只移走那个 helper。超过一百万次 tool call，这一次运行里没有一次达到被拦截的门槛。我们后来用看 chain of thought 的 monitor 和今天的 rubric 回放这些调用，只有一次——一次检查是否有 root 权限——接近被拦。"
+          },
+          {
+            "kind": "p",
+            "text": "除了实时监测，我们还跑一个离线 monitor。它按与实时 monitor 相同的威胁模型分析 agent 团队的行动，但有额外能力，比如查阅其他 agents 的行动。"
+          },
+          {
+            "kind": "h",
+            "text": "结果"
+          },
+          {
+            "kind": "p",
+            "text": "没有 Prove2Me，团队建了自己的协调系统。前 10 分钟里，lead 在数据库里建了五张表：Announce（lead 给全队的命令，比如如何拆分工作）；Assign（谁做什么）；Notes（开放看板，用来认领一块工作或报告进展）；Subtasks（待办清单，任何 agent 可以加任务，第一个认领的 helper 拥有它）；Landed（完成工作的日志）。"
+          },
+          {
+            "kind": "p",
+            "text": "表建好后，lead 做了三件事。它把每条陈述分给 16 到 17 个 helpers 组成的一组，往 assign 表写了 999 行；让每组里的一个 helper 当 captain，负责把计划发到 notes 表，并把工作拆成任务供组员从 subtasks 表认领；再往 announce 表发指令，让每个 helper 先判断自己那条陈述的难度，并把裁决发到 notes 表。大约 27 分钟时，已经有三条陈述被证明，lead 读了贴出的裁决。它随后把多数 helpers 判为在本次运行预算内不可行的 47 条陈述搁在一边，几乎把全部 helpers 重新分配到剩下的 10 条、它认为他们能做完的陈述上。各组从大约 17 个 helpers 长到 46 到 139 个。大约 45 分钟时，10 条里约有 5 条已证明，lead 写道：团队的吞吐量远高于早期那些「预算内不可行」裁决所假定的。这 10 条陈述在大约 70 分钟内全部被证明。"
+          },
+          {
+            "kind": "p",
+            "text": "前 10 条做完后，lead 写道「没有理由闲着」，把 helpers 重新分配到它最初丢掉的更难陈述上。随着更多陈述被证明，它持续把 helpers 转到新任务，大多发生在前 6 个小时。helpers 承担了更多拆解每条陈述的责任。到第 5.6 小时，73 个 helpers 写了 756 个任务，其中只有 16 个是 captains。起初 lead 也把 helpers 分到特定陈述；第一小时内这就开始改变，到第三小时，lead 对空闲的 helpers 说「不要等我」。"
+          },
+          {
+            "kind": "p",
+            "text": "大约第 18 小时，剩下的主要是 Langlands–Tunnell（Wiles 证明所依赖的一个经典结果），以及依赖它的陈述和另一条陈述（团队顺带证明了）。更早的时候，这条任务的 captain 相当悲观，估计证明至少要 70 万到 100 万行 Lean 代码，按时做完的机会不到 1%。Lead 曾把它搁在一边。几乎所有其他工作完成后，lead 让团队重新聚焦到 Langlands–Tunnell，最后一次自上而下地把大约 750 个 helpers 调过去，并写道：「老实说机会很低。」Langlands–Tunnell 远大于 agents 做过的任何其他陈述，任务数大约是九倍，新代码超过两倍。许多最初的任务对单个 helper 来说太大。于是团队把工作组织成一棵树：captain 把陈述分成 10 个区域，每一块列成一个任务；觉得一块太大的 helper 可以再拆，在它下面加上更小的任务。这棵树最终长到 2,418 个任务、最深 10 层。每一块可以假定它下面的那些块，所以数百个 helpers 可以在那些块被证明之前并行工作。Langlands–Tunnell 在第 28.4 小时被证明，最终定理在第 28.7 小时。Lead 随后写道：「谢谢大家：费马大定理已经在 main 上，由官方 checker 做了 kernel 检查。」计数停在 60 条陈述中的 54 条，因为五条替代路径不再需要，一条陈述被丢掉。"
+          },
+          {
+            "kind": "h",
+            "text": "结论"
+          },
+          {
+            "kind": "p",
+            "text": "这次玩具实验让我们研究一支 1,000 个 agents 的团队如何走完一项长而难的任务。只用 Git 和一个共享数据库，agents 设计了表来分配角色和分享结果，组成了小组，并建了一棵任务树来拆解最难的那条陈述——它自己的 captain 曾给过不到 1% 的完成机会。这一结果并不让领域专用的 harness 或平台变得多余。例如 Prove2Me 仍可能靠帮助 agents 更快编译 Lean、并让它们搜索和复用人类结果来提高效率。人的方向在某些节点仍然有用。Agents 往往会在难题上放弃，并误判难度。早期 helpers 把 60 条陈述里的 47 条判为预算内不可行，团队后来却证明了其中大多数。在这样的时刻给人鼓励，可以避免 agents 过早停下。我们预期这些方法会很快演化；随着这样的团队接手更难的工作，围着它们的安全边界也需要跟上。"
+          },
+          {
+            "kind": "pull",
+            "text": "仔细设计的安全边界，给了我们从头跑这次实验的信心。Claude 可以用我们提供的 tools 按自己选择的方式攻这个问题，但只能待在没有网络访问的 sandbox 里，并处在两套分开的 monitor 之下。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anth-memory",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "工程化实践",
+      "title": "Dreaming：用闲时算力整理 agent memory——纠错、建 wiki、注入会话",
+      "originalTitle": "The components of agent memory",
+      "byline": "Lance Martin et al. · Anthropic · 11-06",
+      "sourceUrl": "https://www.anthropic.com/research/components-of-agent-memory",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "framework",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "克尔凯郭尔写过：人生只能往后理解，却必须往前过。设计 AI agent 的 memory 时，我们碰到类似的困境。人一边生活一边编码记忆，海马体即时抓住经历，使记忆很快形成、立刻可用；但只有一部分经历会巩固成长时知识。很多巩固发生在大脑离线时：睡眠和安静休息中，海马体回放近期经历，逐渐蒸馏并整合进储存大部分知识的新皮层。agent memory 可以用类似的分工。Agents 把大量工作记在 logs 或 transcripts 里；Letta 与 UC Berkeley 的研究者提出 sleep-time compute，让模型在交互之间的闲时重组已有 context。同一思路可以帮助 agents 整理 memory：回看 logs 来纠错，或写出新的 notes 与表征。这个过程常被叫做 dreaming。"
+          },
+          {
+            "kind": "pull",
+            "text": "Dreaming 能帮我们给 Claude 有效的 memory：纠正错误、写 notes、建立新的 memory 表征，或决定预先载入未来会话的内容。\nClaude can use dreaming to organize memory. This can correct mistakes, create notes, build new memory representations, or shape what's preemptively loaded into future sessions."
+          },
+          {
+            "kind": "h",
+            "text": "Memory notes"
+          },
+          {
+            "kind": "p",
+            "text": "我们说的 agent memory，是 Claude 从经验里获得的知识——包括与用户的互动和交给它的任务——并跨会话保留，存成日后可读的 context。它不包括模型学习或管理 context 的其他方式：改 weights（训练时设定的内部参数）、单次对话里的 in-context learning，以及 compaction（Claude 写下摘要替换更早的轮次，好在新的 context window 里继续工作）。人脑会在经历之前、期间或之后释放化学信号，把一段记忆标成重要；被标记的记忆在离线期回放得更多，这一过程叫做 replay，有助于把它们稳定并整合进长期记忆。类似地，Claude 可以在 session log 里给显著事件打标，方便以后找到，或写到 memory store，例如一文件夹 memory notes。但在还不知道接下来会发生什么时，当下怎么判断什么显著？"
+          },
+          {
+            "kind": "h",
+            "text": "Memory 可以是对未来所需的预测"
+          },
+          {
+            "kind": "p",
+            "text": "Memory 偶尔是一种预测。写下一条规则，agent 就是在预测它所描述的模式以后还会用到。例如，写下已验证的事实，是预测未来会话里的 agent 会想直接依赖它、不必再核对。随着时间推移，Claude 已经更擅长做这类预测。"
+          },
+          {
+            "kind": "p",
+            "text": "Continual Learning Bench（CL-Bench）1.0 衡量 agent 用 memory 处理长程任务的能力。其中一项任务让 Claude 查数据库回答一系列问题；它给出答案后会被告知正确答案，并可以写一条 memory 帮助回答后面的问题。这里 memory 可以支撑一个学习闭环：如果答错，它可以记下失败、提出关于出错原因的理论、检验这些理论，再把发现写成以后怎么回答的规则。我们用 Claude Managed Agents 跑这项任务。Claude 每道题都从新 session 开始，唯一例外是可以从跨会话持久的 memory 目录取文件。"
+          },
+          {
+            "kind": "p",
+            "text": "不同模型自己搭建学习闭环的程度不同。Claude Sonnet 4.6 能走到对答错原因提出理论；它的 memory 目录里是散落的文件，各列若干未检验的猜测。Claude Opus 4.7 把 notes 收成一份参考文档，开始标哪些事实已核对、哪些仍未确认。Claude Sonnet 5 在 grader 核对后把每条答案标为 confirmed，答错则写更正。Claude Opus 5 是这批模型里第一个闭环的：多数条目包含一条规则（以及它怎么知道这条规则为真）、先前问题的答案，以及对沿途发现的陷阱的明确警告。和 Opus 5 一样，Claude Opus 5.5 与 Claude Sonnet 5.5 也闭环了，用 memory 记下已验证的、以后怎么答题的规则。有 memory 时，两者分数与 Opus 5 大致相当，不过没有 memory 的 baseline 略高。"
+          },
+          {
+            "kind": "h",
+            "text": "Claude 已学会判断 salience"
+          },
+          {
+            "kind": "p",
+            "text": "我们也用玩 Pokémon Red 来评估 Claude 判断该把什么写入 memory——这款游戏考验它处理复杂长程任务的能力。每次 run 开始时，我们给每个模型一个可读可写的 memory 文件夹。我们比较了 Claude Sonnet 3.7 与 Claude Fable 5 各一次 run、大约走到 10,000 步时的 memory 文件夹。关键差别是各自觉得什么值得记住。Sonnet 3.7 假定什么都可能有用，不加选择地写：常常一场战斗、一件物品、一个 NPC 各一份文件。最终它写了 413 个 memory 文件、分布在 225 个文件夹，拿了 1 枚徽章。Fable 5 写了两个文件夹里的 9 个文件，外加顶层一份 `global.md`，拿了 4 枚徽章。"
+          },
+          {
+            "kind": "p",
+            "text": "Sonnet 3.7 的做法主要成问题，是因为 Pokémon 的游戏状态不停变化，这份细账不断过时。于是随着进度推进，Claude 花在翻 memory 上的时间和资源越来越多，而不是在玩游戏。大约第 10,000 步，例如，Sonnet 3.7 开始建第四个「master」memory 文件夹；随后 17 步里新建了 6 个文件、删了另外 9 个，游戏里一步没走。"
+          },
+          {
+            "kind": "p",
+            "text": "Fable 5 用 memory 记游戏不会明确告诉它的东西。Sonnet 3.7 写入 memory 的某些信息——玩家有多少钱、人在地图上哪里——每回合都能从屏幕读到，存下来是多余的。相反，关于策略、计划和已验证规则的 memory 文件，只有 Claude 自己推出来才会存在，不写下来就会消失。Fable 5 据此组织 memory。它的 `global.md` 像一块 dashboard：当前目标、预先写好的健身房（赢得徽章的挑战）计划，以及它自己使用 memory 的规则。`locations` 文件夹存放特定路线的导航计划，`gameplay` 文件夹存放它从游戏机制里学到的策略。例如，连续 7 个 Poké Ball 都没抓住 Magikarp（最容易抓的宝可梦之一）之后，Claude 写下：「If 3+ balls fail in a row, VARY the timing (insert extra ‘wait’ presses between menu steps) - the catch landed right after doing this。」memory 文件夹小得多，Fable 5 却在游戏里走得更远。Opus 5.5 做法类似：只保留一小夹追踪当前目标和下一步的 memory notes，边玩边改写，并通关了游戏。"
+          },
+          {
+            "kind": "h",
+            "text": "引导 Claude 写 memory"
+          },
+          {
+            "kind": "p",
+            "text": "我们发现，告诉 Claude memory 是干什么用的，而不是该怎么用，更有帮助。在 CL-Bench 上，我们只告诉 Claude 有一个 memory 文件夹可用。这样的一般指引就够 Opus 4.7 和 Opus 5 有效使用 memory，两者都有明显提升。我们还测试了给模型规定该写什么的具体规则，每次测试一条，并比较有无该规则时 memory 带来的增益。规定「只记录失败」时，Opus 5 和 Opus 4.7 都丢掉了 memory 带来的大部分提升。对更强的模型，让它们自己判断 salience，比事先定死规则更有效，那些规则反而可能削弱表现。"
+          },
+          {
+            "kind": "p",
+            "text": "我们也注意到，引导对较老的模型帮助最大。例如 Sonnet 4.6 常常不读 memory 目录里的文件，也不去检验关于答错原因的理论。这时，prompt 它在答题前先读 memory 文件，再明确检验理论，benchmark 分数几乎翻倍。Sonnet 5 自己就会做：不经 prompt，10 次里有 9 次答题前先读 memory；相比之下，Sonnet 4.6 这样做的比例不到一半。对前沿 Claude 模型，我们通常只给简单指引：在有人要求、或明显值得记住时创建 memory notes，判断交给 Claude。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以纠正 memory"
+          },
+          {
+            "kind": "p",
+            "text": "Claude 按会话中判断的 salience 写 memory，一条一开始就错、或随环境漂移的 note，可能在后续会话被读到并被信任。Dreaming 让 Claude 拿原始 transcripts 检验它的 notes。我们在用 Managed Agents、并挂载 memory 目录玩 Pokémon 时，看到过正面例子。"
+          },
+          {
+            "kind": "p",
+            "text": "游戏里有一段，玩家必须穿过 Mt. Moon：入口在地图西侧，出口在东侧。入口附近有一个陷阱：单向岩架，会把玩家掉回刚才来的路线，且没有明确的爬回去的办法。Claude 把山入口处的 PokéCenter 当路标，会不会走下岩架，取决于它以为 PokéCenter 在山的哪一侧。有一次 Claude 错误地记下 PokéCenter 在东侧。它走出 PokéCenter 时宣布「Mt Moon is behind me」，并更新 notes：「Mt Moon DONE。」但 Mt. Moon 并不在它身后。几步之后它走下岩架，回到来时的路线。它的导航工具没有显示落差，于是它得出「I overshot far west」，以为自己一直在正确的一侧。其实没有。"
+          },
+          {
+            "kind": "p",
+            "text": "我们随后测试 dreaming 能否帮 Claude 避开这个陷阱。我们对含有错误 PokéCenter 位置的 memory 文件夹跑了 dreaming：Claude 对照 session transcript 核对 note，抓住错误并重写。Transcript 给了它验证 memory 的 ground truth。note 纠正之后，Claude 直接走回 Mt. Moon，最终到达 Cerulean City。未纠正的那次 run 里，Claude 三次掉回先前的路线。第三次失败后它似乎放弃了，写下「I'm going to stop rather than keep looping。」我们设置里的自动回复让它继续。于是它一路退回山前的 Pewter City，希望在那里回复并补货。这次 run 结束时，Claude 从未到达 Cerulean City。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以建立新的 memory 表征"
+          },
+          {
+            "kind": "p",
+            "text": "有了 dreaming，Claude 可以建立帮助导航 memory 的表征。它使用的一类表征叫做 wiki：由 Claude 撰写和维护的一组页面，汇集它对某一主题所知，并链到其他 notes。这些链接相当于一张地图，让它筛选 memory、在需要时高效定位。"
+          },
+          {
+            "kind": "p",
+            "text": "这类表征可以帮助 Claude 穿越不断增长的知识库。我们用 Stainless（我们 5 月收购的软件公司）的内部文档语料——约 350,000 个文件、大约 420M tokens——探索 wiki 作为 memory 表征的收益。我们做了一组 25 个关于这份语料的问题，给 Claude 一个 search 工具去探索，并让它用 dreaming 基于这些文件建 wiki。在 128 个 sessions 里，我们 prompt Opus 5 agents 去探索文件、撰写或纠正带链接的 wiki 页面、合并重复、对照源核对主张。每个 session 建立在先前 agents 的进度之上，用共享 log 协调工作。随着 dreaming 从两个 sessions 扩到 128 个，这 25 个问题的表现从评分标准的 13% 升到 48%。"
+          },
+          {
+            "kind": "p",
+            "text": "Claude 增量地建 wiki。测试里，wiki 在同时给它 search 工具时帮助最大：同时用 search 和 wiki 时，随着 wiki 增长，综合分数从 54% 升到 61%；只用 search 是 53%。只用 wiki 答题时，最好成绩是 48%。同时用 search 和 wiki，每个问题大约节省 20,000 tokens。"
+          },
+          {
+            "kind": "p",
+            "text": "我们还想知道哪类任务受益于 wiki，于是用了 Harvey LAB benchmark，外加一套关于并购的文档。benchmark 给一组文档，让 Claude 据此生成法律 brief，再按标准打分。我们让 Claude 从文档建 wiki，再分别用 wiki 和直接文件 search 来回答问题（关于并购）或生成法律 briefs（LAB benchmark）。一项测试问了 24 个关于并购的问题，其中超过一半需要跨几份文档找信息，许多还需要判断或计算。在这些条目上，查阅 wiki 得 87%，只用 search 得 73%。另一些情况下 wiki 没那么有用：一项 LAB 任务里，brief 标准常常能靠单份文档的文本搜索拿到，wiki 相对 search 没有明显增益。另一项 LAB 任务里，wiki 长得比文档本身还大。就像博尔赫斯短篇《论科学的精确性》里的制图者，画出一张和帝国一样大的地图，Claude 做了一份极其详细、实际上什么也没抽象的 wiki。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以把 notes 提升到 memory 层级顶部"
+          },
+          {
+            "kind": "p",
+            "text": "Dreaming 也可以把 notes 浮到 memory 层级顶部，由 agent harness 在每个 session 开始时预先载入 Claude 的 context。这样 Claude 不必搜索，甚至不必知道有什么可搜。把 memories 提升进新会话（一种 context injection）必须谨慎：注入的 memories 会占用宝贵 tokens，一条错误的 note 会被带进每个 session。载入一条 note 也不保证 Claude 会照做：我们在 Claude Code 的文档里提醒，更长的指令文件会降低遵守程度。所以 memory 层级的顶层必须相对小，dreaming 在这里的大量工作就是维持这个小——把一些细节往下放，留下链接。Claude Code 的 auto memory 以同样方式保持注入层很小，由 Claude 在会话中维护。它不会把全部 auto memory 载入每个 session 的 context window，只载入 `MEMORY.md` 的前 200 行或 25 KB。这段 header 充当索引，告诉 Claude 它知道什么、去哪里找。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以让 memory 对准特定目标"
+          },
+          {
+            "kind": "p",
+            "text": "Dreaming 也可以塑造 memory 如何生长。例如 Claude Duet 这类助手，常常受益于按它正在帮助的人来组织 memories；dreaming 可以调成服务于特定目标。指导 memory 如何生长的说明因任务而异，告诉 Claude 什么信息真正重要。LAB benchmark 有一项任务模拟公司收购并提供一组合同，brief 按是否正确描述合同条款打分。我们先给了生成 wiki 的基本说明，没有告诉 Claude 该怎么用 wiki。这项任务高度依赖合同条款。建 wiki 时，几个 agents 同时写一张共享的合同条款表。结果是一份缺了关键事实的 wiki：按 wiki 生成的 brief，57 条事实里只纳入了 41 条（72%）。我们查看出错原因时发现，共享表对条款概括得很差，有些条款完全缺失，因为 agents 互相覆盖了对方的工作。"
+          },
+          {
+            "kind": "p",
+            "text": "合同条款是 wiki 最重要的部分，但说明里没这么说。为了找到更好的说明，我们跑了一个循环：Claude 反思失败、提出对说明的修改、重建 wiki。这个循环让 Claude 发现必须跟紧合同条款，并据此改写建 wiki 的说明。每份合同在 wiki 里有自己的页面，由单个 agent 撰写，逐字引用条款，而不是概括进共享表。改进后的 wiki 保留了 57 条事实中的全部 57 条；按它生成 brief 时，100% 的标准都能满足，从 72% 升上来。"
+          },
+          {
+            "kind": "h",
+            "text": "Dreaming 可以补上单次 session 留下的缺口"
+          },
+          {
+            "kind": "p",
+            "text": "Claude 写 memory notes 时，只看得到那一次 session 的 context。Dreaming 可以跨许多 sessions 搜索，找共同模式或纠正共同错误。建 LAB benchmark 的 wiki 时，Claude 有时会链到尚未创建的页面。第二次 dreaming pass 补上了其中许多缺口。在一项任务里，dreaming 发现 wiki 里有 9 条指向缺失页面的链接，把它们改指到同一文档的已有页面；它还加了 3 个新页面，包括一份 index，以改进 wiki。"
+          },
+          {
+            "kind": "h",
+            "text": "往后想，往前看"
+          },
+          {
+            "kind": "p",
+            "text": "关于如何设计 agent 的 memory 系统，仍有许多开放问题。其一是 Claude 该何时创建 memory：在任务中写入 memory store，可以在源头捕捉 salience、让重要细节立刻可供后续轮次或会话使用，但当场记 notes 不可避免地会把注意力从主任务上拉开；dreaming 可以把 memory 创建推到后台，但其输出未必立刻可用。其二是如何让 memory 可靠地保持更新：Claude 可能做出错误预测，或一开始就写下错误规则；memory 也会随环境变化而漂移、变得无关。Dreaming 是纠正这些错误的一种办法，但需要算力。让 Claude 持续检查全部 memories 可能不实际；或许应把 dreaming 集中在可能变化的信息上，或仔细调整 dreaming 的节奏（例如按 memories 被访问的频率）。把 transcript search 当作 Claude memory 的基础也说得通：把表征（例如 wiki）与 search 结合有时有效，但维护表征、确保它们不积累错误或幻觉，需要算力。即便 Claude 对 salience 的判断已经更好，没有模型能真正知道未来轮次会发生什么。Dreaming 给 Claude 一个往后看的机会，用算力整理 memory、纠正错误、维护表征，让未来的 session 更容易取用 memory。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "google-distraction",
+      "company": "Google",
+      "companyColor": "#4285F4",
+      "column": "工程化实践",
+      "title": "过时 TODO 把 agent 带跑偏：13% 读文件会话碰到，绕路多 70% steps",
+      "originalTitle": "Agent Distraction",
+      "byline": "Sam Saccone et al · 11-06",
+      "sourceUrl": "https://developers.googleblog.com/en/agent-distraction/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "experiment",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "人对代码里的东西很容易扫过去；agents 却把它们看成行动号召。它们并不知道这些不该当真，会紧紧抓住规划和研究阶段读到的文件里散落的那些东西。随着 agents 借助 tools 和 skills 获得的行动能力增长，去跑支线任务的能力也按比例放大。过时的规格、早已解决的 bug、滞后的文档，不再躺在代码库被遗忘的角落里，而是被无意间吃进 context，间接地误导下一波写代码的人——agents。这种间接并不免费：最好的情况只花 tokens、steps 和时间；最坏的情况会把 agent 钉在虚假事实上，导致实现时做出错误的逻辑和决策。"
+          },
+          {
+            "kind": "p",
+            "text": "要在每月数百万次会话里测量 agents 多久掉进这些陷阱，靠人工审查做不到——我们需要一种能从代码本身导出的客观信号。行内的 `TODO(bug/...)` 注释是正好的替代指标。TODO 往往会在底层 bug 已经解决或被放弃很久之后还留着，而被链接的工单则是权威记录。把 agent 碰到的每一条 TODO，对照该 TODO 的 bug 状态和用户的 prompt，我们就能在规模上自动把有效工作从浪费的绕路里分开。"
+          },
+          {
+            "kind": "h",
+            "text": "代价"
+          },
+          {
+            "kind": "p",
+            "text": "我们用数千名工程师、超过数亿次单独 agent steps 的分布式 traces，量化了代码库里 TODO 分心的影响，以及 agents 如何对它们采取行动。在数百万次读文件的会话里，13% 的会话让 agent 看到了行内 `TODO(bug/...)` 或 `FIXME(bug/...)` 引用——接近七分之一。agents 在 94% 的遭遇里忽略了这条注释；但在 6% 的情况下，agent 随后针对那个 bug ID 采取了行动。这些行动里超过五分之四（83% 的会话）完全未经提示——开发者并没有要求修这个 bug。"
+          },
+          {
+            "kind": "p",
+            "text": "把未经提示的绕路对照线上的 bug 状态，暴露出两种不同的失败模式。超过五分之二（41%）的未经提示绕路追的是已经关闭的工单：已经 fixed/verified 的占 32%，obsolete / won't-fix 的死胡同占 9%，另外 2% 打到了重复或受限的工单。超过一半（57%）的未经提示绕路里，bug 仍是开放的（NEW / ASSIGNED / ACCEPTED），agent 扩大了自己的工作（61% 只做 lookup；39% 改了代码），去调查或修改开发者从未要求碰的问题。"
+          },
+          {
+            "kind": "p",
+            "text": "在控制了开发者、仓复杂度、任务类型、模型档、读文件数、初始 prompt 长度、以及 bug 引用出现的那一步之后，用带开发者聚类标准误的多路固定效应回归，未经提示的 bug 绕路仍带来可观的开销（全部统计显著，p<0.0001）。每个会话：多 70% 的 steps、多 77% 的 tokens、多 105% 的等待时间。"
+          },
+          {
+            "kind": "h",
+            "text": "这会怎样展开"
+          },
+          {
+            "kind": "p",
+            "text": "过时的绕路：一次调查无关 bug 时，agent 看了 SurfaceControlTest.java，看到 `// TODO(bug/XXX)`。这个 bug 在 2023 年就已经修了，却还留在代码库里，随后若干步里 agent 挖进这个 bug 去了解更多。热心的 agent：在正在调查的那个 bug 里碰到一条 TODO，然后（未经提示）决定去「修」代码。它为这个 bug 执行了多次 Code Search 和内部知识搜索，最终改了 ModelDownloaderV1 的代码。轨迹后面，人挑战了这次 scope creep；模型承认这是一次不正确的范围扩大。这两种情况都只是轻微到中等的绕路——但它们是真的分心，花掉时间、tokens 和人的干预。"
+          },
+          {
+            "kind": "h",
+            "text": "我们做了什么"
+          },
+          {
+            "kind": "p",
+            "text": "为了在规模上处理这一发现，我们做了 agents 去清扫全部代码库，找出代码里被标成 fixed 或 obsolete 的 bug 引用以便清理。但这一步本身还不足以判断这些 TODO 是不是承重的。agents 必须走得更远：看 bug 的历史、文件的历史、以及代码库的变更，有时跨越数年。只有在 agent 能够确认这条 TODO 以及它背后的意图已经过时的情况下，我们的 agent 才会送出一份变更去评审、把它从代码库里删掉。靠这种多层做法，我们的 todo cleaner 在过去 6 个月里删掉了数千条真正过时的引用，人审接受率超过 95%。"
+          },
+          {
+            "kind": "h",
+            "text": "分心的分量"
+          },
+          {
+            "kind": "p",
+            "text": "presubmit 分析器、覆盖整个语料的扫描器、以及用来清理死 TODO 的自动化 coding agents，提供了开箱即可规模化的办法来处理这笔税，让代码库更健康、更少分心，好让 agents 发挥。那些曾经因为被认为价值低而被往后推的清理遗留债务项目，现在需要用「agents 正在规模化地在你的代码库上行动」这一新前提重新评估。"
+          },
+          {
+            "kind": "pull",
+            "text": "随着我们把越来越宏大的问题交给 agents，「对 agent 友好的代码库」要求的不只是热路径上的代码健康。代码库里被遗忘的角落，现在比以往任何时候都更会向 agents 征收一笔可观的税。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hf-coord",
+      "company": "社区",
+      "companyColor": "#059669",
+      "column": "社区热点",
+      "title": "Coordination Decay：协议全绿却被弃用——七机舰队 103 天",
+      "originalTitle": "Coordination Decay: 103 Days of a Seven-Machine LLM Agent Fleet",
+      "byline": "Tony Dzi · 11-06",
+      "sourceUrl": "https://huggingface.co/blog/TonyDzi/coordination-decay-103-days-of-a-seven-machine-llm",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "pull",
+            "text": "一套协调协议可以守住每一条安全不变量，却仍被弃用。\nA coordination protocol can keep every safety invariant and still be abandoned."
+          },
+          {
+            "kind": "p",
+            "text": "这是我们在七台机器上跑 LLM coding agents 共 103 天学到的主要事情，也是我们发布 claw-consensus（我们用过的、零 LLM 的共识引擎，MIT 开源）以及显示其使用如何崩塌的汇总 telemetry 的原因。我们的设置不同于「一个进程在 benchmark 上编排多个 agents」：七台分开的机器上跑交互式 coding agents（同一家族），为三个人做真实的知识和运维工作。机器通过 bus——一个同步的 markdown mailbox 文件夹——交谈，经共识 ledger（一份 append-only 日志，变更走 propose、counter、accept、commit、verify）做共享决策。高风险变更（Tier-2：涉及钱、不可逆、对外或处理秘密的动作）另外需要有记录的人工批准。2026 年 6 月 20 日到 9 月 30 日，舰队交换了超过 22,000 条 bus 消息；6 月 29 日到 10 月 1 日，ledger 记录了 151 个提案上的 1,131 个事件。"
+          },
+          {
+            "kind": "p",
+            "text": "写成代码的硬规则守住了，中间没有 LLM：27 个已提交的 Tier-2 提案，没有一个缺少事先的人工批准事件；没有一个提案收到来自两台不同机器的 commit 事件。依赖纪律的规则较差：独立 verification 在 66% 的 commits 上成立，text-rail acknowledgement 为 46%，多数人工批准请求过期了。共识协议的使用从 7 月的 121 个提案降到 9 月的 6 个，而 bus 流量继续增长。同期更轻的机制在增长：work claims（「我正在编辑这个区域」）达到每月 1,440 条；deployment packages（「这个修复必须到达每个节点并在那里被证明」）达到每月 155 条。人工批准门也饱和了：某一节点上 139 个批准请求里，18 个得到明确决定，120 个过期，1 个被后来的清理关掉。谈成一项决定的中位耗时 162 分钟，第 90 百分位是 9.5 天。以下六条是一次部署的教训，有待别处验证。"
+          },
+          {
+            "kind": "h",
+            "text": "1. 衡量的是使用，不只是正确性"
+          },
+          {
+            "kind": "p",
+            "text": "我们的 ledger 在 9 月会报告「全绿」，尽管每月只有 6 个提案。按每个活跃 session 每周的提案数计数，连续两周降到第一个月的十分之一以下就告警。按我们的数据，这个告警会在 8 月第二周触发。"
+          },
+          {
+            "kind": "h",
+            "text": "2. 把硬规则放进没法被谈出去的代码"
+          },
+          {
+            "kind": "p",
+            "text": "两条安全规则由几百行确定性的 Python 执行，中间没有 LLM：没有人工批准就不能做高风险变更；一个提案只能有一个 committer。Agents 可以起草提案；它们不该能批准提案。"
+          },
+          {
+            "kind": "h",
+            "text": "3. 协调的是变更，不是决策"
+          },
+          {
+            "kind": "p",
+            "text": "协议协调的是决策。舰队多半需要协调的是变更：一台机器上做的修复必须到达每台其他机器，并在那里被证明。一份带每节点完成标记的 register，用比谈判更少的仪式处理这件事；它的使用随提案下降而增长，同期政策也有意从谈判转向。"
+          },
+          {
+            "kind": "h",
+            "text": "4. 把人工门当成稀缺通道"
+          },
+          {
+            "kind": "p",
+            "text": "按天给请求做预算、打包处理，给每个请求在沉默时的默认结果，并对按定时器反复升级的提案告警。八个提案制造了全部 escalation 事件的 86%，每一个都在卡住时按定时器重新升级：一条警报大多不可操作的通道，正是技术上可靠的辅助反被弃用的典型布置。"
+          },
+          {
+            "kind": "h",
+            "text": "5. 时间戳写 UTC，并把你以后想计数的一切留一份 append-only 副本"
+          },
+          {
+            "kind": "p",
+            "text": "我们三分之一的任务 / acknowledgement 配对出现了负延迟，因为五个时区的机器写的是本地时间；mailbox 轮转之后，9 月的消息我们只能恢复三分之一。三周后我们还能完整读到的，只有那些 append-only 的 UTC ledger。"
+          },
+          {
+            "kind": "h",
+            "text": "6. 先审计便宜的分类器，再相信计数"
+          },
+          {
+            "kind": "p",
+            "text": "对每条消息第一行做正则，在 249 条已标注的双语消息上，相对四位评分者的多数标签准确率达到 88.4%（kappa 0.86）。这样一次审计花一个下午，就能把假设变成带区间的数字。如果你在多台机器上跑 agents 并保留类似 telemetry，我很想比较数字：你的协议使用是否也以同样的方式衰减？"
+          },
+          {
+            "kind": "aside",
+            "text": "这是我搭建并运营的一支舰队，数据里的批准也都由我做出。一次观察性案例不能证明因果；文中的假设应据此阅读。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gemini-4-hydrogen",
+      "company": "Google DeepMind",
+      "companyColor": "#4285F4",
+      "column": "选读",
+      "title": "Gemini 4 Hydrogen：为日常编码和 agent 工作流做快速执行",
+      "originalTitle": "Introducing Gemini 4 Hydrogen",
+      "byline": "Koray Kavukcuoglu · Google DeepMind · 11-12",
+      "sourceUrl": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-hydrogen/",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "result",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "今天我们推出 Gemini 4 Hydrogen，把前沿智能带到每个人——为日常编码和 agentic 工作流提供速度和效率。我们的前沿模型 Gemini 4 Carbon 和 Gemini 4 Argon 擅长在最难的问题上做深的、长周期推理；Hydrogen 则是为多样 agentic 工作流里的快速执行而建。我们也把 Gemini 4 带到所有人：Google AI Studio 的所有档位、Gemini API、Gemini for business、Gemini app、Google Search，以及 Google Antigravity 里付费的 Google AI Pro 和 Ultra 订阅者。"
+          },
+          {
+            "kind": "pull",
+            "text": "我们的前沿模型 Gemini 4 Carbon 和 Gemini 4 Argon 擅长在最难的问题上做深的、长周期推理；Hydrogen 则是为多样 agentic 工作流里的快速执行而建。\nWhile our frontier models, Gemini 4 Carbon and Gemini 4 Argon, excel at deep, long-horizon reasoning on your hardest problems, Hydrogen is built for rapid execution across diverse agentic workflows."
+          },
+          {
+            "kind": "p",
+            "text": "Hydrogen 在 Artificial Analysis Intelligence Index 上、默认的 high thinking 超过 Argon（51 对 50，最高的 xhigh thinking 设定达到 54），而且常常比同档模型更快完成任务。整个 100 万 token 的 context window 统一定价：每百万 input tokens $1.50，每百万 output tokens $7.50。"
+          },
+          {
+            "kind": "h",
+            "text": "多模型工作负载里的效率"
+          },
+          {
+            "kind": "p",
+            "text": "真实的软件开发里，团队在设计系统或解开细微 bug 时依赖 Carbon 和 Argon 做深的架构判断，但仍需要一个快、有纪律的执行模型来写代码、跑测试、核验变更。Hydrogen 可以单独承担日常工作，也可以在多模型工作流里作为高效执行引擎，与 Carbon 和 Argon 搭配。"
+          },
+          {
+            "kind": "p",
+            "text": "为了让这种多模型协作自动发生，我们在 Google Antigravity 里推出 Orchestrator。它不再从头到尾只用一个模型，而是在同一次 session 里动态切换 Carbon 和 Hydrogen 这类模型。在 Terminal-Bench 4.0 上，Orchestrator 达到接近 Carbon 的任务成功率，同时平均少消耗 24% 的 quota，完成速度快 19%。需要并行 agents 的工作流里，Carbon 可以当 coordinator，Hydrogen 驱动 worker 和 verifier agents，在隔离的 workspace 里同时构建和测试变更。"
+          },
+          {
+            "kind": "h",
+            "text": "从 Gemini 3.8 Flash 迁过来"
+          },
+          {
+            "kind": "p",
+            "text": "对从 Gemini 3.8 Flash 迁过来的团队，Hydrogen 是一次单独的重大升级。它在默认的 high 设定下完成任务快 2.5 倍，同时把 Terminal-Bench 4.1 分数提高到三倍以上（57% 对 18.2%），把虚构的声称削减了 5 倍以上，并在 tool call 失败或搜索返回空时干净地适应。它擅长把读文件和搜索的调用原生批量并行发出，而不是一份一份看；早期测试里，合作伙伴在复杂 graphs、SQL 和数据密集的企业工作流上看到，Hydrogen 比 3.8 Flash 快 2 倍到 2.8 倍，token 用量减少 12% 到 23%。"
+          },
+          {
+            "kind": "h",
+            "text": "四个 thinking levels"
+          },
+          {
+            "kind": "p",
+            "text": "Hydrogen 有四档 thinking：low、medium、high（默认），以及新的 xhigh。质量、延迟和成本按可预期的梯度缩放，你只需为任务所需的推理深度等待和付费。"
+          },
+          {
+            "kind": "h",
+            "text": "为规模化、可依赖的执行而做的安全"
+          },
+          {
+            "kind": "p",
+            "text": "Hydrogen 把我们最新的 Gemini 4 safety 与 security 栈改进带到迄今最广的受众，把内置训练和实时表面防护结合起来，帮助缓解 misalignment 和 misuse。相对 3.8 Flash，它在 agentic 任务里把 overreach 最多降低 81%，under-service 最多降低 79%，并在 tool-use 和 coding 评测里把偏离对齐的动作和任务 shortcut 削减 12 倍。面对不可能或被拦住的任务，它绕过权限边界的可能性最多低 2 倍，在内部 agent honesty 评测上达到 96.7% 的诚实率。面对间接 prompt injection，它在 Gray Swan IPI benchmark 上强 2.3 倍以上。"
+          },
+          {
+            "kind": "p",
+            "text": "即日起，开发者可以在 AI Studio 和 Android Studio 里用 Gemini API 调用它；付费的 Google AI Pro 和 Ultra 订阅者也可以在 Google Antigravity 里试用。企业可以通过 API 或模型下拉在 Gemini for business 里部署。所有人可以在 Gemini app 的模型下拉和 Google Search 里用到它。在 Gemini app 里，免费用户会在它适合这条 prompt 时，经由自动选模型用到 Gemini 4 Hydrogen。"
+          }
+        ]
+      }
+    }
+  ]
+}

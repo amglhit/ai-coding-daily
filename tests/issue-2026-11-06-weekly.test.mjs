@@ -50,6 +50,4 @@ test("build emits /weekly/2026-11-06/", { timeout: 180000 }, () => {
   const archive = fs.readFileSync(path.join(root, "dist", "archive", "index.html"), "utf8");
   assert.match(archive, /\/weekly\/2026-11-06\//);
   assert.match(archive, /\/weekly\/2026-10-30\//);
-  const home = fs.readFileSync(path.join(root, "dist", "index.html"), "utf8");
-  assert.match(home, /\/weekly\/2026-11-06\//);
 });
