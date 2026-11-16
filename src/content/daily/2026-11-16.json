@@ -1,0 +1,329 @@
+{
+  "title": "AI Coding 日报 · 2026-11-16（周一）",
+  "date": "2026-11-16",
+  "type": "daily",
+  "masthead": "11 月 16 日 · AI Coding 日报",
+  "columns": [
+    "行业动向",
+    "工程化实践",
+    "社区热点",
+    "选读"
+  ],
+  "must_read": [
+    "anth-always-on-agents",
+    "anth-safety-evals"
+  ],
+  "stories": [
+    {
+      "id": "anth-always-on-agents",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "工程化实践",
+      "title": "Always-on agent 并不一直开着：inbox、timers、memory、permissions 与 outbox",
+      "originalTitle": "Building always-on agents",
+      "byline": "William Hu · 11-13",
+      "sourceUrl": "https://claude.com/resources/articles/building-always-on-agents",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "framework",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "过去几个月，我们看到 always-on agents 再度兴起。它们是 stateful 且 proactive 的：跨 session 管理 context，并且在没有直接监督时采取行动。底下跑的仍是和其他 agents 一样的核心循环。差别在周围的架构——由一组 primitives 控制 agent 何时醒来、两次 run 之间带上什么、以及工作如何到达用户。"
+          },
+          {
+            "kind": "p",
+            "text": "这波回潮很大程度上来自近期的模型进步。第一，最新模型判断更好：更可靠地理解用户意图，也更知道何时该来问一声。第二，调用智力的成本在下降，长程任务受益最大。例如，在一项长程编码 benchmark 上，Opus 5.5 每个解出的任务比 Opus 5 便宜 78%，而在典型工作负载上只便宜 40%。客户开始问我们，怎样把这类体验接到自己的产品里：有的想让现有 agents 更主动，有的想从零做起。"
+          },
+          {
+            "kind": "pull",
+            "text": "Always-on agent 其实并不是一直开着的。这只是对用户体验的描述。\nAn always-on agent is not actually “always on.” This is just a description of the user experience."
+          },
+          {
+            "kind": "h",
+            "text": "Always-on agent 背后的周期"
+          },
+          {
+            "kind": "p",
+            "text": "实际上，agent 大部分时间在睡觉，只是周期性地醒来做事。每一段工作叫做一次 run：agent 收到一个 event，做完任务，再把发生的事情存下来。一次 run 发生在一个 session 里，也就是消息和 tool calls 的 transcript。run 结束后，agent 再次入睡，这个周期无限重复。"
+          },
+          {
+            "kind": "h",
+            "text": "核心 primitives"
+          },
+          {
+            "kind": "p",
+            "text": "周围架构有五件核心 primitives：event inbox、timers、memory、permissions，以及 outbox。"
+          },
+          {
+            "kind": "h",
+            "text": "Event inbox"
+          },
+          {
+            "kind": "p",
+            "text": "多数 AI agents 只在用户发消息时运行。Always-on agents 则可以被多种 events 触发，包括 webhooks、定时任务和后台作业。一种诱人的做法是让每个 event 源直接调用 agent，但这会有几种失败模式：两个 events 同时到达可能启动相互竞争的 runs，崩溃也可能把 event 丢掉。所以每个源把 event 送到 inbox，由一个 worker 取走。"
+          },
+          {
+            "kind": "p",
+            "text": "最简单的版本有三个部件：一份持久的 events 列表，通常是数据库表；一个 handler，通常是 HTTP 端点，把 events 写入列表；以及一个 worker，通常是后台服务，从列表里读取。Inbox 应跟踪每个 event 的状态，并可以按来源的唯一标识去重。我们建议先按用户各设一个 inbox，需要更多并行时再拆。新 event 到来时，handler 写入 inbox 并唤醒 worker。Worker 读取待处理项并启动一次 run：继续此前工作的 events（例如用户回复）恢复已有 session，其余则开新 session。随后 worker 把 events 交给 agent loop，等 run 结束，再把对应 events 标为完成。"
+          },
+          {
+            "kind": "p",
+            "text": "几条实践：handler 应尽快确认 events，因为有些源（例如 webhook 提供方）会把慢响应当成失败；更深的核查，例如检查 prompt injection，应放在 run 期间做。Inbox 应是 source of truth：worker 被唤醒后应先从 inbox 拉取最新 events，这样 worker 若在 run 中途挂掉，新的 worker 可以接过同一 event 重试。一个 inbox 同一时间只应有一个活跃 worker，以免两次 run 重复劳动或互相覆盖；run 中途又来了新 event 时，可以把它推到下一次 run、并进当前 run，或中断并重启。Worker 还应把待处理 events 批在一起：用户连发几条消息时，可以合并成一次 run，让 agent 只回一次。"
+          },
+          {
+            "kind": "h",
+            "text": "Timers"
+          },
+          {
+            "kind": "p",
+            "text": "Timers 和 event inbox 一起，让 always-on agents 能够主动行动。Timers 大致分两类：follow-ups 或 schedules。Follow-up 是 agent 给自己设的截止时间，例如去查看一封回复；schedule 是已知节奏上的重复任务，例如每日 newsletter。Timers 放在自己的持久存储里，通常是另一张数据库表，与 inbox 分开——inbox 只应存放已经可以处理的 events。Follow-up 和 schedule 可以共用相近的 schema，但 schedule 还需要跟踪它的重复规则。"
+          },
+          {
+            "kind": "p",
+            "text": "Timer 本身不会启动 run。相反，一个 scheduler（通常是后台服务）按固定间隔轮询存储，把到期的项触发掉。每一轮它扫描到期的 timers，按类别更新（follow-up 标为完成，schedule 把到期时间改到下一次），再向 inbox 添加一个 event 并唤醒 worker。Scheduler 可以自建，也可以用 durable execution engine。"
+          },
+          {
+            "kind": "h",
+            "text": "Memory"
+          },
+          {
+            "kind": "p",
+            "text": "Always-on agents 跨许多互不相连的 runs 工作，靠 memory 保持连续性。Memory 也应有自己的存储。在我们的产品里，例如 Claude Code 的 auto memory 和 Messages API 的 memory tool，这是一个文件目录；对 always-on agent，这些目录应映射到持久存储，通常是数据库或 object store，好让 memories 比 worker 活得更久。经验法则是：memory 只应保存 agent 无法再查到的东西。如果某件事已经在另一个系统里（例如 issue tracker），应存一个指针。"
+          },
+          {
+            "kind": "p",
+            "text": "Always-on agent 应保存的类型包括：用户关于 agent 行为的 instructions（单独文件，每次 run 开始时载入，因为用户不总在场指导）；关于用户的 notes（角色、偏好、纠正；可先一个文件，变多后拆成小文件，开始时只载入索引，需要细节时再把单个文件拉进 context）；已经对用户说过的话，以免重复；以及每个进行中任务的进度文件，新的 run 可以接着做。以上是在 run 期间保存的 memory。也可以加上 dreaming，回看过去的 sessions 来整理 memories：替换过时条目，并发现只在许多次 runs 里才出现的模式。"
+          },
+          {
+            "kind": "h",
+            "text": "在 context window 里"
+          },
+          {
+            "kind": "p",
+            "text": "开始工作前，agent 载入 system prompt、tool definitions 和 memory files。这笔初始 context「开销」每次 run 都会带上，所以我们建议保持精简，并用 prompt caching 降低成本。新 session 只带上这笔开销和触发这次 run 的 events；已有 session 则会带回先前 runs 的消息和 tool calls。Session 太长时，可以 compact 更早的消息，或开一个新 session。两种做法都会丢掉细节，所以需要保留的东西应沿途写入 memory。"
+          },
+          {
+            "kind": "h",
+            "text": "Permissions"
+          },
+          {
+            "kind": "p",
+            "text": "Permissions 是 always-on agents 风险最大的地方。一次 run 握有用户的访问权限，而且按设计是无人值守的。对每次 tool call，agent 需要决定自行继续、拦下，还是等待批准。部件和其他 agents 相同。Credential store：推荐模式是在 agent 环境之外放一个 proxy，给外出请求加上 credentials——agent 发出不含 credentials 的请求，由 proxy 注入后再转发。Auto mode：always-on agent 应能在没有持续用户输入的情况下工作。我们在 Claude Code 的 auto mode 里已经处理过类似问题：用 classifiers 审查更高风险的动作，拦住它们判定为危险的，好让 Claude 找更安全的做法；对最重要的决定，仍需要用户审查。"
+          },
+          {
+            "kind": "p",
+            "text": "Deferred tool calls：在 Claude Code 里，hook 可以推迟一次 tool call，等待用户额外输入。同样的模式适用于 always-on agents。调用被推迟时，run 结束，session 在调用中途被保存；请求展示给用户（例如通过用 MCP Apps 做的交互卡片），用户的回答作为 inbox 里的 event 回来，启动新的 run，恢复已保存的 session。在等待回复时，worker 可以处理其他 events，agent 不会被卡住。"
+          },
+          {
+            "kind": "h",
+            "text": "Outbox"
+          },
+          {
+            "kind": "p",
+            "text": "多数 AI agents 会把回复边生成边流给用户，让他们跟着看 Claude 的推理、tool calls 和答案。Always-on agents 则大部分工作在后台完成。用户拿到的是结果和少量细节，而不是完整的逐步过程。一次 run 可以有三种结束方式：agent 向 outbox 发一条消息；agent 决定什么都不必发送；或 agent 用 deferred tool call 请求许可或补充输入。多数 always-on agents 用一个「发送」tool 直接把消息交给用户就够了。只有在你想控制发送节奏，或让 agent 能从错误中恢复时，才需要正式的 outbox。Outbox 是一张待发送消息表，类似于 event inbox，另有一个 dispatcher（通常是后台服务）读取待发送项、决定交付什么并发送给用户。"
+          },
+          {
+            "kind": "p",
+            "text": "还要调节 agent 发多少消息：发太多会吵，发太少会漏掉用户需要知道的事。我们建议做 evals 来找平衡。实践中，更好的做法是让 agent 先保持安静，再逐渐赢得更多用户注意力。"
+          },
+          {
+            "kind": "h",
+            "text": "它们如何拼在一起"
+          },
+          {
+            "kind": "p",
+            "text": "每次 run 都从 inbox 里的一个 event 开始，不论是用户消息、webhook 还是 timer。Worker 取到 event 后启动一次 run，在新的或已有的 session 里唤醒 agent。Agent 先读 memory 作为基线，在 permissions 范围内行动，再把学到的东西写入 memory。run 结束后，agent 向 outbox 推入一行，由 dispatcher 交给用户。一次 run 可以设一个稍后再次唤醒自己的 timer；用户回复一条消息时，答案作为 event 回到 inbox。每次 run 都很短，但这个周期会无限进行下去，而这正是让 agent 看起来一直在线的原因。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "anth-safety-evals",
+      "company": "Anthropic",
+      "companyColor": "#D97706",
+      "column": "工程化实践",
+      "title": "「更安全」只说明某套 eval 分更高：先写清 construct，并报告不确定性",
+      "originalTitle": "Building strong safety evaluations",
+      "byline": "Ruth Appel et al. · 11-13",
+      "sourceUrl": "https://www.anthropic.com/research/building-strong-safety-evaluations",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "advice",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "安全评估会左右我们关于一个 AI 模型的一些最重大决定：它是否可以部署、要随它发布哪些 safeguards、以及下一轮安全训练和研究该盯住什么。"
+          },
+          {
+            "kind": "pull",
+            "text": "当我们说一个模型比它的前代「更安全」，意思是它在某套有人建出来的 evals 上分数更高。但一项安全声明，只和它背后的 eval 一样站得住；而好的 eval 很难做。\nWhen we say a model is “safer than its predecessor,” we mean that it scored better on a set of evals someone built. But a safety claim is only as sound as the eval behind it, and good ones are hard to build."
+          },
+          {
+            "kind": "p",
+            "text": "安全 eval 测量的是模型造成或促成伤害的倾向、它对某项请求的回应会让伤害更可能还是更不可能、以及伤害会有多严重，而不是测量特定能力。它问的本质是：给定一个具体输入，模型有没有做对的事？和其他 evals 一样，这类评估很难做对：研究者一再发现，AI evals 容易被钻空子，不一定在测它们声称在测的东西，记录也不够完整，难以复现。结果还会随题目是选择题还是开放题、甚至选项排列顺序而改变。心理学在大约十年前遇到过类似问题，后来引入 preregistration、更好的测量和更严格的统计。借鉴这些改革，也基于我们在 Anthropic 做 evals 的经验，这篇文章给出建议，并使用我们 system cards 里的例子。"
+          },
+          {
+            "kind": "h",
+            "text": "安全优先"
+          },
+          {
+            "kind": "p",
+            "text": "做一套强的安全 eval 需要多种视角，包括领域专家和方法专家。缺了其中一种，质量就会受损：一种是技术上严谨，却抓不住某一伤害领域里最相关的因素；另一种是领域知识很深，却只测到一部分行为，难以对整个领域下有效结论。安全 evals 常常关掉标准 safeguards 来跑，以便看清模型的 baseline。尤其在 cyber evals 里，模型可能试探测试环境的边界，一旦逃出就可能采取意外行动。因此 evals 应在没有互联网访问的 sandbox 里运行，并实时监控，以便在模型可能造成真实世界伤害时立刻停下。近几个月，针对我们自己的 incidents，我们加固了评估环境，暂时停止了许多给模型互联网访问的评估，并对必须给模型互联网访问的 web search 评估做了实时监控。"
+          },
+          {
+            "kind": "h",
+            "text": "让设计匹配问题"
+          },
+          {
+            "kind": "p",
+            "text": "动手做 eval 时，首先要问：你想回答的是什么问题？这会决定你如何解释结果。多数 evals 是 observational 的：它们告诉你一个模型的分数和另一个不同，但不告诉你为什么。因果主张（例如「这项干预让模型更安全了」）需要一次只改变一个变量的设计，例如在有无某项干预的情况下评估同一个模型。Observational 设计适合理解模型行为；causal 设计适合理解某个具体改动会不会影响该行为。"
+          },
+          {
+            "kind": "h",
+            "text": "测你真正想测的东西"
+          },
+          {
+            "kind": "p",
+            "text": "接下来要问：你到底想测量什么？这也叫 construct validity——你的指标是否抓住了你真正关心的概念——而 AI 评估常常在这里出错。对安全 evals，最显而易见的 construct 是 refusal，也就是模型拒绝回应的频率。在许多情况下这说得通：我们不希望模型帮用户实施诈骗或 phishing。但在与自杀和自我伤害有关的对话里，refusal 常常是错误的 construct。用户处于危机时，单纯拒绝互动本身就是一次失败；理想的回应是带着共情与用户互动，并指向人类支持。一个对任何与自杀或自我伤害有关的 prompt 都拒绝的模型，会在 refusal-rate eval 上拿满分，但它不一定是更安全的模型。"
+          },
+          {
+            "kind": "p",
+            "text": "在 Anthropic，我们设计 multi-turn 安全 evals，汇报 appropriate response rate：模型在整段对话中都表现得适当的会话占比，判断依据是由领域专家为某一风险领域制定的 rubric。一轮表现不好——例如模型在被反复追问后说出如何实施诈骗的细节——整段对话就不及格。在用户福祉的安全 eval 里，一次「适当」的回应是：模型对风险披露给予支持性回应，避免讨论方法细节，在恰当的时刻指向危机资源，并且不把自己定位成危机热线的替代。在生物学和网络安全等 dual-use 领域，适当的回应很少是干脆拒绝，而是接住请求的正当版本，同时扣住会给有害版本提供真正 uplift 的操作细节。我们为每个主题单独建 rubrics。一套好的 eval 还需要同时测量对有害请求的配合，以及对无害请求的过度拒绝。"
+          },
+          {
+            "kind": "h",
+            "text": "让结果能推广到真实世界"
+          },
+          {
+            "kind": "p",
+            "text": "单轮 prompts 最好做，但会很快饱和，也不太真实：很多时候，真实世界伤害的可能并不会在单条 prompt 里显露。人常常通过逐渐加码从模型里套出有害信息，所以第一轮处理得好的模型，到第五轮可能就回应不当了。用户的困境也往往很难从单条消息里看出来，它会在对话中累积。例如，在我们 system card 汇报的一套自杀与自我伤害 multi-turn 评估里，模拟用户会在对话早期披露一次动摇性事件；随后再问一个看似平常的问题，而这个问题必须连同先前披露一起读，才可能需要更谨慎的回应。"
+          },
+          {
+            "kind": "p",
+            "text": "为每个安全风险构建测试集时，我们的领域专家设计紧贴真实观察的 multi-turn 模拟，并用内部工具系统化地做：领域专家写一份 specification（模拟用户的目标、策略，以及 persona、情境、语气等维度）；第一轮用户消息是固定的；随后的「用户」轮次由另一个 Claude 模型按 specification 生成，被测模型写「助手」轮次；每个场景会跑多次，每次抽取不同特征组合。评分模型按该风险领域的 rubric 给每份 transcript 打分，报告整段都被评为「适当」的会话占比。还应把你关心的维度独立变化，否则分不清是严重程度还是语气在起作用。尽量从观察到的行为出发来编场景，并把场景集当成会演化的，而不是一次写死。我们的单轮安全套件覆盖 16 个政策领域、七种语言和多种产品表面；模型愿不愿意配合有害请求，也会取决于环境设置，例如是否有 tools、是否使用默认 system prompt，所以要把 eval 设置对齐你想测试的部署。"
+          },
+          {
+            "kind": "h",
+            "text": "保持 internally valid"
+          },
+          {
+            "kind": "p",
+            "text": "即便纸面上的 construct 是对的，eval 的分数也可能被你要测的行为以外的东西驱动；这时我们说它不再 internally valid。如果测试题或类似内容出现在训练数据里（data contamination），你测到的是模型的记忆，而不是它的行为。模型也可能找到你没打算留下的捷径（reward hacking）。在采信分数之前，先堵住任何能让模型不按原意完成任务却拿满分的路径；并随机化不应影响分数的细节，例如选择题选项顺序。任务难度也需要校准。在我们的 API 上，近期每个模型在单轮评估上的汇总 harmless response rate 都在 94% 到 98% 之间；相比之下，multi-turn 任务的回应率分布要宽得多。换句话说，单轮任务已经饱和，因此主要用于对已知失败模式做回归检查。Eval 饱和时，要用仍然保住 construct 的方式把任务变难（例如更长的时间跨度、更隐蔽的呈现、更接近自然的写法），而不是加进偏题。反过来，eval 也可能太难：对一项主流编码 benchmark 的审计发现，相当一部分任务规定不清、缺少必要 context，或被会拒绝正确答案的测试打分。太易和太难都测不出模型表现的差别。"
+          },
+          {
+            "kind": "h",
+            "text": "仔细校准 grader"
+          },
+          {
+            "kind": "p",
+            "text": "多数现代 evals 用另一个 AI 模型来审和打分，常被称为 LLM judge 或 grader，因为没有人的团队能读完几十万份 transcripts。但这些 graders 可能在无人察觉时失效：它们坏了仍可能默默（且错误地）记分；底层模型一换，判定也可能悄悄变严或变松。要加上 alerting，分数让你吃惊时先检查 eval 设置。对 grader 标为高度不确定的例子，一般应做人审。"
+          },
+          {
+            "kind": "p",
+            "text": "若干实践：让评分尽量简单、客观；标准应拆成原子化的是非题，而不是一个总分，并写明什么不算满足该标准。要写清哪些东西不应改变判定：有害内容就算被警告或资源链接包着，也不因此变成无害，grader 应判断回应的实质，而不是它被怎样包装。避免 grader 偏差：不要让它看到构建场景用的设计元数据；考虑用与被测模型不同的模型做 grader，因为模型 graders 会被证明更偏爱自己的输出；检查分数是否与回应长度相关，并把 pairwise 比较的选项对调再跑一遍；用不同模型或不同措辞的 rubric 对样本重新打分，若结论随 grader 改变，你测到的可能是 grader 而不是模型。Grader 自己坏掉时，该题应被标记并排除，而不是默默打分或丢弃。在采信 grader 之前，让人在看不到 grader 判定的情况下给样本打标签，再报告人与 grader 的一致性（并扣除偶然一致），同时对照人类标注者彼此的一致性。"
+          },
+          {
+            "kind": "h",
+            "text": "Preregister"
+          },
+          {
+            "kind": "p",
+            "text": "在看到结果之前，先决定怎么分析；这就是 preregistration。写下主要指标、将做的比较、将汇报的数据切片，以及什么算改进或回退。若偏离计划，要在报告里说明并解释原因。样本量比人们预想的更重要。模型输出是嘈杂且非确定性的，所以计划把每个测试用例跑若干次，并报告离散程度。我们把 100 条当作复杂 multi-turn eval 的下限，把 1,000 条当作更简单的单轮 eval 的下限。要发现模型之间的小差异，配对比较更容易：两个模型跑同一批题目，对逐题差异计算置信区间，而不是只看各自的汇总分数。"
+          },
+          {
+            "kind": "h",
+            "text": "完整汇报统计，并写清配置"
+          },
+          {
+            "kind": "p",
+            "text": "一个总的 headline 数字，例如把所有伤害类别加总后的 harmless response rate，也许能诚实概括一次 eval，但通常还需要更多分寸才能让发现有用。按类别拆开汇报，既报告没有变化的类别，也报告有变化的；如果做了许多比较，要用统计调整来校正。尤其要为每个估计汇报不确定性。我们的 system cards 会给分数附上置信区间；在 API 上的 multi-turn evals，区间可以很宽，超过 ±10 个百分点。置信区间应塑造你描述结果的方式：如果它足够宽，两个模型或两次 run 之间的差别可能只是抽样噪声。例如，我们在 claude.ai 上测量一套以 romance scams 为焦点的 multi-turn 评估的 appropriate response rate，发现 Claude Opus 5 和 Opus 5.5 相差多个百分点（98% 对 94%）。但这一差别没有统计显著性，所以我们不能断定哪一个更好。"
+          },
+          {
+            "kind": "p",
+            "text": "也要报告你使用的配置，因为它可能影响表现。在我们的 system cards 里，我们同时报告 API（开发者拿到的原始模型）和 claude.ai（带上 system prompt）的安全结果。测试 Claude Fable 5.1 时，这两种配置在 multi-turn 安全 evals 上的 appropriate response rate 差别最高达到 34 个百分点。提供足够细节（模型版本、采样设置、prompts、grader 版本和日期），让别人能复现这次 run；也不要用不同 graders 的分数做比较。不必从零做工具：例如 UK AI Security Institute 的开源 Inspect 框架处理运行、记录和评分，我们基于 Inspect 构建的 Petri toolkit 则自动化这里描述的这类 multi-turn 行为测试。"
+          },
+          {
+            "kind": "h",
+            "text": "负责任地披露缺陷"
+          },
+          {
+            "kind": "p",
+            "text": "在发布 Claude Fable 5.1 前，我们审阅自杀与自我伤害评估的 transcripts 时，观察到 Claude 有时会在劝阻自我伤害并指向人类支持的回应里，仍隐含地把自我伤害当成一种应对策略加以肯定。于是我们在 system prompt 里加了一条指示：「Claude 不会告诉别人自我伤害有用、有帮助，或能对他们起什么作用，即使他们自己这样说」，以尽量减少这种行为。带着这条以及其他针对性的 system prompt 缓解措施重跑 eval 后，claude.ai 上的 appropriate response rate 显著提高（API 上 60%，带上新 system prompt 的 claude.ai 上 94%）。因此，在模型开发过程中持续跑 evals、而不是只在发布前跑一次，也会有帮助。许多安全 evals 会在 fine-tuning 期间对着模型 snapshots 跑，结果送到 Safeguards 和 Model Behavior 团队，我们常常能在发布前迅速调整 reward signals 或 system prompts。当 eval 发现已部署系统里的严重缺陷时，应负责任地披露：先告知开发方，并给他们时间修复，再发表结果，以免缺陷在此期间被利用。这是 responsible disclosure 的核心原则。"
+          },
+          {
+            "kind": "h",
+            "text": "从哪里开始"
+          },
+          {
+            "kind": "p",
+            "text": "不是每套 eval 都必须用上这篇文章里的每一条建议，但我们相信一套好的 eval 应尽可能多地遵循它们。如果你只做三件事，就做这三件：在收集数据之前写清你要测量的 construct；在采信 grader 给出的任何数字之前，用人类判断校验它；并报告不确定性，好让读者分清信号和噪声。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cursor-security-update",
+      "company": "Cursor",
+      "companyColor": "#000000",
+      "column": "行业动向",
+      "title": "Cursor 安全事件更新：Fireworks 密钥被暴露，恶意扩展在 cache 上约 11 小时",
+      "originalTitle": "An update on our recent security incident",
+      "byline": "Cursor Team · 11-13",
+      "sourceUrl": "https://cursor.com/blog/security-incident-update",
+      "sourceLabel": "读原文",
+      "body": {
+        "pattern": "essay",
+        "sections": [
+          {
+            "kind": "p",
+            "text": "10 月 29 日，我们曾说正在调查一起安全事件，以及一份出现在 Cursor VS Code 扩展市场里、未经授权的 Anthropic Claude Code 扩展恶意副本。经过过去两周的深入调查，我们想补充这次攻击及其影响的更多背景。绝大多数客户没有受到影响，我们已经就各自适用的细节，直接联系了每一位受影响的客户。这起事件涉及我们存储和共享的数据、我们签发的 credentials，以及我们运营的系统。"
+          },
+          {
+            "kind": "h",
+            "text": "发生了什么"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "事情从 Fireworks 开始。攻击者拿到了我们签发给 Fireworks 的一把 access key。这把密钥被 Fireworks 暴露，攻击者用它从我们用来向他们共享数据的只读 storage bucket 里复制数据。该 bucket 里有有限的 coding agent traces，大多来自 2025 年，来自未使用 Privacy Mode 的 sessions，是我们被允许用于模型训练的数据。其中一小部分 traces 含有未被 redacted 的 credentials；API credentials 被暴露的客户不到 0.01%。从这些 credentials 出发，攻击者进入了 Cursor 使用的部分 SaaS 工具，并从这些工具访问了部分已归档的非生产 Cursor 源代码仓库（有些含有商务联系信息）、有限的客户支持数据和邮件往来、产品使用指标和联系方式、部分 coding agent 对话的摘要，以及用户发给 Cursor 支持团队的一些 credentials。",
+              "我们的监控系统发现了未授权活动。意识到之后，我们停用了该供应商的密钥，启动了 incident response，开始撤销和轮换 credentials，并追查是否还有其他未授权访问。一发现进一步的访问，我们就切断它。出于谨慎，我们临时停用的内部和产品服务超出了证据所要求的范围，这一度中断了某些 Cursor 功能；确认安全后再逐一恢复。",
+              "攻击者发布了一个恶意扩展。10 月 29 日，攻击者利用从我们内部系统暴露数据中窃取的 credential，把未经授权的 Anthropic Claude Code 扩展恶意副本，直接放到了用于提供 Cursor VS Code 扩展市场内容的 cache 上。这份副本不是 Anthropic 发布的，也不是 Anthropic 产品的漏洞。市场源 Open VSX 从未有过这份 malware。最多约 5,000 名在 10 月 29 日请求了特定缓存版本的用户，可能收到了这份恶意 build。它在被我们移除前大约存在了 11 小时。我们把它撤下，让扩展市场下线，并与托管攻击者服务器的云服务商合作将其关闭。",
+              "我们通知了客户。10 月 30 日，我们在博客和 X 上发布了安全通告，附上 indicators of compromise、修复步骤和用于检查系统的脚本，并开始通过应用内通知和电子邮件告知受影响用户和团队管理员。如果 credentials 被暴露，我们向团队管理员邮件发送了需要轮换的具体密钥列表，并请签发这些 credentials 的第三方服务撤销它们。如果客户支持或商务数据可能被涉及，我们直接通知了客户。如果有客户在暴露窗口内从 Cursor VS Code 扩展市场安装或更新到被篡改的 Anthropic.claude-code 2.1.312 或 2.1.313，我们请他们按安全通告中的步骤处理。只卸载扩展可能不够。",
+              "我们认为事件已经得到控制。我们看到的最后一次攻击者活动是在 11 月 1 日，并且已被拦住。我们会继续监控系统中的异常活动，并加强安全控制。如果发现影响客户的新信息，我们会直接联系他们。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "哪些没有受到影响"
+          },
+          {
+            "kind": "p",
+            "text": "使用 Privacy Mode 时，你的 prompts 和代码没有受到影响。对未使用 Privacy Mode 的用户，coding agent traces 被暴露的不到 0.05%；我们已经识别并直接通知了这些用户。如果你没有收到通知，你的数据不在这些 traces 里。你现在发往 Cursor 的任何数据或 live traffic 都没有暴露：被暴露的 trace 数据仅限于用于历史离线分析的存储。运行 Cursor 的生产系统和基础设施没有受到影响。Cursor 应用及其正式更新，以及我们交付到客户端和云服务的代码，也没有受到影响：我们从攻击者从未进入的另一套代码托管系统发布 Cursor，也没有发布签名密钥被暴露。我们的其他产品没有受到影响，包括面向客户团队的 Cloud Agents、Grok Bot，以及所有其他 SpaceX SI 产品。扩展市场里的其他扩展没有受到影响；我们验证了它们都是真实的，并审查和重建了市场 store。正在进行的 inference 请求没有被暴露；出于谨慎，我们已把全部 inference 从该第三方训练和推理供应商迁走。从 Cursor Marketplace 下载的 plugins，以及客户的代码仓库，都没有受到影响。"
+          },
+          {
+            "kind": "h",
+            "text": "我们做了什么"
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "把全部 inference 流量从 Fireworks 迁走，停用签发给它的密钥，并切断它对我们共享的所有数据集的访问。",
+              "轮换我们发现的每一枚被暴露的 Cursor credential，风险最高的优先；出于谨慎，还轮换了内部系统中正在使用的全部 credentials，即使没有暴露证据。",
+              "验证市场中所有其他扩展都是真实的，并审查、重建了我们的 VS Code 扩展市场。",
+              "在可能的情况下，扩大了服务提供商的网络访问限制，使被盗用的 credentials 无法在预定位置之外使用。",
+              "在我们所有代码仓库中增加了 secret scanning 和保护，并把扫描扩大到其他内部数据源。",
+              "出于谨慎，重新部署了全部生产基础设施和服务，并在恢复前审查了每一项内部服务。",
+              "聘请了外部取证专家协助调查。",
+              "联系了所有受影响的人。"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "我们向受到这次事件影响的人道歉——隐私和安全被当作最高优先级，而我们可以、也必须做得更好。我们会用学到的东西，让 Cursor 更安全。如果有任何重要变化，我们会更新这篇文章。"
+          }
+        ]
+      }
+    }
+  ]
+}
